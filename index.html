@@ -3,129 +3,202 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Hustle — an idle life</title>
+<title>The Hustle</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💸</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:opsz,wght@6..72,500;6..72,600;6..72,700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0e1013;--p:#161a1f;--p2:#1d2229;--ln:#2a3038;--ink:#e8ebf0;--mut:#8b94a3;--up:#4ade9b;--dn:#ff6b6b;--gold:#ffc857;--acc:#7c9cff;--pink:#ff7ab8;color-scheme:dark}
+/* Hallmark · genre: editorial · macrostructure: Workbench (app · broadsheet ledger) · theme: custom "Salmon Ledger" (Newsprint-derived) · tone: financial broadsheet · anchor hue: 62 · accent: oxford blue 255 · enrichment: none · nav: N6 masthead · footer: none (app)
+ * pre-emit critique: P5 H4 E4 S5 R4 V5
+ */
+:root{
+  --color-paper:oklch(94% .028 62);--color-paper-2:oklch(90.5% .036 58);--color-paper-3:oklch(97.5% .012 70);
+  --color-ink:oklch(21% .015 45);--color-ink-2:oklch(42% .02 45);--color-ink-3:oklch(56% .022 50);
+  --color-rule:oklch(79% .035 55);--color-accent:oklch(37% .1 255);--color-accent-2:oklch(29% .1 255);
+  --color-up:oklch(43% .12 150);--color-down:oklch(48% .17 27);--color-warn:oklch(50% .11 70);
+  --color-scrim:oklch(21% .015 45 / .5);--color-focus:oklch(37% .1 255);
+  --font-display:"Newsreader",Georgia,"Times New Roman",serif;
+  --font-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+  --space-3xs:.25rem;--space-2xs:.5rem;--space-xs:.75rem;--space-sm:1rem;--space-md:1.5rem;--space-lg:2rem;--space-xl:3rem;
+  --text-xs:.75rem;--text-sm:.8125rem;--text-base:.9375rem;--text-md:1.125rem;--text-lg:1.5rem;--text-xl:2.25rem;--text-2xl:3.25rem;
+  --ease-out:cubic-bezier(.16,1,.3,1);--dur-short:140ms;
+  --rule:1px solid var(--color-rule);--rule-ink:1px solid var(--color-ink);--radius:2px;
+  color-scheme:light;
+}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 Inter,system-ui,sans-serif;display:grid;grid-template:"h h h" auto "n m a" minmax(0,1fr)/180px minmax(0,1fr) 300px;height:100vh;overflow:hidden}
-h1,h2,h3,.num,.brand{font-family:'Space Grotesk',Inter,sans-serif}
-h2{margin:0;font-size:20px;letter-spacing:-.3px}
-h3{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.12em;color:var(--mut);margin:28px 0 10px}
-header{grid-area:h;display:flex;align-items:center;gap:26px;padding:10px 20px;border-bottom:1px solid var(--ln);background:#0a0c0f;flex-wrap:wrap}
-.brand{font-weight:700;font-size:24px;letter-spacing:-1px}.brand i{color:var(--up);font-style:normal}
-.hstats{display:flex;gap:26px;flex-wrap:wrap}
-.hstats small{display:block;color:var(--mut);font-size:10.5px;text-transform:uppercase;letter-spacing:.1em}
-.hstats b{font:600 18px 'Space Grotesk',sans-serif;font-variant-numeric:tabular-nums}
-.speed{margin-left:auto;display:flex;gap:4px}
-.speed button{padding:5px 9px;font-size:12px}
-.speed button.on{background:var(--ink);color:#000}
-#inboxBtn{background:var(--gold);color:#2b1d00;border:0;font-weight:600;animation:pulse 1.6s infinite}
-@keyframes pulse{50%{box-shadow:0 0 0 6px #ffc85722}}
-nav{grid-area:n;padding:14px 10px;border-right:1px solid var(--ln);display:flex;flex-direction:column;gap:3px}
-nav button{background:none;border:0;text-align:left;padding:9px 12px;border-radius:8px;color:var(--mut);font-weight:500}
-nav button.on{background:var(--p2);color:var(--ink)}
-nav .spacer{flex:1}
-nav .reset{font-size:12px;opacity:.6}
-main{grid-area:m;padding:22px 26px 60px;overflow:auto}
-aside{grid-area:a;border-left:1px solid var(--ln);padding:0 16px 16px;overflow:auto}
-aside h3{margin-top:18px}
-button{font:inherit;color:inherit;background:var(--p2);border:1px solid var(--ln);border-radius:8px;padding:7px 12px;cursor:pointer;transition:background .12s,border-color .12s}
-button:hover:not(:disabled){border-color:#3d4552;background:#252b34}
-button:disabled{opacity:.38;cursor:not-allowed}
-button.pri{background:var(--up);color:#052816;border-color:transparent;font-weight:600}
-button.pri:hover:not(:disabled){background:#6cf0b0}
-button.bad{color:var(--dn)}
-.card{background:var(--p);border:1px solid var(--ln);border-radius:12px;padding:16px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
-.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
-.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.between{justify-content:space-between}
-.up{color:var(--up)}.dn{color:var(--dn)}.mut{color:var(--mut)}.gold{color:var(--gold)}.small{font-size:12px}
-.num{font-variant-numeric:tabular-nums}
-.chip{display:inline-block;padding:2px 9px;border-radius:99px;background:var(--p2);border:1px solid var(--ln);font-size:12px;color:var(--mut)}
-.chip.up{color:var(--up);border-color:#4ade9b44}.chip.dn{color:var(--dn);border-color:#ff6b6b44}
-.bar{height:6px;background:var(--p2);border-radius:4px;overflow:hidden;margin-top:4px}.bar i{display:block;height:100%;background:var(--up);border-radius:4px}
-.stat{margin-bottom:10px}.stat .row{justify-content:space-between}
-.profile{display:flex;gap:14px;align-items:center}
-.avatar{font-size:44px;width:70px;height:70px;display:grid;place-items:center;background:var(--p2);border-radius:18px}
-.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
-.acts{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
-.acts button{text-align:left;padding:10px 12px}
-.acts b{display:block;font-weight:600}.acts small{color:var(--mut)}
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:14px 0}
-.kpis .card{padding:12px 14px}.kpis small{color:var(--mut);display:block;font-size:11px;text-transform:uppercase;letter-spacing:.08em}.kpis b{font:600 20px 'Space Grotesk'}
-.biz{display:flex;flex-direction:column;gap:10px}
-.biz.locked{opacity:.45}
-.biz .top{display:flex;gap:12px;align-items:center}
-.biz .ic{font-size:30px;width:50px;height:50px;display:grid;place-items:center;background:var(--p2);border-radius:12px;flex:none}
-.biz .btns{display:flex;gap:6px;flex-wrap:wrap}.biz .btns button{flex:1;padding:6px 8px;font-size:12.5px}
-.mkt{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:12px;align-items:start}
-.list{padding:6px}
-.srow{display:grid;grid-template-columns:62px minmax(0,1fr) auto 64px;gap:10px;align-items:center;width:100%;text-align:left;background:none;border:1px solid transparent;padding:8px 10px}
-.srow.on{background:var(--p2);border-color:var(--ln)}
-.srow .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--mut)}
-.srow .r{text-align:right}
-.srow b.held::after{content:'●';color:var(--gold);font-size:8px;vertical-align:super;margin-left:3px}
-#chart{width:100%;height:210px;display:block;margin:10px 0}
-.trade{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px}
-.chirp{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;max-width:640px}
-.post{display:flex;gap:10px;padding:12px 14px;border-bottom:1px solid var(--ln)}
-.post:last-child{border:0}
-.post.mine{background:#4ade9b0b}
-.post .txt{white-space:pre-line;margin:2px 0 4px}
-.av{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-weight:700;flex:none;color:#fff}
-.ver{color:var(--acc)}
-.tag{margin-left:6px;font-size:11px;padding:1px 7px;border-radius:99px;background:var(--p2)}
-.feed{padding:0}
-.lg{padding:6px 0;border-bottom:1px solid #1d2229;font-size:12.5px}
-.lg small{color:var(--mut);margin-right:6px;font-variant-numeric:tabular-nums}
-.lg.good{color:#b9f5d6}.lg.bad{color:#ffc0c0}
-.gig{font:700 22px 'Space Grotesk';padding:18px 26px;border-radius:14px}
-#toasts{position:fixed;right:18px;bottom:18px;display:flex;flex-direction:column;gap:8px;z-index:30;pointer-events:none}
-.toast{background:#252b34;border:1px solid var(--ln);padding:9px 14px;border-radius:10px;box-shadow:0 6px 24px #0008;animation:tin .25s ease-out;max-width:320px}
-@keyframes tin{from{transform:translateY(10px);opacity:0}}
-#modal{position:fixed;inset:0;background:#000b;display:grid;place-items:center;z-index:20;padding:16px}
-#modal .card{max-width:520px;width:100%;padding:24px;max-height:90vh;overflow:auto}
-#modal p{color:#c6ccd6}
-.choices{display:flex;flex-direction:column;gap:8px;margin-top:16px}
-.choices button{padding:11px 14px;text-align:left}
-.bgs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
-.bgs button{text-align:left;padding:12px}.bgs span{font-size:24px;display:block}.bgs small{display:block;color:var(--mut)}
-label{display:block;color:var(--mut);font-size:12px;margin-top:14px}
-input{display:block;width:100%;margin-top:6px;background:var(--p2);border:1px solid var(--ln);border-radius:8px;padding:10px 12px;color:var(--ink);font:inherit;font-size:16px}
-table{width:100%;border-collapse:collapse}td{padding:5px 0;border-bottom:1px solid var(--ln)}td:last-child{text-align:right}
-@media(max-width:1100px){.mkt{grid-template-columns:minmax(0,1fr)}}
-@media(max-width:900px){
-  body{grid-template:"h" auto "n" auto "m" auto "a" auto/minmax(0,1fr);height:auto;overflow:visible}
-  nav{flex-direction:row;overflow-x:auto;border:0;border-bottom:1px solid var(--ln);padding:8px 16px}
-  nav .spacer{display:none}nav button{white-space:nowrap}
-  header{position:sticky;top:0;z-index:5;gap:14px;padding:10px 16px}.hstats{gap:16px}.hstats b{font-size:15px}
-  main{padding:16px;overflow:visible}aside{border:0;border-top:1px solid var(--ln);overflow:visible}
-  .speed{margin-left:0}
+html,body{overflow-x:clip}
+body{margin:0;background:var(--color-paper);color:var(--color-ink);font:400 var(--text-base)/1.5 var(--font-body);display:flex;flex-direction:column;height:100vh;overflow:hidden}
+h1,h2,h3{font-family:var(--font-display);font-style:normal;font-weight:600;margin:0;letter-spacing:-.01em;overflow-wrap:anywhere;min-width:0}
+p{margin:0}
+b{font-weight:600}
+.num{font-family:var(--font-mono);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.up{color:var(--color-up)}.dn{color:var(--color-down)}.warn{color:var(--color-warn)}.mut{color:var(--color-ink-2)}
+.r{text-align:right}
+
+/* masthead */
+.mast{padding:var(--space-sm) var(--space-lg) 0;flex:none}
+.mast-top{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:var(--space-sm)}
+.dateline{font-size:var(--text-sm);color:var(--color-ink-2)}
+.wordmark{font-size:var(--text-2xl);font-weight:700;line-height:.95;letter-spacing:-.035em;text-align:center}
+.speed{justify-self:end;display:flex;gap:var(--space-3xs)}
+.speed button{padding:.3rem .5rem;font-size:var(--text-xs);border-color:var(--color-rule)}
+.speed button.on{background:var(--color-ink);border-color:var(--color-ink);color:var(--color-paper)}
+.ticker{display:flex;flex-wrap:wrap;align-items:center;border-top:3px double var(--color-ink);border-bottom:var(--rule-ink);margin-top:var(--space-xs)}
+.ticker>div{padding:var(--space-2xs) var(--space-md) var(--space-2xs) 0;margin-right:var(--space-md);border-right:var(--rule)}
+.ticker small{font-size:var(--text-xs);color:var(--color-ink-2);margin-right:var(--space-2xs)}
+.ticker b{font:500 var(--text-md) var(--font-mono);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+#inboxBtn{margin-left:auto}
+nav{display:flex;gap:var(--space-md);overflow-x:auto;border-bottom:var(--rule);scrollbar-width:none}
+nav button{border:0;border-radius:0;background:none;padding:var(--space-2xs) 0;font:500 var(--text-sm) var(--font-body);color:var(--color-ink-2);border-bottom:2px solid transparent}
+nav button:hover:not(:disabled){background:none;color:var(--color-ink)}
+nav button.on{color:var(--color-ink);border-bottom-color:var(--color-ink)}
+nav .reset{margin-left:auto;color:var(--color-ink-3)}
+
+.page{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 19rem}
+main{overflow:auto;padding:var(--space-lg) var(--space-lg) var(--space-xl)}
+aside{overflow:auto;border-left:var(--rule);padding:var(--space-md) var(--space-md) var(--space-lg)}
+aside h2{font-size:var(--text-lg);padding-bottom:var(--space-2xs);border-bottom:var(--rule-ink);margin-bottom:var(--space-2xs)}
+.lg{display:grid;grid-template-columns:2.25rem minmax(0,1fr);gap:var(--space-2xs);padding:var(--space-2xs) 0;border-bottom:var(--rule);font-size:var(--text-sm)}
+.lg small{font:var(--text-xs) var(--font-mono);color:var(--color-ink-3);padding-top:.15em}
+.lg.good{color:var(--color-ink)}.lg.bad span{color:var(--color-down)}
+.lg.info{color:var(--color-ink-2)}
+
+/* buttons */
+button{font:500 var(--text-sm)/1.2 var(--font-body);color:var(--color-ink);background:transparent;border:var(--rule-ink);border-radius:var(--radius);padding:.5rem .75rem;cursor:pointer;white-space:nowrap;transition:background-color var(--dur-short) var(--ease-out),color var(--dur-short) var(--ease-out)}
+button:hover:not(:disabled){background:var(--color-ink);color:var(--color-paper)}
+button:active:not(:disabled){transform:translateY(1px)}
+button:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--color-focus);outline-offset:2px}
+button:disabled{border-color:var(--color-rule);color:var(--color-ink-3);cursor:not-allowed}
+button.pri{background:var(--color-accent);border-color:var(--color-accent);color:var(--color-paper-3)}
+button.pri:hover:not(:disabled){background:var(--color-accent-2);border-color:var(--color-accent-2)}
+button.pri:disabled{background:transparent;border-color:var(--color-rule);color:var(--color-ink-3)}
+button.bad{border-color:var(--color-down);color:var(--color-down)}
+button.bad:hover:not(:disabled){background:var(--color-down);color:var(--color-paper-3)}
+button.big{font-size:var(--text-base);padding:.8rem 1.25rem}
+
+/* page furniture */
+.lede{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:var(--space-xl);align-items:end;padding-bottom:var(--space-md);border-bottom:var(--rule-ink)}
+.headline{font-size:var(--text-xl);line-height:1.05;font-weight:600}
+.dek{font-size:var(--text-md);line-height:1.45;color:var(--color-ink-2);margin-top:var(--space-2xs);max-width:36em;text-wrap:pretty}
+.dek b{color:var(--color-ink)}
+.side{display:flex;flex-direction:column;gap:var(--space-xs);align-items:flex-start}
+.side .figure{font:500 var(--text-lg) var(--font-mono);letter-spacing:-.03em}
+h3{font-size:var(--text-md);margin:var(--space-lg) 0 var(--space-2xs)}
+.cols{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:var(--space-xl)}
+.note{font-size:var(--text-sm);color:var(--color-ink-2);margin-top:var(--space-xs);max-width:44em}
+.scroll{overflow-x:auto}
+.ledger{width:100%;border-collapse:collapse;font-size:var(--text-sm)}
+.ledger th{font:500 var(--text-xs) var(--font-body);color:var(--color-ink-2);text-align:left;padding:var(--space-2xs) var(--space-xs) var(--space-2xs) 0;border-bottom:var(--rule-ink);white-space:nowrap}
+.ledger td{padding:var(--space-2xs) var(--space-xs) var(--space-2xs) 0;border-bottom:var(--rule);vertical-align:middle}
+.ledger td.act{text-align:right;white-space:nowrap;padding-right:0}
+.ledger td.act button+button{margin-left:var(--space-3xs)}
+.ledger th.r,.ledger td.r{text-align:right}
+.ledger td:first-child b{white-space:nowrap}
+.ledger .sub{font-size:var(--text-xs);color:var(--color-ink-3)}
+.ledger tr.dim td{color:var(--color-ink-3)}
+.ledger tr.pick{cursor:pointer}
+.ledger tr.pick:hover td{background:var(--color-paper-2)}
+.ledger tr.on td{background:var(--color-paper-2);font-weight:600}
+.stats{width:100%;border-collapse:collapse}
+.stats th{font:500 var(--text-sm) var(--font-body);text-align:left;padding:var(--space-3xs) var(--space-sm) var(--space-3xs) 0;width:6.5rem}
+.stats td{padding:var(--space-3xs) 0}
+.stats td.num{text-align:right;width:2.5rem}
+.stats tr.low th,.stats tr.low td.num{color:var(--color-down)}
+.meter{display:block;height:3px;background:var(--color-rule)}
+.meter i{display:block;height:100%;background:var(--color-ink)}
+tr.low .meter i{background:var(--color-down)}
+.meter.warn i{background:var(--color-warn)}
+.meter.wide{margin:var(--space-xs) 0}
+
+/* markets */
+.mkt{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:var(--space-xl);margin-top:var(--space-md);align-items:start}
+.price{font:500 var(--text-xl) var(--font-mono);letter-spacing:-.04em}
+#chart{width:100%;height:13rem;display:block;margin:var(--space-sm) 0;border-top:var(--rule);border-bottom:var(--rule)}
+.trade{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--space-3xs);margin-top:var(--space-xs)}
+
+/* chirp */
+.chirp{max-width:42rem}
+.compose{display:flex;flex-wrap:wrap;gap:var(--space-2xs);align-items:center;padding:var(--space-sm) 0;border-bottom:var(--rule-ink)}
+.compose .mut{width:100%;font-size:var(--text-sm)}
+.feed{list-style:none;margin:0;padding:0}
+.post{display:grid;grid-template-columns:2.25rem minmax(0,1fr);gap:var(--space-xs);padding:var(--space-sm) 0;border-bottom:var(--rule)}
+.post.mine{background:var(--color-paper-2);padding-inline:var(--space-xs);margin-inline:calc(var(--space-xs) * -1)}
+.av{width:2.25rem;height:2.25rem;display:grid;place-items:center;background:var(--color-paper-2);border:var(--rule);font:600 var(--text-md) var(--font-display)}
+.post.mine .av{background:var(--color-ink);color:var(--color-paper);border-color:var(--color-ink)}
+.by{font-size:var(--text-sm)}
+.by .ver{color:var(--color-accent)}
+.post p{margin:var(--space-3xs) 0;white-space:pre-line}
+.tag{font-size:var(--text-xs);margin-left:var(--space-2xs);color:var(--color-accent)}
+.tag.dn{color:var(--color-down)}
+
+/* dialogs & slips */
+#modal{position:fixed;inset:0;background:var(--color-scrim);display:grid;place-items:center;z-index:20;padding:var(--space-sm)}
+#mbox{background:var(--color-paper-3);border-top:3px double var(--color-ink);max-width:34rem;width:100%;padding:var(--space-lg);max-height:90vh;overflow:auto;box-shadow:0 1rem 2.5rem var(--color-scrim)}
+#mbox h2{font-size:var(--text-xl);line-height:1.05;margin:var(--space-3xs) 0 var(--space-sm)}
+#mbox p{font-size:var(--text-md);color:var(--color-ink-2);margin-bottom:var(--space-sm)}
+#mbox p b{color:var(--color-ink)}
+#mbox .kicker{font-size:var(--text-sm);color:var(--color-ink-3)}
+.choices{display:flex;flex-direction:column;gap:var(--space-2xs)}
+.choices button{text-align:left;padding:.8rem 1rem;font-size:var(--text-base);white-space:normal}
+.bgs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-2xs);margin-top:var(--space-2xs)}
+.bgs button{text-align:left;padding:var(--space-sm);white-space:normal}
+.bgs b{display:block;font:600 var(--text-md) var(--font-display)}
+.bgs small{display:block;color:var(--color-ink-2);font-size:var(--text-sm);margin-top:var(--space-3xs)}
+.bgs button:hover:not(:disabled) small{color:var(--color-paper-2)}
+label{display:block;font-size:var(--text-sm);color:var(--color-ink-2);margin-top:var(--space-sm)}
+input{display:block;width:100%;margin-top:var(--space-3xs);background:var(--color-paper);border:var(--rule-ink);border-radius:var(--radius);padding:.7rem .8rem;color:var(--color-ink);font:400 var(--text-md) var(--font-body)}
+input:focus-visible{outline:2px solid var(--color-focus);outline-offset:1px}
+.row{display:flex;gap:var(--space-2xs);flex-wrap:wrap}
+#toasts{position:fixed;left:var(--space-md);bottom:var(--space-md);display:flex;flex-direction:column;gap:var(--space-2xs);z-index:30;pointer-events:none}
+.toast{background:var(--color-ink);color:var(--color-paper);padding:.55rem .9rem;font-size:var(--text-sm);max-width:22rem;animation:slip .2s var(--ease-out)}
+@keyframes slip{from{opacity:0;transform:translateY(.5rem)}}
+@media (prefers-reduced-motion:reduce){.toast{animation:none}button{transition:none}}
+
+@media (max-width:1100px){.mkt,.cols{grid-template-columns:minmax(0,1fr);gap:0}}
+@media (max-width:860px){
+  body{height:auto;overflow:visible}
+  .mast{padding:var(--space-sm) var(--space-sm) 0}
+  .mast-top{grid-template-columns:minmax(0,1fr) auto}
+  .wordmark{grid-column:1/-1;grid-row:1;text-align:left;font-size:var(--text-xl)}
+  .dateline{grid-row:2}
+  .ticker>div{margin-right:var(--space-sm);padding-right:var(--space-sm)}
+  .ticker b{font-size:var(--text-base)}
+  #inboxBtn{margin:var(--space-2xs) 0;width:100%}
+  .page{display:block}
+  main{padding:var(--space-md) var(--space-sm) var(--space-lg);overflow:visible}
+  aside{border-left:0;border-top:var(--rule-ink);overflow:visible;padding:var(--space-md) var(--space-sm)}
+  .lede{grid-template-columns:minmax(0,1fr);gap:var(--space-md)}
+  .headline{font-size:var(--text-lg)}
+  .bgs{grid-template-columns:minmax(0,1fr)}
+  #mbox{padding:var(--space-md)}
 }
 </style>
 </head>
 <body>
-<header>
-  <div class="brand">hustle<i>.</i></div>
-  <div class="hstats">
+<header class="mast">
+  <div class="mast-top">
+    <span class="dateline" id="dateline"></span>
+    <h1 class="wordmark">The Hustle</h1>
+    <div class="speed" id="speed"></div>
+  </div>
+  <div class="ticker">
     <div><small>Cash</small><b id="hCash">—</b></div>
     <div><small>Net worth</small><b id="hNw">—</b></div>
     <div><small>Per day</small><b id="hInc">—</b></div>
     <div><small>Age</small><b id="hAge">—</b></div>
+    <button id="inboxBtn" class="pri" data-a="inbox" hidden></button>
   </div>
-  <button id="inboxBtn" data-a="inbox" hidden></button>
-  <div class="speed" id="speed"></div>
+  <nav id="nav"></nav>
 </header>
-<nav id="nav"></nav>
-<main id="view"></main>
-<aside><h3>Life log</h3><div id="log"></div></aside>
-<div id="toasts"></div>
-<div id="modal" hidden><div class="card" id="mbox"></div></div>
+<div class="page">
+  <main id="view"></main>
+  <aside><h2>The Record</h2><div id="log"></div></aside>
+</div>
+<div id="toasts" role="status" aria-live="polite"></div>
+<div id="modal" hidden><div id="mbox" role="dialog" aria-modal="true"></div></div>
 
 <script>
 // ---------- helpers ----------
@@ -142,29 +215,29 @@ const hue=h=>[...h].reduce((a,c)=>a*31+c.charCodeAt(0)>>>0,7)%360;
 // ---------- data ----------
 const EDU=[{n:'High school'},{n:'Diploma',cost:6000,days:180,sma:10},{n:"Bachelor's degree",cost:35000,days:360,sma:12},{n:"Master's degree",cost:80000,days:240,sma:10},{n:'PhD',cost:120000,days:480,sma:15}];
 const JOBS=[
- {id:'crew',n:'Fast Food Crew',ic:'🍟',e:0,s:0,pay:60,str:2},
- {id:'rider',n:'Delivery Rider',ic:'🛵',e:0,s:0,pay:72,str:3},
- {id:'retail',n:'Retail Associate',ic:'🛍️',e:0,s:25,pay:88,str:2},
- {id:'admin',n:'Office Admin',ic:'🗂️',e:1,s:35,pay:140,str:1},
- {id:'dev',n:'Junior Developer',ic:'💻',e:1,s:50,pay:210,str:2},
- {id:'nurse',n:'Nurse',ic:'🩺',e:2,s:45,pay:260,str:3},
- {id:'analyst',n:'Financial Analyst',ic:'📊',e:2,s:60,pay:380,str:3},
- {id:'swe',n:'Software Engineer',ic:'🧑‍💻',e:2,s:65,pay:480,str:2},
- {id:'lawyer',n:'Lawyer',ic:'⚖️',e:3,s:72,pay:760,str:4},
- {id:'surgeon',n:'Surgeon',ic:'🫀',e:4,s:78,pay:1150,str:4},
- {id:'ceo',n:'Corporate CEO',ic:'👔',e:3,s:80,pay:2600,str:5,f:25000},
+ {id:'crew',n:'Fast Food Crew',e:0,s:0,pay:60,str:2},
+ {id:'rider',n:'Delivery Rider',e:0,s:0,pay:72,str:3},
+ {id:'retail',n:'Retail Associate',e:0,s:25,pay:88,str:2},
+ {id:'admin',n:'Office Admin',e:1,s:35,pay:140,str:1},
+ {id:'dev',n:'Junior Developer',e:1,s:50,pay:210,str:2},
+ {id:'nurse',n:'Nurse',e:2,s:45,pay:260,str:3},
+ {id:'analyst',n:'Financial Analyst',e:2,s:60,pay:380,str:3},
+ {id:'swe',n:'Software Engineer',e:2,s:65,pay:480,str:2},
+ {id:'lawyer',n:'Lawyer',e:3,s:72,pay:760,str:4},
+ {id:'surgeon',n:'Surgeon',e:4,s:78,pay:1150,str:4},
+ {id:'ceo',n:'Corporate CEO',e:3,s:80,pay:2600,str:5,f:25000},
 ];
 const RANKS=['','Senior ','Lead ','Principal ','Head '];
 const BIZ=[
- {id:'lemon',n:'Lemonade Stand',ic:'🍋',cost:120,inc:3},
- {id:'truck',n:'Food Truck',ic:'🚚',cost:2000,inc:30},
- {id:'cafe',n:'Coffee Shop',ic:'☕',cost:18000,inc:190},
- {id:'wash',n:'Car Wash',ic:'🧽',cost:150000,inc:1200},
- {id:'gym',n:'Fitness Club',ic:'🏋️',cost:1.2e6,inc:7500},
- {id:'app',n:'App Studio',ic:'📱',cost:1e7,inc:48000},
- {id:'hotel',n:'Boutique Hotel',ic:'🏨',cost:9e7,inc:320000},
- {id:'bank',n:'Private Bank',ic:'🏦',cost:8e8,inc:2.2e6},
- {id:'rocket',n:'Rocket Company',ic:'🚀',cost:9e9,inc:1.6e7},
+ {id:'lemon',n:'Lemonade Stand',cost:120,inc:3},
+ {id:'truck',n:'Food Truck',cost:2000,inc:30},
+ {id:'cafe',n:'Coffee Shop',cost:18000,inc:190},
+ {id:'wash',n:'Car Wash',cost:150000,inc:1200},
+ {id:'gym',n:'Fitness Club',cost:1.2e6,inc:7500},
+ {id:'app',n:'App Studio',cost:1e7,inc:48000},
+ {id:'hotel',n:'Boutique Hotel',cost:9e7,inc:320000},
+ {id:'bank',n:'Private Bank',cost:8e8,inc:2.2e6},
+ {id:'rocket',n:'Rocket Company',cost:9e9,inc:1.6e7},
 ];
 const STOCKS=[
  {t:'NOVA',n:'Nova Robotics',sec:'Tech',p:120,v:.028,mu:.0007,b:1.3},
@@ -178,34 +251,34 @@ const STOCKS=[
  {t:'MOON',n:'MoonCoin',sec:'Crypto',p:1.2,v:.075,mu:.003,b:2.2},
 ];
 const SHOP=[
- {id:'bike',n:'Bicycle',ic:'🚲',cost:300,up:0,hap:.02,fame:0},
- {id:'phone',n:'Flagship Phone',ic:'📱',cost:1400,up:1,hap:.02,fame:.5},
- {id:'car',n:'Used Hatchback',ic:'🚗',cost:9000,up:8,hap:.04,fame:0},
- {id:'apt',n:'City Apartment',ic:'🏢',cost:180000,up:35,hap:.07,fame:1,home:1},
- {id:'sports',n:'Sports Car',ic:'🏎️',cost:240000,up:90,hap:.08,fame:4},
- {id:'house',n:'Suburban House',ic:'🏡',cost:700000,up:110,hap:.1,fame:2,home:1},
- {id:'mansion',n:'Hilltop Mansion',ic:'🏰',cost:1.2e7,up:2500,hap:.18,fame:25,home:1},
- {id:'yacht',n:'Superyacht',ic:'🛥️',cost:6e7,up:15000,hap:.2,fame:70},
- {id:'jet',n:'Private Jet',ic:'✈️',cost:1.5e8,up:40000,hap:.22,fame:140},
- {id:'island',n:'Private Island',ic:'🏝️',cost:1e9,up:120000,hap:.3,fame:350},
+ {id:'bike',n:'Bicycle',cost:300,up:0,hap:.02,fame:0},
+ {id:'phone',n:'Flagship Phone',cost:1400,up:1,hap:.02,fame:.5},
+ {id:'car',n:'Used Hatchback',cost:9000,up:8,hap:.04,fame:0},
+ {id:'apt',n:'City Apartment',cost:180000,up:35,hap:.07,fame:1,home:1},
+ {id:'sports',n:'Sports Car',cost:240000,up:90,hap:.08,fame:4},
+ {id:'house',n:'Suburban House',cost:700000,up:110,hap:.1,fame:2,home:1},
+ {id:'mansion',n:'Hilltop Mansion',cost:1.2e7,up:2500,hap:.18,fame:25,home:1},
+ {id:'yacht',n:'Superyacht',cost:6e7,up:15000,hap:.2,fame:70},
+ {id:'jet',n:'Private Jet',cost:1.5e8,up:40000,hap:.22,fame:140},
+ {id:'island',n:'Private Island',cost:1e9,up:120000,hap:.3,fame:350},
 ];
 const ACTS=[
- {id:'gym',ic:'🏋️',n:'Hit the gym',cd:3,c:15,fx:()=>{add('hea',3);add('loo',1);add('hap',1);return 'Good pump. 💪'}},
- {id:'read',ic:'📚',n:'Read a book',cd:3,c:20,fx:()=>{add('sma',1.5);return 'You feel a little smarter.'}},
- {id:'med',ic:'🧘',n:'Meditate',cd:2,c:0,fx:()=>{add('hap',3);return 'Inner peace, briefly.'}},
- {id:'out',ic:'🍻',n:'Night out',cd:5,c:150,fx:()=>{add('hap',8);add('hea',-2);if(R()<.3){const f=rint(5,40)+Math.round(s.fol*.01);s.fol+=f;return `Legendary night. +${f} followers.`}return 'Great night, rough morning.'}},
- {id:'date',ic:'💘',n:'Dating app',cd:10,c:40,show:()=>s.rel===0,fx:()=>{if(R()<.2+s.st.loo/250){s.rel=1;add('hap',10);log("You matched with someone great. You're dating! 💕",'good');return "It's a match! You're dating 💕"}add('hap',-2);return 'Swiped all night. Nothing.'}},
- {id:'fam',ic:'🏠',n:'Family time',cd:4,c:0,show:()=>s.rel||s.kids||s.pet,fx:()=>{add('hap',5);return 'Quality time. ❤️'}},
- {id:'doc',ic:'🩺',n:'Doctor check-up',cd:30,c:400,fx:()=>{add('hea',15);return 'Clean bill of health.'}},
- {id:'spa',ic:'💆',n:'Spa day',cd:14,c:600,fx:()=>{add('hap',8);add('loo',2);return 'Glowing. ✨'}},
- {id:'trip',ic:'🏖️',n:'Vacation',cd:120,c:5000,fx:()=>{add('hap',30);add('hea',5);return 'Sun, sea, no emails. 🏝️'}},
- {id:'surg',ic:'💉',n:'Cosmetic surgery',cd:365,c:25000,fx:()=>{add('hea',-5);if(R()<.85){add('loo',15);return 'Looking fresh. +15 looks.'}add('loo',-10);return 'It went… badly. -10 looks.'}},
+ {id:'gym',n:'Hit the gym',cd:3,c:15,fx:()=>{add('hea',3);add('loo',1);add('hap',1);return 'Good pump.'}},
+ {id:'read',n:'Read a book',cd:3,c:20,fx:()=>{add('sma',1.5);return 'You feel a little smarter.'}},
+ {id:'med',n:'Meditate',cd:2,c:0,fx:()=>{add('hap',3);return 'Inner peace, briefly.'}},
+ {id:'out',n:'Night out',cd:5,c:150,fx:()=>{add('hap',8);add('hea',-2);if(R()<.3){const f=rint(5,40)+Math.round(s.fol*.01);s.fol+=f;return `Legendary night. +${f} followers.`}return 'Great night, rough morning.'}},
+ {id:'date',n:'Dating app',cd:10,c:40,show:()=>s.rel===0,fx:()=>{if(R()<.2+s.st.loo/250){s.rel=1;add('hap',10);log("You matched with someone great. You're dating!",'good');return "It's a match! You're dating"}add('hap',-2);return 'Swiped all night. Nothing.'}},
+ {id:'fam',n:'Family time',cd:4,c:0,show:()=>s.rel||s.kids||s.pet,fx:()=>{add('hap',5);return 'Quality time.'}},
+ {id:'doc',n:'Doctor check-up',cd:30,c:400,fx:()=>{add('hea',15);return 'Clean bill of health.'}},
+ {id:'spa',n:'Spa day',cd:14,c:600,fx:()=>{add('hap',8);add('loo',2);return 'Glowing.'}},
+ {id:'trip',n:'Vacation',cd:120,c:5000,fx:()=>{add('hap',30);add('hea',5);return 'Sun, sea, no emails.'}},
+ {id:'surg',n:'Cosmetic surgery',cd:365,c:25000,fx:()=>{add('hea',-5);if(R()<.85){add('loo',15);return 'Looking fresh. +15 looks.'}add('loo',-10);return 'It went… badly. -10 looks.'}},
 ];
 const BG={
- rich:{ic:'💎',n:'Trust-fund kid',d:'$20K head start, bad at books',cash:20000,st:{hea:80,hap:75,sma:22,loo:62}},
- street:{ic:'🧢',n:'Street hustler',d:'Tough & scrappy, $150 and a fry-cook job',cash:150,job:'crew',st:{hea:92,hap:60,sma:35,loo:50}},
- nerd:{ic:'🤓',n:'Bookworm',d:'Diploma done, office job, 65 smarts',cash:600,job:'admin',st:{hea:70,hap:55,sma:65,loo:40},edu:1},
- online:{ic:'📲',n:'Chronically online',d:'1,500 followers and a delivery gig',cash:400,job:'rider',st:{hea:65,hap:62,sma:28,loo:70},fol:1500},
+ rich:{n:'Trust-fund kid',d:'$20K head start, bad at books',cash:20000,st:{hea:80,hap:75,sma:22,loo:62}},
+ street:{n:'Street hustler',d:'Tough & scrappy, $150 and a fry-cook job',cash:150,job:'crew',st:{hea:92,hap:60,sma:35,loo:50}},
+ nerd:{n:'Bookworm',d:'Diploma done, office job, 65 smarts',cash:600,job:'admin',st:{hea:70,hap:55,sma:65,loo:40},edu:1},
+ online:{n:'Chronically online',d:'1,500 followers and a delivery gig',cash:400,job:'rider',st:{hea:65,hap:62,sma:28,loo:70},fol:1500},
 };
 const NAMES=['Alex','Sam','Jordan','Riley','Casey','Kai','Mika','Rin','Ari','Noa','Remy','Jules'];
 const NPC=[['@stonksguy','Stonks Guy'],['@moneymira','Mira | Money'],['@techbro_tim','tim 🚀'],['@auntie_ling','Auntie Ling'],['@gymrat_raj','Raj lifts'],['@catmom88','cat mom'],['@lowkey_lena','lena'],['@dad_jokes_dan','Dan'],['@nomad_noor','Noor ✈️'],['@quietquitter','Q. Quitter']];
@@ -214,21 +287,21 @@ const ABOUT=['{h} is lowkey inspiring ngl','anyone else following {h}? the grind
 const GOOD=['{n} smashes earnings expectations','{n} lands a massive government contract','analysts upgrade {n} to "strong buy"','{n} unveils a breakthrough product','{n} announces record buyback'];
 const BAD=['{n} misses earnings, guidance slashed','{n} CEO resigns amid scandal','regulators open probe into {n}','{n} recalls flagship product','short seller report targets {n}'];
 const POSTS={
- selfie:{ic:'📸',n:'Selfie',q:()=>s.st.loo,tx:['new haircut who dis ✂️','golden hour hits different','gym progress 💪','outfit check 🔥','sunday vibes ☀️']},
- take:{ic:'🧠',n:'Hot take',q:()=>s.st.sma,risk:.15,tx:['unpopular opinion: breakfast is overrated','the economy is a vibe, not a science','most meetings should be emails. i said what i said','{stock} is overvalued and i will die on this hill','nobody reads the terms & conditions and that\'s the real conspiracy']},
- meme:{ic:'😂',n:'Meme',q:()=>45,viral:.07,tx:['me: i\'ll save money this month\nalso me: *buys everything*','my bank account looking at me like 👁️👄👁️','POV: you check your stocks after lunch','nobody:\nme at 3am: what if i started a business']},
- flex:{ic:'💸',n:'Flex',q:()=>Math.min(100,Math.log10(Math.max(1,netWorth()))*12),need:()=>netWorth()>=25000,why:'Net worth $25K+',tx:['just checked my portfolio 📈 net worth: {nw}','hard work pays off. that\'s the post.','they said i couldn\'t. i did. 🏆','new week, new money 💸']},
- shill:{ic:'📢',n:'Promote biz',q:()=>40,need:()=>BIZ.some(b=>s.biz[b.id]?.n),why:'Own a business · +25% biz income 10d',tx:['come through to my {biz}! first 10 customers get 20% off','my {biz} is hiring! DM me','new menu at my {biz} 👀','proud of what we built at {biz} 🙌']},
+ selfie:{n:'Selfie',q:()=>s.st.loo,tx:['new haircut who dis ✂️','golden hour hits different','gym progress 💪','outfit check 🔥','sunday vibes ☀️']},
+ take:{n:'Hot take',q:()=>s.st.sma,risk:.15,tx:['unpopular opinion: breakfast is overrated','the economy is a vibe, not a science','most meetings should be emails. i said what i said','{stock} is overvalued and i will die on this hill','nobody reads the terms & conditions and that\'s the real conspiracy']},
+ meme:{n:'Meme',q:()=>45,viral:.07,tx:['me: i\'ll save money this month\nalso me: *buys everything*','my bank account looking at me like 👁️👄👁️','POV: you check your stocks after lunch','nobody:\nme at 3am: what if i started a business']},
+ flex:{n:'Flex',q:()=>Math.min(100,Math.log10(Math.max(1,netWorth()))*12),need:()=>netWorth()>=25000,why:'Net worth $25K+',tx:['just checked my portfolio 📈 net worth: {nw}','hard work pays off. that\'s the post.','they said i couldn\'t. i did. 🏆','new week, new money 💸']},
+ shill:{n:'Promote biz',q:()=>40,need:()=>BIZ.some(b=>s.biz[b.id]?.n),why:'Own a business · +25% biz income 10d',tx:['come through to my {biz}! first 10 customers get 20% off','my {biz} is hiring! DM me','new menu at my {biz} 👀','proud of what we built at {biz} 🙌']},
 };
 const EM=Object.fromEntries,JM=EM(JOBS.map(j=>[j.id,j])),BM=EM(BIZ.map(b=>[b.id,b])),SK=EM(STOCKS.map(k=>[k.t,k])),SM=EM(SHOP.map(i=>[i.id,i])),AM=EM(ACTS.map(a=>[a.id,a]));
 
 // ---------- events (choices) ----------
 const EV=[
 {id:'wallet',w:3,a:()=>rint(40,400),t:'Finders keepers?',d:(s,a)=>`You find a wallet on the train with <b>${fmt(a)}</b> in cash and an ID card inside.`,def:0,ch:[
- ['Return it',(s,a)=>{add('hap',6);if(R()<.4){const f=rint(40,200)+Math.round(s.fol*.05);s.fol+=f;chirp('@goodnews_daily','Good News Daily',`faith in humanity restored: ${s.handle} returned a lost wallet with ${fmt(a)} inside 🙏`,1);return `The owner posted about you. <b>+${big(f)} followers</b>.`}return 'The owner nearly cries. You feel great.'}],
+ ['Return it',(s,a)=>{add('hap',6);if(R()<.4){const f=rint(40,200)+Math.round(s.fol*.05);s.fol+=f;chirp('@goodnews_daily','Good News Daily',`faith in humanity restored: ${s.handle} returned a lost wallet with ${fmt(a)} inside`,1);return `The owner posted about you. <b>+${big(f)} followers</b>.`}return 'The owner nearly cries. You feel great.'}],
  ['Keep the cash',(s,a)=>{s.cash+=a;add('hap',-4);return `+${fmt(a)}. The guilt lingers a little.`}]]},
 {id:'crypto',w:2,c:s=>s.cash>500,a:s=>Math.round(s.cash*.15),t:'To the moon?',d:(s,a)=>`Your friend won't shut up about <b>$DOGGO</b>, a brand-new coin. "Put in ${fmt(a)}, trust me bro."`,def:1,ch:[
- ['Ape in 🦍',(s,a)=>{s.cash-=a;if(R()<.3){const w=a*rint(3,8);s.later.push({d:s.day+rint(20,60),k:'cash',v:w,m:'$DOGGO mooned! You cashed out'})}else s.later.push({d:s.day+rint(10,40),k:'msg',m:'$DOGGO got rugged. Your coins are worthless. 🫠'});return 'You bought the coin. Now you wait…'}],
+ ['Ape in',(s,a)=>{s.cash-=a;if(R()<.3){const w=a*rint(3,8);s.later.push({d:s.day+rint(20,60),k:'cash',v:w,m:'$DOGGO mooned! You cashed out'})}else s.later.push({d:s.day+rint(10,40),k:'msg',m:'$DOGGO got rugged. Your coins are worthless.'});return 'You bought the coin. Now you wait…'}],
  ['Pass',()=>'You pass. Your friend calls you "paper hands".']]},
 {id:'overtime',w:3,c:s=>s.job,a:()=>Math.round(jobPay()*12),t:'Overtime offer',d:(s,a)=>`Your manager asks you to cover extra shifts for two weeks. It pays <b>${fmt(a)}</b>.`,def:1,ch:[
  ['Take the shifts',(s,a)=>{s.cash+=a;add('hea',-5);add('hap',-6);s.jobDays+=10;return `+${fmt(a)}. You're exhausted, but the boss noticed.`}],
@@ -240,28 +313,28 @@ const EV=[
  ['Jump ship',()=>{s.rank+=2;s.jobDays=0;add('hap',4);return `New gig: <b>${jobTitle()}</b> at ${fmt(jobPay())}/day.`}],
  ['Stay loyal',()=>{s.jobDays+=30;return 'Your loyalty gets noticed. Promotion is closer.'}]]},
 {id:'date',w:2,c:s=>s.rel===0,t:'A spark',d:()=>`Someone cute from your ${pick(['gym','favourite café','building','evening class'])} asks you out to dinner.`,def:1,ch:[
- ['Say yes',()=>{if(R()<.7){s.rel=1;add('hap',10);return "Dinner turns into a second date. You're officially dating 💕"}add('hap',-2);return 'Awkward. Zero chemistry.'}],
+ ['Say yes',()=>{if(R()<.7){s.rel=1;add('hap',10);return "Dinner turns into a second date. You're officially dating"}add('hap',-2);return 'Awkward. Zero chemistry.'}],
  ['Not now',()=>'You politely decline.']]},
 {id:'propose',w:1.5,c:s=>s.rel===1,a:()=>Math.max(3000,Math.round(netWorth()*.02)),t:'Put a ring on it?',d:(s,a)=>`Things are serious with your partner. A wedding would cost about <b>${fmt(a)}</b>.`,def:1,ch:[
- ['Propose 💍',(s,a)=>{s.cash-=a;s.rel=2;add('hap',15);return "They said yes! You're married. 💒"}],
+ ['Propose',(s,a)=>{s.cash-=a;s.rel=2;add('hap',15);return "They said yes! You're married."}],
  ['Not yet',()=>{if(R()<.25){s.rel=0;add('hap',-10);return 'Your partner wanted commitment. They left.'}return 'You keep things as they are.'}]]},
 {id:'baby',w:1.5,c:s=>s.rel===2&&s.kids<4&&age()<48,t:'Baby talk',d:()=>`Your spouse brings up having ${s.kids?'another':'a'} kid. Kids cost about $35/day, but bring joy every day.`,def:1,ch:[
- ['Grow the family',()=>{s.kids++;add('hap',12);return `Welcome, baby #${s.kids}! 👶`}],
+ ['Grow the family',()=>{s.kids++;add('hap',12);return `Welcome, baby #${s.kids}!`}],
  ['Wait',()=>'Maybe later.']]},
 {id:'breakup',w:s=>s.st.hap<35?3:.4,c:s=>s.rel>0,a:s=>Math.max(200,Math.round(s.cash*.05)),t:'Rough patch',d:(s,a)=>`You and your ${s.rel===2?'spouse':'partner'} keep fighting. A getaway to reconnect costs <b>${fmt(a)}</b>.`,def:1,ch:[
  ['Book the getaway',(s,a)=>{s.cash-=a;add('hap',8);return 'The trip works. You feel close again.'}],
- ['Let it be',()=>{if(R()<.5){const m=s.rel===2;s.rel=0;if(m){const c=Math.max(0,s.cash*.4);s.cash-=c;add('hap',-20);return `Divorce. The lawyers cost you ${fmt(c)}.`}add('hap',-12);return 'You broke up. 💔'}return 'It blows over… for now.'}]]},
+ ['Let it be',()=>{if(R()<.5){const m=s.rel===2;s.rel=0;if(m){const c=Math.max(0,s.cash*.4);s.cash-=c;add('hap',-20);return `Divorce. The lawyers cost you ${fmt(c)}.`}add('hap',-12);return 'You broke up.'}return 'It blows over… for now.'}]]},
 {id:'inspect',w:2,c:s=>s.biz.truck?.n||s.biz.cafe?.n,a:()=>rint(500,3000),t:'Health inspector',d:(s,a)=>`An inspector finds problems at your ${s.biz.cafe?.n?'coffee shop':'food truck'}. They hint that <b>${fmt(a)}</b> would make it all go away.`,def:1,ch:[
  ['Pay the "fee"',(s,a)=>{s.cash-=a;if(R()<.25){const l=Math.round(s.fol*.15);s.fol-=l;add('hap',-8);chirp('@citynews','City News',`bribery scandal: local business owner ${s.handle} caught paying off a health inspector`,1);return `It leaked. <b>-${big(l)} followers</b>.`}return 'Problem solved. Quietly.'}],
  ['Fix it properly',(s,a)=>{s.cash-=a*1.5;return `Repairs cost ${fmt(a*1.5)}, but you sleep well.`}]]},
 {id:'buyout',w:1.5,c:s=>BIZ.some(b=>(s.biz[b.id]?.n||0)>=10),a:s=>BIZ.filter(b=>(s.biz[b.id]?.n||0)>=10).pop().id,t:'Buyout offer',d:(s,a)=>`A national chain wants to buy <b>5 of your ${BM[a].n}</b> locations for <b>${fmt(buyout(a))}</b>, double what they'd cost to build.`,def:1,ch:[
- ['Sell 5',(s,a)=>{const o=s.biz[a];if(o.n<5)return 'You no longer have enough locations.';const p=buyout(a);o.spent*=(o.n-5)/o.n;o.n-=5;s.cash+=p;return `Sold for ${fmt(p)}. 🤝`}],
+ ['Sell 5',(s,a)=>{const o=s.biz[a];if(o.n<5)return 'You no longer have enough locations.';const p=buyout(a);o.spent*=(o.n-5)/o.n;o.n-=5;s.cash+=p;return `Sold for ${fmt(p)}.`}],
  ['Decline',()=>'Your empire stays intact.']]},
 {id:'tip',w:2,c:s=>s.cash>1000,a:()=>pick(STOCKS).t,t:'Hot tip',d:(s,a)=>`A stranger in your DMs swears <b>$${a}</b> is about to explode. "Insider info bro, don't tell anyone."`,def:1,ch:[
  ['Buy with 20% of cash',(s,a)=>{const n=Math.floor(s.cash*.2/s.px[a].p);if(n<1)return "You can't afford a single share.";ACT.buy(a,n);s.later.push({d:s.day+rint(3,8),k:'shock',t:a,v:R()<.45?.25:-.2});return `You bought ${n} shares of $${a}. Fingers crossed.`}],
  ['Report as spam',()=>'Blocked. Probably wise.']]},
 {id:'lotto',w:2,t:'Lottery ticket',d:()=>'The jackpot is at <b>$1M</b>. Tickets are $20.',def:1,ch:[
- ['Buy one',()=>{s.cash-=20;const r=R();if(r<.0008){s.cash+=1e6;add('hap',40);return 'YOU WON THE JACKPOT! <b>+$1M</b> 🤯'}if(r<.03){s.cash+=500;return 'Small prize: +$500.'}return 'Not a winner. Classic.'}],
+ ['Buy one',()=>{s.cash-=20;const r=R();if(r<.0008){s.cash+=1e6;add('hap',40);return 'YOU WON THE JACKPOT! <b>+$1M</b>'}if(r<.03){s.cash+=500;return 'Small prize: +$500.'}return 'Not a winner. Classic.'}],
  ['Nah',()=>'The house always wins.']]},
 {id:'sick',w:2,a:()=>rint(200,1200),t:'Under the weather',d:(s,a)=>`You wake up feeling awful. A clinic visit costs <b>${fmt(a)}</b>.`,def:1,ch:[
  ['See a doctor',(s,a)=>{s.cash-=a;add('hea',8);return 'Diagnosis: rest. You bounce back fast.'}],
@@ -270,7 +343,7 @@ const EV=[
  ['Accept',(s,a)=>{s.cash+=a;return `+${fmt(a)}. Rest easy, uncle.`}],
  ['Donate it all',()=>{add('hap',12);s.fol+=Math.round(s.fol*.03);return 'A generous choice. You feel wonderful.'}]]},
 {id:'celeb',w:1.5,c:s=>s.fol>100,t:'Celebrity quote-chirp',d:()=>`A famous ${pick(['rapper','actor','streamer','billionaire'])} quote-chirped your last post. Everyone is watching.`,def:1,ch:[
- ['Clap back 🔥',()=>{if(R()<.5){const f=Math.round(s.fol*.6+500);s.fol+=f;return `Legendary reply. <b>+${big(f)} followers</b>.`}const l=Math.round(s.fol*.2);s.fol-=l;add('hap',-8);return `You got ratio'd into oblivion. <b>-${big(l)} followers</b>.`}],
+ ['Clap back',()=>{if(R()<.5){const f=Math.round(s.fol*.6+500);s.fol+=f;return `Legendary reply. <b>+${big(f)} followers</b>.`}const l=Math.round(s.fol*.2);s.fol-=l;add('hap',-8);return `You got ratio'd into oblivion. <b>-${big(l)} followers</b>.`}],
  ['Stay wholesome',()=>{const f=Math.round(s.fol*.15+100);s.fol+=f;return `Classy. <b>+${big(f)} followers</b>.`}]]},
 {id:'scandal',w:1,c:s=>s.fol>5000,t:'Old chirps resurface',d:()=>'Someone dug up your cringe posts from years ago. The replies are brutal.',def:0,ch:[
  ['Apologize',()=>{const l=Math.round(s.fol*.08);s.fol-=l;return `The storm passes. <b>-${big(l)} followers</b>.`}],
@@ -288,7 +361,7 @@ const EV=[
  ['Quit & recharge',()=>{fire();add('hap',30);add('hea',5);return 'You quit. The sun already feels brighter.'}],
  ['Push through',()=>{add('hea',-10);return 'You keep grinding. Your body keeps the score.'}]]},
 {id:'marathon',w:1.5,c:()=>age()<60,t:'Marathon challenge',d:()=>'A friend dares you to train for a marathon together.',def:1,ch:[
- ['Lace up 🏃',()=>{add('hea',10);add('hap',5);add('loo',2);return 'You finished! Slowly. Proudly.'}],
+ ['Lace up',()=>{add('hea',10);add('hap',5);add('loo',2);return 'You finished! Slowly. Proudly.'}],
  ['Couch it',()=>'You cheer from the couch.']]},
 {id:'audit',w:1.5,c:()=>netWorth()>5e5,a:()=>Math.round(netWorth()*.004+2000),t:'Tax audit',d:(s,a)=>`The tax office wants to review your finances. A good accountant costs <b>${fmt(a)}</b>.`,def:1,ch:[
  ['Hire an accountant',(s,a)=>{s.cash-=a;return 'Everything checks out. Squeaky clean.'}],
@@ -303,7 +376,7 @@ const EV=[
  ['Go and flex',()=>{if(netWorth()>1e5){add('hap',10);return 'Everyone asks how you did it. You glow.'}add('hap',-6);return 'Everyone seems richer than you. Ouch.'}],
  ['Skip it',()=>'Some things are better left in the past.']]},
 {id:'pet',w:1,c:s=>!s.pet,t:'Stray kitten',d:()=>'A tiny kitten follows you home, meowing at your door.',def:0,ch:[
- ['Adopt 🐈',()=>{s.pet=1;add('hap',10);return 'You have a cat now. It owns you.'}],
+ ['Adopt',()=>{s.pet=1;add('hap',10);return 'You have a cat now. It owns you.'}],
  ['Take it to a shelter',()=>'It will find a good home.']]},
 ];
 const EVM=EM(EV.map(e=>[e.id,e]));
@@ -349,8 +422,8 @@ function day(){
   s.cash+=f.job+f.biz+f.spon-f.exp;
   for(const b of BIZ){const o=s.biz[b.id];if(o?.n&&!o.mgr){const g=bizInc(b,o);o.pend=Math.min(o.pend+g,g*CAP)}}
   if(s.cash<0){s.cash*=1.0003;add('hap',-.05)}
-  if(s.job){s.jobDays++;if(s.jobDays%120===0&&s.st.hap>20){s.rank++;log(`Promoted to <b>${jobTitle()}</b>! Now ${fmt(jobPay())}/day.`,'good');toast('🎉 Promotion!')}}
-  if(s.study&&--s.study.left<=0){const e=EDU[s.study.lvl];s.edu=s.study.lvl;add('sma',e.sma);s.study=null;log(`Graduated with a ${e.n} 🎓`,'good');toast('🎓 Graduated!')}
+  if(s.job){s.jobDays++;if(s.jobDays%120===0&&s.st.hap>20){s.rank++;log(`Promoted to <b>${jobTitle()}</b>! Now ${fmt(jobPay())}/day.`,'good');toast(' Promotion!')}}
+  if(s.study&&--s.study.left<=0){const e=EDU[s.study.lvl];s.edu=s.study.lvl;add('sma',e.sma);s.study=null;log(`Graduated with a ${e.n}`,'good');toast(' Graduated!')}
   const J=job();
   // stats drift toward a baseline, so an idle life is dull but survivable; choices push you above or below it
   add('hap',(50-s.st.hap)*.004-(J?J.str*.02:0)-(s.study?.03:0)+(s.rel?.03:0)+s.kids*.015+s.pet*.015+shopSum('hap'));
@@ -369,7 +442,7 @@ function day(){
 }
 function marketDay(quiet){
   const M=s.mkt;
-  if(R()<(M.bull?.003:.008)){M.bull=!M.bull;if(!quiet)chirp('@MarketWire','MarketWire',M.bull?'📈 analysts call it: a new bull market has begun.':'📉 stocks slide as recession fears grow. bear market territory.',1)}
+  if(R()<(M.bull?.003:.008)){M.bull=!M.bull;if(!quiet)chirp('@MarketWire','MarketWire',M.bull?' analysts call it: a new bull market has begun.':' stocks slide as recession fears grow. bear market territory.',1)}
   const m=(M.bull?.0005:-.0008)+gauss()*.007,sec={};
   for(const k of STOCKS){sec[k.sec]??=gauss()*.006;const q=s.px[k.t];q.o=q.p;q.p=Math.max(.01,q.p*Math.exp(k.mu-k.v*k.v/2+m*k.b+sec[k.sec]+k.v*gauss()));q.h.push(q.p);if(q.h.length>240)q.h.shift()}
   if(quiet)return;
@@ -377,18 +450,18 @@ function marketDay(quiet){
 }
 function shock(t,p){const q=s.px[t];q.p=Math.max(.01,q.p*(1+p));q.h[q.h.length-1]=q.p}
 function news(){const k=pick(STOCKS),up=R()<.55,p=(up?1:-1)*(.06+R()*.16);shock(k.t,p);chirp('@MarketWire','MarketWire',`$${k.t} ${up?'▲':'▼'} ${Math.abs(p*100).toFixed(0)}% — ${pick(up?GOOD:BAD).replace('{n}',k.n)}`,1)}
-function crash(){s.mkt.bull=false;for(const k of STOCKS)shock(k.t,-(.12+R()*.2));chirp('@MarketWire','MarketWire','🚨 FLASH CRASH: markets plunge across the board',1);log('The stock market crashed! 📉','bad');toast('🚨 Market crash!')}
+function crash(){s.mkt.bull=false;for(const k of STOCKS)shock(k.t,-(.12+R()*.2));chirp('@MarketWire','MarketWire',' FLASH CRASH: markets plunge across the board',1);log('The stock market crashed!','bad');toast(' Market crash!')}
 function dividends(){let t=0;for(const k of STOCKS){const h=s.port[k.t];if(h&&k.div)t+=h.sh*s.px[k.t].p*k.div/4}if(t>0){s.cash+=t;log(`Dividends paid: ${fmt(t)}`,'good')}}
 function npcChatter(){const[h,n]=pick(NPC);chirp(h,n,s.fol>300&&R()<.15?pick(ABOUT).replace('{h}',s.handle):pick(CHAT))}
 function runLater(p){
-  if(p.k==='cash'){s.cash+=p.v;log(`${p.m} ${fmt(p.v)} 💰`,'good');toast(`💰 ${p.m} ${fmt(p.v)}`)}
+  if(p.k==='cash'){s.cash+=p.v;log(`${p.m} ${fmt(p.v)}`,'good');toast(` ${p.m} ${fmt(p.v)}`)}
   else if(p.k==='shock'){shock(p.t,p.v);chirp('@MarketWire','MarketWire',`$${p.t} ${p.v>0?'rips':'tanks'} ${Math.round(Math.abs(p.v)*100)}% on rumors`,1)}
   else{log(p.m,'bad');toast(p.m)}
 }
 function newEvent(){
   const W=e=>typeof e.w==='function'?e.w(s):e.w,ok=EV.filter(e=>(!e.c||e.c(s))&&!s.inbox.some(i=>i.id===e.id));
   let r=R()*ok.reduce((t,e)=>t+W(e),0);
-  for(const e of ok)if((r-=W(e))<=0){s.inbox.push({id:e.id,d:s.day,a:e.a?e.a(s):0});toast('📨 A new decision is waiting');return}
+  for(const e of ok)if((r-=W(e))<=0){s.inbox.push({id:e.id,d:s.day,a:e.a?e.a(s):0});toast(' A new decision is waiting');return}
 }
 function die(){s.dead=1;log(`${esc(s.name)} passed away at ${Math.floor(age())}.`,'bad');save();deathModal()}
 function offline(ms){
@@ -396,7 +469,7 @@ function offline(ms){
   let g=0;for(const b of BIZ){const o=s.biz[b.id];if(!o?.n)continue;const i=bizInc(b,o);if(o.mgr)g+=i;else o.pend=Math.min(i*CAP,o.pend+i*sec*.1)}
   const earn=g*sec*.1;if(earn<1)return; // ponytail: offline = 10% of real-time managed income, no aging, 8h cap
   s.cash+=earn;log(`Your managers earned ${fmt(earn)} while you were away.`,'good');
-  modal(`<h2>Welcome back 👋</h2><p>You were away for <b>${dur(sec)}</b>. Your managers kept the lights on and earned <b class="up">${fmt(earn)}</b>.</p><button class="pri" data-a="close">Nice</button>`);
+  modal(`<h2>While you were out</h2><p>You were away for <b>${dur(sec)}</b>. Your managers kept the lights on and earned <b class="num">${fmt(earn)}</b>.</p><button class="pri" data-a="close">Nice</button>`);
 }
 const dur=sec=>sec<3600?`${Math.round(sec/60)}m`:`${Math.floor(sec/3600)}h ${Math.round(sec%3600/60)}m`;
 
@@ -406,15 +479,15 @@ const ACT={
   spd:x=>speed=+x,
   sel:x=>sel=x,
   close:()=>closeModal(),
-  act:id=>{const a=AM[id];if(s.day<(s.cd[id]||0)||s.cash<a.c)return;s.cash-=a.c;s.cd[id]=s.day+a.cd;toast(`${a.ic} ${a.fx()}`)},
+  act:id=>{const a=AM[id];if(s.day<(s.cd[id]||0)||s.cash<a.c)return;s.cash-=a.c;s.cd[id]=s.day+a.cd;toast(a.fx())},
   enroll:()=>{const e=EDU[s.edu+1];if(!e||s.study||s.cash<=0)return;s.cash-=e.cost;s.study={lvl:s.edu+1,left:e.days};log(`Enrolled in a ${e.n} (${e.days} days).`)},
-  apply:id=>{const j=JM[id];if(!canJob(j))return;s.job=id;s.rank=0;s.jobDays=0;log(`Hired as <b>${j.n}</b> ${j.ic}`,'good')},
+  apply:id=>{const j=JM[id];if(!canJob(j))return;s.job=id;s.rank=0;s.jobDays=0;log(`Hired as <b>${j.n}</b>`,'good')},
   quit:()=>{log(`Quit your job as ${jobTitle()}.`);fire()},
   gig:()=>{s.cash+=gig();s.gigs=(s.gigs||0)+1},
   bbuy:(id,x)=>{const b=BM[id],o=s.biz[id]??={n:0,mgr:0,pend:0,spent:0},q=x==='max'?bmax(b,o.n):+x;if(q<1)return;const c=bcost(b,o.n,q);if(c>s.cash)return;
     const first=!o.n;s.cash-=c;o.spent+=c;const before=bmul(o.n);o.n+=q;
-    if(first){log(`Opened your first ${b.n} ${b.ic}`,'good');if(s.fol>100&&R()<.6)chirp(...pick(NPC),`just walked past ${s.handle}'s new ${b.n.toLowerCase()} 👀 ${pick(['love to see it','entrepreneur arc','the grind pays'])}`)}
-    if(bmul(o.n)>before){log(`${b.n} milestone: ${o.n} units → income ×${bmul(o.n)}!`,'good');toast(`${b.ic} Milestone! Income ×2`)}},
+    if(first){log(`Opened your first ${b.n}`,'good');if(s.fol>100&&R()<.6)chirp(...pick(NPC),`just walked past ${s.handle}'s new ${b.n.toLowerCase()} ${pick(['love to see it','entrepreneur arc','the grind pays'])}`)}
+    if(bmul(o.n)>before){log(`${b.n} milestone: ${o.n} units → income ×${bmul(o.n)}!`,'good');toast(`${b.n} income doubled`)}},
   mgr:id=>{const b=BM[id],o=s.biz[id],c=b.cost*12;if(!o||o.mgr||s.cash<c)return;s.cash-=c;o.spent+=c;o.mgr=1;s.cash+=o.pend;o.pend=0;log(`Hired a manager for your ${b.n}. It runs itself now.`,'good')},
   col:id=>{const o=s.biz[id];s.cash+=o.pend;o.pend=0},
   colAll:()=>{for(const id in s.biz){s.cash+=s.biz[id].pend;s.biz[id].pend=0}},
@@ -427,15 +500,15 @@ const ACT={
     const gain=Math.round(bad?-s.fol*.03-5:reach*.07*(.5+q));s.fol=Math.max(0,s.fol+gain);
     const bz=BIZ.filter(b=>s.biz[b.id]?.n).pop();
     const x=pick(P.tx).replace('{nw}',fmt(netWorth())).replace('{stock}','$'+pick(STOCKS).t).replace('{biz}',bz?bz.n.toLowerCase():'business');
-    s.feed.unshift({h:s.handle,n:s.name,x,me:1,l:0,tl:Math.round(reach*(bad?.1:.3)),d:s.day,tag:bad?"ratio'd 💀":viral?'🔥 viral':''});
+    s.feed.unshift({h:s.handle,n:s.name,x,me:1,l:0,tl:Math.round(reach*(bad?.1:.3)),d:s.day,tag:bad?"ratio'd":viral?'went viral':'',bad:bad?1:0});
     if(k==='shill')s.boost=s.day+10;
     s.cd.post=s.day+4;s.lastPost=s.day;add('hap',bad?-5:2);
-    toast(`${P.ic} ${gain>=0?'+':''}${big(gain)} followers${viral?' — it went viral! 🔥':bad?' — backlash 💀':''}`);
-    if(viral)log(`Your ${P.n.toLowerCase()} went viral! +${big(gain)} followers 🔥`,'good')},
-  own:id=>{const i=SM[id];if(s.own[id]||s.cash<i.cost)return;s.cash-=i.cost;s.own[id]=1;add('hap',5);log(`Bought a ${i.n} ${i.ic}`,'good')},
+    toast(`${P.n}: ${gain>=0?'+':''}${big(gain)} followers${viral?', it went viral':bad?', and it backfired':''}`);
+    if(viral)log(`Your ${P.n.toLowerCase()} went viral! +${big(gain)} followers`,'good')},
+  own:id=>{const i=SM[id];if(s.own[id]||s.cash<i.cost)return;s.cash-=i.cost;s.own[id]=1;add('hap',5);log(`Bought ${art(i.n)}`,'good')},
   unown:id=>{if(!s.own[id])return;s.cash+=SM[id].cost*.6;delete s.own[id];log(`Sold your ${SM[id].n}.`)},
   inbox:()=>{const it=s.inbox[0];if(!it)return;const e=EVM[it.id];
-    modal(`<small class="mut">📨 Decision · ${30-(s.day-it.d)} days to decide</small><h2 style="margin-top:6px">${e.t}</h2><p>${e.d(s,it.a)}</p><div class="choices">${e.ch.map((c,i)=>`<button data-a="choose" data-x="${i}">${c[0]}</button>`).join('')}</div>`)},
+    modal(`<p class="kicker">${30-(s.day-it.d)} days left to decide</p><h2>${e.t}</h2><p>${e.d(s,it.a)}</p><div class="choices">${e.ch.map((c,i)=>`<button data-a="choose" data-x="${i}">${c[0]}</button>`).join('')}</div>`)},
   choose:i=>{const it=s.inbox.shift(),e=EVM[it.id],msg=e.c&&!e.c(s)?'The moment has passed.':e.ch[+i][1](s,it.a);log(`<b>${e.t}</b>: ${msg}`);
     modal(`<h2>${e.t}</h2><p>${msg}</p><button class="pri" data-a="${s.inbox.length?'inbox':'close'}">${s.inbox.length?'Next decision →':'OK'}</button>`)},
   reset:()=>modal(`<h2>Start over?</h2><p>This wipes your save for good.</p><div class="row"><button class="bad" data-a="wipe">Wipe my save</button><button data-a="close">Cancel</button></div>`),
@@ -451,141 +524,164 @@ function modal(h){$('#mbox').innerHTML=h;$('#modal').hidden=false}
 function closeModal(){$('#modal').hidden=true;render()}
 function startModal(h={}){
   heir=h;
-  modal(`<h2>${h.gen?`Generation ${h.gen} 🌱`:'Welcome to hustle<span class="up">.</span>'}</h2>
-  <p>${h.gen?`You inherit <b class="up">${fmt(h.inherit)}</b> and a permanent <b>+${(h.gen-1)*25}%</b> business income bonus.`:'You just turned 18. Work, study, build businesses, trade stocks, get famous — and make choices along the way. Time keeps moving, even when you don\'t.'}</p>
+  modal(`<p class="kicker">${h.gen?`Generation ${h.gen}`:'The Hustle'}</p><h2>${h.gen?'The family business continues':'You just turned eighteen'}</h2>
+  <p>${h.gen?`You inherit <b class="num">${fmt(h.inherit)}</b> and a permanent <b>+${(h.gen-1)*25}%</b> business income bonus.`:'Work, study, open businesses, trade stocks and build a following. Decisions will land on your desk along the way. One second is one day, and the clock keeps running.'}</p>
   <label>Your name<input id="nm" maxlength="20" value="${h.last?esc(h.last.split(' ')[0])+' Jr.':pick(NAMES)}"></label>
   <label>Pick your start</label>
-  <div class="bgs">${Object.entries(BG).map(([k,b])=>`<button data-a="begin" data-x="${k}"><span>${b.ic}</span><b>${b.n}</b><small>${b.d}</small></button>`).join('')}</div>`);
+  <div class="bgs">${Object.entries(BG).map(([k,b])=>`<button data-a="begin" data-x="${k}"><b>${b.n}</b><small>${b.d}</small></button>`).join('')}</div>`);
 }
 function deathModal(){
   const w=netWorth(),nb=BIZ.reduce((t,b)=>t+(s.biz[b.id]?.n||0),0);
-  modal(`<h2>🕯️ Rest in peace, ${esc(s.name)}</h2><p>You lived to <b>${Math.floor(age())}</b>.</p>
-  <table><tr><td>Net worth</td><td class="num">${fmt(w)}</td></tr><tr><td>Businesses</td><td>${nb}</td></tr><tr><td>Followers</td><td>${big(s.fol)}</td></tr><tr><td>Career</td><td>${s.job?jobTitle():'—'}</td></tr><tr><td>Family</td><td>${['Single','Partnered','Married'][s.rel]}${s.kids?`, ${s.kids} kid${s.kids>1?'s':''}`:''}</td></tr></table>
-  <p>Your heir inherits half your net worth: <b class="up">${fmt(Math.max(0,w*.5))}</b>.</p><button class="pri" data-a="heir">Continue as your heir →</button>`);
+  modal(`<p class="kicker">Obituary</p><h2>${esc(s.name)}, ${Math.floor(age())}</h2>
+  <table class="ledger"><tr><td>Net worth</td><td class="r num">${fmt(w)}</td></tr><tr><td>Businesses</td><td>${nb}</td></tr><tr><td>Followers</td><td>${big(s.fol)}</td></tr><tr><td>Career</td><td>${s.job?jobTitle():'—'}</td></tr><tr><td>Family</td><td>${['Single','Partnered','Married'][s.rel]}${s.kids?`, ${s.kids} kid${s.kids>1?'s':''}`:''}</td></tr></table>
+  <p style="margin-top:var(--space-sm)">Your heir inherits half your net worth: <b class="num">${fmt(Math.max(0,w*.5))}</b>.</p><button class="pri big" data-a="heir">Continue as your heir</button>`);
 }
 
 // ---------- views ----------
-const statBar=(k,n,c)=>`<div class="stat"><div class="row"><span>${n}</span><span class="num mut">${Math.round(s.st[k])}</span></div><div class="bar"><i style="width:${s.st[k]}%;background:${c}"></i></div></div>`;
+const meter=(v,c='')=>`<span class="meter ${c}"><i style="width:${clamp(v,0,100)}%"></i></span>`;
 const cdLeft=k=>Math.max(0,(s.cd[k]||0)-s.day);
+const art=w=>(/^(?:[aeio]|u(?!s))/i.test(w)?'an ':'a ')+w;
+const sign=(n,cls=true)=>`<span class="num${cls?n>=0?' up':' dn':''}">${n>=0?'+':''}${fmt(n)}</span>`;
+function lifeLine(){
+  const b=[s.job?`works as ${art(jobTitle())}`:'is between jobs',['is single','is seeing someone','is married'][s.rel]];
+  if(s.kids)b.push(`has ${s.kids===1?'one kid':s.kids+' kids'}`);
+  if(s.pet)b.push('lives with a cat');
+  return b.join(', ').replace(/, ([^,]*)$/,' and $1')+'.';
+}
 const VIEWS={
 life(){
-  const A=age(),f=flows(),e=EDU[s.edu+1],av=A>=60?'🧓':s.job?'🧑‍💼':'🧑';
-  return `<div class="grid2">
-   <div class="card profile"><div class="avatar">${av}</div><div><h2>${esc(s.name)}</h2><div class="mut">${s.handle} · Generation ${s.gen}</div>
-    <div class="chips"><span class="chip">🎓 ${EDU[s.edu].n}</span><span class="chip">${s.job?job().ic+' '+jobTitle():'Unemployed'}</span><span class="chip">${['💔 Single','💕 Dating','💍 Married'][s.rel]}</span>${s.kids?`<span class="chip">👶 ×${s.kids}</span>`:''}${s.pet?'<span class="chip">🐈 Cat</span>':''}</div></div></div>
-   <div class="card">${statBar('hea','❤️ Health','#ff6b8a')}${statBar('hap','😊 Happiness','#ffc857')}${statBar('sma','🧠 Smarts','#7c9cff')}${statBar('loo','✨ Looks','#ff7ab8')}</div>
-  </div>
-  <h3>Things to do</h3>
-  <div class="acts">${ACTS.filter(a=>!a.show||a.show()).map(a=>{const w=cdLeft(a.id);return `<button data-a="act" data-x="${a.id}" ${w||s.cash<a.c?'disabled':''}><b>${a.ic} ${a.n}</b><small>${a.c?fmt(a.c):'Free'} · ${w?`ready in ${w}d`:'ready'}</small></button>`}).join('')}</div>
-  <h3>Education</h3>
-  <div class="card">${s.study?`<div class="row between"><span>Studying for a <b>${EDU[s.study.lvl].n}</b></span><span class="mut">${s.study.left} days left</span></div><div class="bar"><i style="width:${100-s.study.left/EDU[s.study.lvl].days*100}%;background:var(--acc)"></i></div>`
-   :e?`<div class="row between"><span>Next: <b>${e.n}</b> <span class="mut">· ${e.days} days · +${e.sma} smarts · unlocks better jobs</span></span><button class="pri" data-a="enroll" ${s.cash<=0?'disabled':''}>Enroll · ${fmt(e.cost)}</button></div><div class="small mut" style="margin-top:6px">Short on cash? Tuition can put you into debt (student loan, ~11%/yr).</div>`
-   :'<span>🎓 You\'ve maxed out education. Doctor of everything.</span>'}</div>
-  <h3>Daily budget</h3>
-  <div class="card"><table>
-   <tr><td>💼 Salary</td><td class="up num">${fmt(f.job)}</td></tr>
-   <tr><td>🏪 Businesses (managed)</td><td class="up num">${fmt(f.biz)}</td></tr>
-   <tr><td>🏪 Businesses (to collect)</td><td class="gold num">${fmt(f.pend)}</td></tr>
-   <tr><td>🤝 Sponsorships</td><td class="up num">${fmt(f.spon)}</td></tr>
-   <tr><td>🧾 Living costs${SHOP.some(i=>i.home&&s.own[i.id])?'':' (incl. $30 rent)'}</td><td class="dn num">-${fmt(f.exp)}</td></tr>
-  </table></div>`;
+  const f=flows(),e=EDU[s.edu+1],home=SHOP.some(i=>i.home&&s.own[i.id]);
+  return `<section class="lede">
+    <div><h2 class="headline">${esc(s.name)}, ${Math.floor(age())}</h2>
+     <p class="dek">${esc(s.name)} ${lifeLine()} ${s.edu?`Holds ${art(EDU[s.edu].n)}.`:'Finished high school.'}</p></div>
+    <table class="stats">${[['hea','Health'],['hap','Happiness'],['sma','Smarts'],['loo','Looks']].map(([k,n])=>`<tr class="${s.st[k]<25?'low':''}"><th>${n}</th><td>${meter(s.st[k])}</td><td class="num">${Math.round(s.st[k])}</td></tr>`).join('')}</table>
+  </section>
+  <div class="cols">
+   <section><h3>Things to do</h3>
+    <table class="ledger"><thead><tr><th>Activity</th><th class="r">Cost</th><th>When</th><th></th></tr></thead><tbody>
+    ${ACTS.filter(a=>!a.show||a.show()).map(a=>{const w=cdLeft(a.id);return `<tr class="${w?'dim':''}"><td>${a.n}</td><td class="r num">${a.c?fmt(a.c):'free'}</td><td>${w?`in ${w}d`:'now'}</td><td class="act"><button data-a="act" data-x="${a.id}" ${w||s.cash<a.c?'disabled':''}>Do it</button></td></tr>`}).join('')}
+    </tbody></table></section>
+   <section><h3>Education</h3>
+    ${s.study?`<p>Studying for ${art(EDU[s.study.lvl].n)}. <span class="num">${s.study.left}</span> days to go.</p>${meter(100-s.study.left/EDU[s.study.lvl].days*100,'wide')}`
+     :e?`<p>Next up: ${art(e.n)}. Takes ${e.days} days, adds ${e.sma} smarts and unlocks better jobs. Tuition can put you in debt, at about 11% a year.</p><div class="row" style="margin-top:var(--space-xs)"><button class="pri" data-a="enroll" ${s.cash<=0?'disabled':''}>Enroll for ${fmt(e.cost)}</button></div>`
+     :'<p>Nothing left to study. You have the full set.</p>'}
+    <h3>Daily budget</h3>
+    <table class="ledger"><tbody>
+     <tr><td>Salary</td><td class="r">${sign(f.job)}</td></tr>
+     <tr><td>Managed businesses</td><td class="r">${sign(f.biz)}</td></tr>
+     <tr><td>Tills to collect</td><td class="r num warn">+${fmt(f.pend)}</td></tr>
+     <tr><td>Sponsorships</td><td class="r">${sign(f.spon)}</td></tr>
+     <tr><td>Living costs${home?'':', rent included'}</td><td class="r">${sign(-f.exp)}</td></tr>
+    </tbody></table></section>
+  </div>`;
 },
 work(){
   const J=job();
-  return `<h2>Work</h2>
-  <div class="grid2" style="margin-top:14px">
-   <div class="card">${J?`<div class="row between"><div><div class="mut small">Current job</div><h2>${J.ic} ${jobTitle()}</h2></div><button class="bad" data-a="quit">Quit</button></div>
-     <div class="row between" style="margin-top:12px"><span class="up num">${fmt(jobPay())}/day</span><span class="mut small">next promotion in ${120-s.jobDays%120}d${s.st.hap<=20?' · too unhappy to be promoted':''}</span></div>
-     <div class="bar"><i style="width:${s.jobDays%120/1.2}%"></i></div>`
-     :'<div class="mut small">Current job</div><h2>Unemployed</h2><p class="mut">Pick a job below to start earning a salary every day.</p>'}</div>
-   <div class="card row between"><div><div class="mut small">Side gigs</div><b class="num">+${fmt(gig())}</b> <span class="mut small">per gig · ${s.gigs||0} done</span></div><button class="pri gig" data-a="gig">⚡ Hustle</button></div>
-  </div>
+  return `<section class="lede">
+    <div><h2 class="headline">${J?jobTitle():'Out of work'}</h2>
+     <p class="dek">${J?`Paid <b class="num">${fmt(jobPay())}</b> a day. Next promotion in ${120-s.jobDays%120} days${s.st.hap<=20?', once your mood recovers':''}.`:'No salary coming in. Pick a position from the board below.'}</p>
+     ${J?`${meter(s.jobDays%120/1.2,'wide')}<button class="bad" data-a="quit">Resign</button>`:''}</div>
+    <div class="side"><p class="mut">Side gigs pay <b class="num">${fmt(gig())}</b> each. ${s.gigs?`${s.gigs} done so far.`:'Tap as often as you like.'}</p><button class="pri big" data-a="gig">Take a gig</button></div>
+  </section>
   <h3>Job board</h3>
-  <div class="grid">${JOBS.map(j=>{const ok=canJob(j),cur=s.job===j.id;return `<div class="card"><div class="row between"><b>${j.ic} ${j.n}</b><span class="up num">${fmt(j.pay)}/d</span></div>
-   <div class="small mut" style="margin:6px 0 10px">Needs ${EDU[j.e].n}${j.s?` · ${j.s} smarts`:''}${j.f?` · ${big(j.f)} followers`:''} · stress ${'●'.repeat(j.str)}</div>
-   <button ${ok&&!cur?'':'disabled'} data-a="apply" data-x="${j.id}" style="width:100%">${cur?'Current job':ok?'Apply':'Not qualified'}</button></div>`}).join('')}</div>`;
+  <div class="scroll"><table class="ledger"><thead><tr><th>Position</th><th>Requires</th><th class="r">Stress</th><th class="r">Per day</th><th></th></tr></thead><tbody>
+  ${JOBS.map(j=>{const ok=canJob(j),cur=s.job===j.id;return `<tr class="${ok||cur?'':'dim'}"><td><b>${j.n}</b></td><td>${EDU[j.e].n}${j.s?`, ${j.s} smarts`:''}${j.f?`, ${big(j.f)} followers`:''}</td><td class="r num">${j.str}/5</td><td class="r num">${fmt(j.pay)}</td>
+   <td class="act">${cur?'<span class="mut">Current</span>':`<button data-a="apply" data-x="${j.id}" ${ok?'':'disabled'}>Apply</button>`}</td></tr>`}).join('')}
+  </tbody></table></div>`;
 },
 biz(){
-  const f=flows(),pend=BIZ.reduce((t,b)=>t+(s.biz[b.id]?.pend||0),0),ownedIdx=BIZ.reduce((m,b,i)=>s.biz[b.id]?.n?i:m,-1);
-  return `<div class="row between"><h2>Businesses</h2>${s.day<s.boost?`<span class="chip up">📢 Promo boost +25% · ${s.boost-s.day}d</span>`:''}</div>
-  <div class="kpis"><div class="card"><small>Managed income</small><b class="up">${fmt(f.biz)}/d</b></div><div class="card"><small>Unmanaged income</small><b class="gold">${fmt(f.pend)}/d</b></div>
-   <div class="card row between"><div><small>Waiting to collect</small><b>${fmt(pend)}</b></div><button class="pri" data-a="colAll" ${pend<.01?'disabled':''}>Collect all</button></div></div>
-  <p class="mut small">Unmanaged businesses fill a till (max ${CAP} days of income) that you collect by hand. Hire a manager and it pays straight into your account — even while you're offline. Every milestone (${MILES.slice(0,5).join(', ')}…) doubles a business's income.</p>
-  <div class="grid">${BIZ.map((b,i)=>{const o=s.biz[b.id]||{n:0,pend:0,mgr:0};if(i>ownedIdx+1&&!o.n)return '';const n=o.n,g=n?bizInc(b,o):0,nm=MILES.find(m=>m>n),mc=b.cost*12,mx=bmax(b,n);
-    return `<div class="card biz ${!n&&s.cash<b.cost?'locked':''}"><div class="top"><div class="ic">${b.ic}</div><div style="flex:1;min-width:0"><div class="row between"><b>${b.n}</b><span class="chip">×${n}</span></div>
-     <div class="small"><span class="up num">${fmt(g)}/d</span> <span class="mut">· next ×2 at ${nm||'—'}</span></div></div></div>
-     ${n&&!o.mgr?`<div><div class="row between small"><span class="mut">Till</span><span class="gold num">${fmt(o.pend)}</span></div><div class="bar"><i style="width:${o.pend/(g*CAP)*100}%;background:var(--gold)"></i></div></div>`:''}
-     <div class="btns"><button data-a="bbuy" data-x="${b.id}" data-y="1" ${s.cash<bcost(b,n,1)?'disabled':''}>Buy ${fmt(bcost(b,n,1))}</button><button data-a="bbuy" data-x="${b.id}" data-y="10" title="${fmt(bcost(b,n,10))}" ${s.cash<bcost(b,n,10)?'disabled':''}>×10</button><button data-a="bbuy" data-x="${b.id}" data-y="max" ${mx<1?'disabled':''}>Max${mx>0?` (${mx})`:''}</button></div>
-     ${n?`<div class="btns">${o.mgr?'<button disabled>✅ Managed</button>':`<button data-a="col" data-x="${b.id}" ${o.pend<.01?'disabled':''}>Collect</button><button data-a="mgr" data-x="${b.id}" ${s.cash<mc?'disabled':''}>👔 Manager ${fmt(mc)}</button>`}</div>`:''}</div>`}).join('')}</div>`;
+  const f=flows(),pend=BIZ.reduce((t,b)=>t+(s.biz[b.id]?.pend||0),0),last=BIZ.reduce((m,b,i)=>s.biz[b.id]?.n?i:m,-1);
+  return `<section class="lede">
+    <div><h2 class="headline">Businesses</h2>
+     <p class="dek">Managed shops pay <b class="num">${fmt(f.biz)}</b> a day straight into your account. The rest earn <b class="num">${fmt(f.pend)}</b> a day into tills that stop filling after ${CAP} days.${s.day<s.boost?` Your promotion adds 25% for ${s.boost-s.day} more days.`:''}</p></div>
+    <div class="side"><p class="mut"><span class="figure">${fmt(pend)}</span><br>waiting in tills</p><button class="pri" data-a="colAll" ${pend<.01?'disabled':''}>Collect all</button></div>
+  </section>
+  <div class="scroll"><table class="ledger"><thead><tr><th>Business</th><th class="r">Owned</th><th class="r">Per day</th><th>Till</th><th class="r">Next unit</th><th></th></tr></thead><tbody>
+  ${BIZ.map((b,i)=>{const o=s.biz[b.id]||{n:0,pend:0,mgr:0};if(i>last+1&&!o.n)return '';const n=o.n,g=n?bizInc(b,o):0,nm=MILES.find(m=>m>n),mc=b.cost*12,mx=bmax(b,n),c1=bcost(b,n,1),c10=bcost(b,n,10);
+    return `<tr class="${n?'':'dim'}"><td><b>${b.n}</b><div class="sub">${nm?`doubles at ${nm}`:'fully doubled'}</div></td><td class="r num">${n}</td><td class="r num ${g?'up':''}">${fmt(g)}</td>
+     <td>${!n?'':o.mgr?'<span class="mut">managed</span>':`<span class="num warn">${fmt(o.pend)}</span>${meter(o.pend/(g*CAP)*100,'warn')}`}</td>
+     <td class="r num">${fmt(c1)}</td>
+     <td class="act"><button data-a="bbuy" data-x="${b.id}" data-y="1" ${s.cash<c1?'disabled':''}>Buy</button><button data-a="bbuy" data-x="${b.id}" data-y="10" title="${fmt(c10)}" ${s.cash<c10?'disabled':''}>×10</button><button data-a="bbuy" data-x="${b.id}" data-y="max" ${mx<1?'disabled':''}>Max${mx>0?` ${mx}`:''}</button>${n&&!o.mgr?`<button data-a="col" data-x="${b.id}" ${o.pend<.01?'disabled':''}>Collect</button><button class="pri" data-a="mgr" data-x="${b.id}" ${s.cash<mc?'disabled':''}>Hire manager ${fmt(mc)}</button>`:''}</td></tr>`}).join('')}
+  </tbody></table></div>
+  <p class="note">Every milestone (${MILES.slice(0,5).join(', ')} and on) doubles a business's income. Managers keep earning while you're away.</p>`;
 },
 stock(){
   const k=SK[sel],q=s.px[sel],h=s.port[sel],M=s.mkt;
   let val=0,cost=0;for(const t in s.port){val+=s.port[t].sh*s.px[t].p;cost+=s.port[t].cost}
   const d=q.p/q.o-1,d30=q.p/q.h[Math.max(0,q.h.length-31)]-1,maxN=Math.floor(s.cash/q.p);
-  return `<div class="row between"><h2>Stock market</h2><span class="chip ${M.bull?'up':'dn'}">${M.bull?'🐂 Bull market':'🐻 Bear market'}</span></div>
-  <div class="kpis"><div class="card"><small>Portfolio</small><b>${fmt(val)}</b></div><div class="card"><small>Unrealized P/L</small><b class="${val>=cost?'up':'dn'}">${val>=cost?'+':''}${fmt(val-cost)}</b></div><div class="card"><small>Buying power</small><b>${fmt(s.cash)}</b></div></div>
+  return `<section class="lede">
+    <div><h2 class="headline">Markets</h2>
+     <p class="dek">${M.bull?'A bull market. Prices are drifting up.':'A bear market. Prices are sliding.'} ${val?`Your portfolio is worth <b class="num">${fmt(val)}</b>, ${sign(val-cost)} against what you paid.`:'You hold no shares yet.'}</p></div>
+    <div class="side"><p class="mut"><span class="figure">${fmt(s.cash)}</span><br>buying power</p></div>
+  </section>
   <div class="mkt">
-   <div class="card list">${STOCKS.map(k=>{const q=s.px[k.t],d=q.p/q.o-1;return `<button class="srow ${k.t===sel?'on':''}" data-a="sel" data-x="${k.t}"><b class="${s.port[k.t]?'held':''}">${k.t}</b><span class="nm">${k.n}</span><span class="r num">${fmt(q.p)}</span><span class="r num ${d>=0?'up':'dn'}">${pct(d)}</span></button>`}).join('')}</div>
-   <div class="card">
-    <div class="row between"><div><b>${k.n}</b> <span class="mut">$${k.t} · ${k.sec}${k.div?` · ${(k.div*100).toFixed(1)}% div`:''}</span></div></div>
-    <div class="row" style="align-items:baseline;margin-top:4px"><span class="num" style="font:600 28px 'Space Grotesk'">${fmt(q.p)}</span><span class="num ${d>=0?'up':'dn'}">${pct(d)} today</span><span class="num mut small">${pct(d30)} 30d</span></div>
+   <table class="ledger"><thead><tr><th>Ticker</th><th>Company</th><th class="r">Last</th><th class="r">Day</th></tr></thead><tbody>
+   ${STOCKS.map(k=>{const q=s.px[k.t],d=q.p/q.o-1;return `<tr class="pick ${k.t===sel?'on':''}" data-a="sel" data-x="${k.t}" tabindex="0"><td><b>${k.t}</b>${s.port[k.t]?' <span class="mut">·held</span>':''}</td><td class="mut">${k.n}</td><td class="r num">${fmt(q.p)}</td><td class="r num ${d>=0?'up':'dn'}">${pct(d)}</td></tr>`}).join('')}
+   </tbody></table>
+   <section>
+    <h3 style="margin-top:0">${k.n}</h3>
+    <p class="mut">${k.t} · ${k.sec}${k.div?` · pays ${(k.div*100).toFixed(1)}% a year in dividends`:''}</p>
+    <p style="margin-top:var(--space-2xs)"><span class="price">${fmt(q.p)}</span> <span class="num ${d>=0?'up':'dn'}">${pct(d)}</span> <span class="mut">today, ${pct(d30)} over 30 days</span></p>
     <canvas id="chart"></canvas>
-    ${h?`<div class="row between small"><span>You own <b>${big(h.sh)}</b> @ avg ${fmt(h.cost/h.sh)}</span><span class="num ${h.sh*q.p>=h.cost?'up':'dn'}">${fmt(h.sh*q.p)} (${pct(h.sh*q.p/h.cost-1)})</span></div>`:'<div class="small mut">You don\'t own any shares yet.</div>'}
-    <div class="trade">${['1','10','100'].map(n=>`<button data-a="buy" data-x="${sel}" data-y="${n}" ${maxN<+n?'disabled':''}>Buy ${n}</button>`).join('')}<button class="pri" data-a="buy" data-x="${sel}" data-y="max" ${maxN<1?'disabled':''}>Max</button>
+    <p>${h?`You own <b class="num">${big(h.sh)}</b> at an average of <span class="num">${fmt(h.cost/h.sh)}</span>, now worth <b class="num">${fmt(h.sh*q.p)}</b> (<span class="num ${h.sh*q.p>=h.cost?'up':'dn'}">${pct(h.sh*q.p/h.cost-1)}</span>).`:'<span class="mut">You own none of this one.</span>'}</p>
+    <div class="trade">${['1','10','100'].map(n=>`<button data-a="buy" data-x="${sel}" data-y="${n}" ${maxN<+n?'disabled':''}>Buy ${n}</button>`).join('')}<button class="pri" data-a="buy" data-x="${sel}" data-y="max" ${maxN<1?'disabled':''}>Buy max</button>
      ${['1','10','100'].map(n=>`<button data-a="sell" data-x="${sel}" data-y="${n}" ${!h||h.sh<+n?'disabled':''}>Sell ${n}</button>`).join('')}<button class="bad" data-a="sell" data-x="${sel}" data-y="all" ${h?'':'disabled'}>Sell all</button></div>
-   </div>
+   </section>
   </div>`;
 },
 chirp(){
   const w=cdLeft('post'),sp=sponsor();
-  return `<div class="chirp">
-   <div class="card row"><div class="av" style="width:56px;height:56px;font-size:22px;background:hsl(${hue(s.handle)} 55% 42%)">${esc(s.name[0])}</div>
-    <div style="flex:1"><b>${esc(s.name)}</b> <span class="mut">${s.handle}</span><div class="row" style="gap:18px;margin-top:4px"><span><b class="num" style="font:600 20px 'Space Grotesk'">${big(s.fol)}</b> <span class="mut">followers</span></span><span class="small ${sp?'up':'mut'}">${sp?`🤝 ${fmt(sp)}/day sponsorships`:`sponsors unlock at 1K followers`}</span></div></div></div>
-   <div class="card"><div class="mut" style="margin-bottom:10px">What's happening? ${w?`<span class="small">· next post in ${w}d</span>`:''}</div>
-    <div class="acts">${Object.entries(POSTS).map(([k,P])=>{const ok=!w&&(!P.need||P.need());return `<button data-a="post" data-x="${k}" ${ok?'':'disabled'}><b>${P.ic} ${P.n}</b><small>${P.why||(P.risk?'Smarts · risky':P.viral?'High viral chance':'Looks')}</small></button>`}).join('')}</div></div>
-   <div class="card feed">${s.feed.map(p=>`<div class="post ${p.me?'mine':''}"><div class="av" style="background:hsl(${hue(p.h)} 50% 40%)">${esc(p.n[0])}</div><div style="min-width:0">
-     <div class="small"><b>${esc(p.n)}</b>${p.v?' <span class="ver">✓</span>':''} <span class="mut">${p.h} · ${s.day-p.d?`${s.day-p.d}d`:'now'}</span>${p.tag?`<span class="tag">${p.tag}</span>`:''}</div>
-     <div class="txt">${esc(p.x)}</div><div class="small mut">♥ ${big(p.l)}</div></div></div>`).join('')}</div>
-  </div>`;
+  return `<div class="chirp"><section class="lede" style="grid-template-columns:minmax(0,1fr)">
+    <div><h2 class="headline">Chirp</h2>
+     <p class="dek">${esc(s.name)} posts as ${s.handle} to <b class="num">${big(s.fol)}</b> followers. ${sp?`Sponsors pay <b class="num">${fmt(sp)}</b> a day.`:'Sponsors start paying at 1K followers.'}</p></div></section>
+   <div class="compose"><p class="mut">${w?`You can post again in ${w} day${w>1?'s':''}.`:'Selfies ride on looks. Hot takes ride on smarts and can backfire. Memes go viral more often. Flexes need $25K net worth. Promotions lift business income 25% for 10 days.'}</p>
+    ${Object.entries(POSTS).map(([k,P])=>`<button data-a="post" data-x="${k}" ${!w&&(!P.need||P.need())?'':'disabled'}>${P.n}</button>`).join('')}</div>
+   <ol class="feed">${s.feed.map(p=>`<li class="post ${p.me?'mine':''}"><span class="av">${esc(p.n[0].toUpperCase())}</span><div>
+     <div class="by"><b>${esc(p.n)}</b>${p.v?' <span class="ver" title="Verified">✓</span>':''} <span class="mut">${p.h} · ${s.day-p.d?`${s.day-p.d}d`:'now'}</span>${p.tag?`<span class="tag ${p.bad?'dn':''}">${p.tag}</span>`:''}</div>
+     <p>${esc(p.x)}</p><div class="mut num" style="font-size:var(--text-xs)">${big(p.l)} likes</div></div></li>`).join('')}</ol></div>`;
 },
 shop(){
-  return `<h2>Lifestyle</h2><p class="mut">Nice things make you happier every day, and flashy ones earn you followers. They cost upkeep, though. Owning a home saves you $30/day in rent. Sell anytime for 60%.</p>
-  <div class="grid">${SHOP.map(i=>{const o=s.own[i.id];return `<div class="card"><div class="row between"><b>${i.ic} ${i.n}</b><span class="num">${fmt(i.cost)}</span></div>
-   <div class="small mut" style="margin:6px 0 10px">+${Math.round(i.hap/.004)} mood${i.fame?` · +${big(i.fame*365)} followers/yr`:''}${i.up?` · upkeep ${fmt(i.up)}/d`:''}${i.home?' · 🏠 home':''}</div>
-   ${o?`<button class="bad" data-a="unown" data-x="${i.id}" style="width:100%">Sell for ${fmt(i.cost*.6)}</button>`:`<button class="pri" data-a="own" data-x="${i.id}" style="width:100%" ${s.cash<i.cost?'disabled':''}>Buy</button>`}</div>`}).join('')}</div>`;
+  return `<section class="lede"><div><h2 class="headline">Lifestyle</h2>
+    <p class="dek">Nice things lift your everyday mood, and flashy ones pull in followers. All of them cost upkeep. Owning a home saves $30 a day in rent. Sell anything back for 60%.</p></div></section>
+  <div class="scroll"><table class="ledger"><thead><tr><th>Item</th><th class="r">Price</th><th class="r">Mood</th><th class="r">Followers a year</th><th class="r">Upkeep a day</th><th></th></tr></thead><tbody>
+  ${SHOP.map(i=>{const o=s.own[i.id];return `<tr class="${o||s.cash>=i.cost?'':'dim'}"><td><b>${i.n}</b>${i.home?' <span class="mut">· home</span>':''}</td><td class="r num">${fmt(i.cost)}</td><td class="r num">+${Math.round(i.hap/.004)}</td><td class="r num">${i.fame?big(i.fame*365):'—'}</td><td class="r num">${i.up?fmt(i.up):'—'}</td>
+   <td class="act">${o?`<button class="bad" data-a="unown" data-x="${i.id}">Sell for ${fmt(i.cost*.6)}</button>`:`<button class="pri" data-a="own" data-x="${i.id}" ${s.cash<i.cost?'disabled':''}>Buy</button>`}</td></tr>`}).join('')}
+  </tbody></table></div>`;
 },
 };
-const TABS=[['life','🧍 Life'],['work','💼 Work'],['biz','🏪 Business'],['stock','📈 Stocks'],['chirp','🐦 Chirp'],['shop','🛍️ Lifestyle']];
+const TABS=[['life','Life'],['work','Work'],['biz','Business'],['stock','Markets'],['chirp','Chirp'],['shop','Lifestyle']];
 
 function hdr(){
   if(!s)return;const f=flows(),net=f.job+f.biz+f.pend+f.spon-f.exp;
+  $('#dateline').textContent=`Year ${Math.floor(s.day/365)+1}, day ${s.day%365+1} · generation ${s.gen}`;
   $('#hCash').textContent=fmt(s.cash);$('#hCash').className=s.cash<0?'dn':'';
   $('#hNw').textContent=fmt(netWorth());
   $('#hInc').textContent=(net>=0?'+':'')+fmt(net);$('#hInc').className=net>=0?'up':'dn';
-  $('#hAge').textContent=`${Math.floor(age())}y ${s.day%365}d`;
-  const n=s.inbox.length,ib=$('#inboxBtn');ib.hidden=!n;ib.textContent=`📨 ${n} decision${n>1?'s':''}`;
-  $('#speed').innerHTML=[[0,'⏸'],[1,'1×'],[2,'2×'],[5,'5×'],[10,'10×']].map(([v,l])=>`<button class="${speed===v?'on':''}" data-a="spd" data-x="${v}">${l}</button>`).join('');
-  $('#log').innerHTML=s.log.map(l=>`<div class="lg ${l.k}"><small>${Math.floor(s.startAge+l.d/365)}y</small>${l.t}</div>`).join('');
+  $('#hAge').textContent=Math.floor(age());
+  const n=s.inbox.length,ib=$('#inboxBtn');ib.hidden=!n;ib.textContent=`${n} decision${n>1?'s':''} waiting`;
+  $('#speed').innerHTML=[[0,'Pause'],[1,'1×'],[2,'2×'],[5,'5×'],[10,'10×']].map(([v,l])=>`<button class="${speed===v?'on':''}" data-a="spd" data-x="${v}">${l}</button>`).join('');
+  $('#log').innerHTML=s.log.map(l=>`<div class="lg ${l.k}"><small>${Math.floor(s.startAge+l.d/365)}</small><span>${l.t}</span></div>`).join('');
 }
 function render(){
   if(!s)return;hdr();
-  $('#nav').innerHTML=TABS.map(([k,l])=>`<button class="${tab===k?'on':''}" data-a="tab" data-x="${k}">${l}</button>`).join('')+'<div class="spacer"></div><button class="reset" data-a="reset">↺ New life</button>';
+  $('#nav').innerHTML=TABS.map(([k,l])=>`<button class="${tab===k?'on':''}" data-a="tab" data-x="${k}">${l}</button>`).join('')+'<button class="reset" data-a="reset">Start a new life</button>';
   $('#view').innerHTML=VIEWS[tab]();
   if(tab==='stock')drawChart();
 }
 function drawChart(){
   const c=$('#chart');if(!c)return;const dpr=devicePixelRatio||1,W=c.clientWidth,H=c.clientHeight;c.width=W*dpr;c.height=H*dpr;
+  const T=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
   const g=c.getContext('2d');g.scale(dpr,dpr);const h=s.px[sel].h,lo=Math.min(...h),hi=Math.max(...h),P=6;
-  const X=i=>P+i/(h.length-1)*(W-P*2),Y=v=>H-P-(v-lo)/(hi-lo||1)*(H-P*2-12);
-  const col=h[h.length-1]>=h[0]?'#4ade9b':'#ff6b6b',gr=g.createLinearGradient(0,0,0,H);gr.addColorStop(0,col+'44');gr.addColorStop(1,col+'00');
-  g.beginPath();h.forEach((v,i)=>i?g.lineTo(X(i),Y(v)):g.moveTo(X(i),Y(v)));g.strokeStyle=col;g.lineWidth=2;g.lineJoin='round';g.stroke();
-  g.lineTo(X(h.length-1),H);g.lineTo(X(0),H);g.fillStyle=gr;g.fill();
-  const p=s.port[sel];if(p){const a=p.cost/p.sh;if(a>=lo&&a<=hi){g.setLineDash([4,4]);g.strokeStyle='#8b94a3';g.lineWidth=1;g.beginPath();g.moveTo(P,Y(a));g.lineTo(W-P,Y(a));g.stroke();g.setLineDash([])}}
-  g.fillStyle='#8b94a3';g.font='11px Inter,sans-serif';g.fillText(`${fmt(hi)} · ${h.length}d high`,P,11);g.fillText(fmt(lo),P,H-4);
+  const X=i=>P+i/(h.length-1)*(W-P*2),Y=v=>H-P-(v-lo)/(hi-lo||1)*(H-P*2-14);
+  g.beginPath();h.forEach((v,i)=>i?g.lineTo(X(i),Y(v)):g.moveTo(X(i),Y(v)));
+  g.strokeStyle=T(h[h.length-1]>=h[0]?'--color-up':'--color-down');g.lineWidth=1.5;g.lineJoin='round';g.stroke();
+  const p=s.port[sel];if(p){const a=p.cost/p.sh;if(a>=lo&&a<=hi){g.setLineDash([3,4]);g.strokeStyle=T('--color-ink-3');g.lineWidth=1;g.beginPath();g.moveTo(P,Y(a));g.lineTo(W-P,Y(a));g.stroke();g.setLineDash([]);g.fillStyle=T('--color-ink-3');g.font=`11px ${T('--font-mono')}`;g.fillText('your average',W-P-80,Y(a)-4)}}
+  g.fillStyle=T('--color-ink-2');g.font=`11px ${T('--font-mono')}`;g.fillText(`${fmt(hi)} · ${h.length}-day high`,P,12);g.fillText(`${fmt(lo)} low`,P,H-5);
 }
 
 // ---------- loop, input, save ----------
 document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b||b.disabled)return;ACT[b.dataset.a](b.dataset.x,b.dataset.y);if(s&&$('#modal').hidden)render();else hdr()});
+document.addEventListener('keydown',e=>{const r=e.target.closest?.('tr[data-a]');if(r&&(e.key==='Enter'||e.key===' ')){e.preventDefault();r.click()}});
 addEventListener('pointerdown',()=>holding=true);
 addEventListener('pointerup',()=>holding=false);addEventListener('pointercancel',()=>holding=false);
 let last=performance.now(),acc=0;
