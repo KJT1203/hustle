@@ -154,7 +154,31 @@ input:focus-visible{outline:2px solid var(--color-focus);outline-offset:1px}
 @keyframes slip{from{opacity:0;transform:translateY(.5rem)}}
 @media (prefers-reduced-motion:reduce){.toast{animation:none}button{transition:none}}
 
-@media (max-width:1100px){.mkt,.cols{grid-template-columns:minmax(0,1fr);gap:0}}
+/* casino */
+.casino{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 var(--space-xl)}
+.casino .wide{grid-column:1/-1}
+.chips{gap:var(--space-3xs)}
+.chips button{padding:.4rem .55rem}
+.chips button.on{background:var(--color-ink);border-color:var(--color-ink);color:var(--color-paper)}
+.felt{border-top:var(--rule);border-bottom:var(--rule);padding:var(--space-xs) 0;min-height:10.5rem}
+.hand{display:grid;grid-template-columns:5.5rem minmax(0,1fr);align-items:center;gap:var(--space-sm);padding:var(--space-2xs) 0}
+.pc{vertical-align:top;display:inline-grid;place-items:center;width:2.6rem;height:3.6rem;margin:0 var(--space-2xs) var(--space-3xs) 0;border:var(--rule-ink);border-radius:var(--radius);background:var(--color-paper-2);font:600 var(--text-md) var(--font-display)}
+.pc.red{color:var(--color-down)}
+.pc.back{background:repeating-linear-gradient(45deg,var(--color-rule) 0 4px,var(--color-paper-2) 4px 8px)}
+.result{margin:var(--space-xs) 0;color:var(--color-ink-2);min-height:1.5em}
+.result b{color:var(--color-ink)}
+.reels{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:var(--rule);border-bottom:var(--rule)}
+.reels span{display:grid;place-items:center;height:5.5rem;font:700 var(--text-xl) var(--font-display);border-right:var(--rule)}
+.reels span:last-child{border-right:0}
+.rn{display:inline-grid;place-items:center;min-width:2.25rem;height:2.25rem;padding:0;font:600 var(--text-sm) var(--font-mono)}
+.rn.red{color:var(--color-down)}.rn.g{color:var(--color-up)}
+.wheel{display:flex;align-items:center;gap:var(--space-md);flex-wrap:wrap}
+.rn.big{width:4.5rem;height:4.5rem;font-size:var(--text-xl);border:var(--rule-ink)}
+.hist{display:flex;gap:var(--space-3xs);flex-wrap:wrap}
+.hist .rn{border:var(--rule);min-width:1.9rem;height:1.9rem;font-size:var(--text-xs)}
+.board{display:grid;grid-template-columns:repeat(13,2.25rem);gap:var(--space-3xs);margin-top:var(--space-sm)}
+.board .g{grid-row:1/4;height:auto}
+@media (max-width:1100px){.mkt,.cols,.casino{grid-template-columns:minmax(0,1fr);gap:0}}
 @media (max-width:860px){
   body{height:auto;overflow:visible}
   .mast{padding:var(--space-sm) var(--space-sm) 0}
@@ -245,7 +269,6 @@ const STOCKS=[
  {t:'LUXE',n:'Luxe Maison',sec:'Consumer',p:210,v:.02,mu:.0005,b:1},
  {t:'MEDI',n:'MediCore',sec:'Health',p:95,v:.022,mu:.00055,b:.7},
  {t:'BANC',n:'Banco Unido',sec:'Finance',p:60,v:.015,mu:.0003,b:1.1,div:.04},
- {t:'MOON',n:'MoonCoin',sec:'Crypto',p:1.2,v:.075,mu:.003,b:2.2},
 ];
 const SHOP=[
  {id:'bike',n:'Bicycle',cost:300,up:0,hap:.02,fame:0},
@@ -313,6 +336,21 @@ const POSTS={
  flex:{n:'Flex',q:()=>Math.min(100,Math.log10(Math.max(1,netWorth()))*12),need:()=>netWorth()>=25000,why:'Net worth $25K+',tx:['just checked my portfolio 📈 net worth: {nw}','hard work pays off. that\'s the post.','they said i couldn\'t. i did. 🏆','new week, new money 💸']},
  shill:{n:'Promote biz',q:()=>40,need:()=>BIZ.some(b=>s.biz[b.id]?.n),why:'Own a business · +25% biz income 10d',tx:['come through to my {biz}! first 10 customers get 20% off','my {biz} is hiring! DM me','new menu at my {biz} 👀','proud of what we built at {biz} 🙌']},
 };
+// crypto: b = sensitivity to the crypto cycle; meme coins can moon or get rugged; the stablecoin holds $1 and pays apy
+const COINS=[
+ {t:'SATS',n:'Satoshi Gold',p:42000,v:.035,mu:.0008,b:1},
+ {t:'GAS',n:'Gasnet',p:2400,v:.045,mu:.0011,b:1.2},
+ {t:'SOLR',n:'Solar Chain',p:95,v:.06,mu:.002,b:1.4},
+ {t:'LINKD',n:'Linkd Oracle',p:14,v:.06,mu:.0019,b:1.3},
+ {t:'WOOF',n:'Woofcoin',p:.12,v:.08,mu:.0025,b:1.8,meme:1},
+ {t:'MOON',n:'MoonCoin',p:1.2,v:.075,mu:.0026,b:2,meme:1},
+ {t:'USDH',n:'Hustle Dollar',p:1,v:0,mu:0,b:0,stable:1,apy:.06},
+];
+const MEME=['PUG','ZAP','YOLO','GIGA','CHAD','NYAN','BLOB','HODL','WAGMI','COPE','SNEK','TURBO','BEANS','GOOB','MEOW','DEGEN','FOMO','BRRR'];
+const CHIPS=[10,100,1000,1e4,1e5,1e6],RK=['','A','2','3','4','5','6','7','8','9','10','J','Q','K'],ST=['♠','♥','♦','♣'];
+const SLOT=[['7',2,150],['BAR',4,40],['★',6,15],['♦',8,8],['♣',10,4]]; // symbol, reel weight, three-of-a-kind multiplier
+const RED=new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
+const RBETS=[['red','Red'],['black','Black'],['odd','Odd'],['even','Even'],['low','1–18'],['high','19–36'],['d1','1st 12'],['d2','2nd 12'],['d3','3rd 12']];
 const EM=Object.fromEntries,JM=EM(JOBS.map(j=>[j.id,j])),BM=EM(BIZ.map(b=>[b.id,b])),SK=EM(STOCKS.map(k=>[k.t,k])),SM=EM(SHOP.map(i=>[i.id,i])),AM=EM(ACTS.map(a=>[a.id,a])),PM=EM(PROPS.map(p=>[p.id,p])),CM=EM(CARS.map(c=>[c.id,c]));
 
 // ---------- events (choices) ----------
@@ -410,6 +448,15 @@ const EV=[
 {id:'collector',w:1.2,c:s=>s.cars.some(c=>CM[c.t].vol),a:s=>{const c=s.cars.find(c=>CM[c.t].vol);return {u:c.uid,n:CM[c.t].n.toLowerCase(),p:Math.round(c.v*(1.25+R()*.4))}},t:'A collector calls',d:(s,a)=>`A collector offers <b>${fmt(a.p)}</b> for your ${a.n}, well above what it would fetch at auction.`,def:1,ch:[
  ['Sell it',(s,a)=>{const i=s.cars.findIndex(c=>c.uid===a.u);if(i<0)return 'You already sold it.';s.cars.splice(i,1);s.cash+=a.p;return `Sold for ${fmt(a.p)}.`}],
  ['Not for sale',()=>{add('hap',2);return 'Some things are worth keeping.'}]]},
+{id:'chasing',w:4,c:s=>s.cz.net<-Math.max(20000,netWorth()*.1)&&s.day>=s.cz.ban,t:'Chasing losses',d:()=>`You're down <b>${fmt(-s.cz.net)}</b> at the casino, and you keep going back to win it back.`,def:1,ch:[
+ ['Ban myself for a year',()=>{s.cz.ban=s.day+365;s.cz.net=0;add('hap',6);return 'The casino has your photo at the door now. It feels like a weight lifted.'}],
+ ['One big win will fix it',()=>{add('hap',-6);return 'You tell yourself it is fine.'}]]},
+{id:'seed',w:2,c:()=>walletVal()>2000,t:'Wallet support',d:()=>'Someone from "Hustle Wallet Support" DMs you. Your account has been flagged, they say, and they need your seed phrase to secure it.',def:1,ch:[
+ ['Send the phrase',()=>{const v=walletVal();s.wallet={};add('hap',-15);return `It was a scam. They emptied your wallet: ${fmt(v)} gone.`}],
+ ['Block and report',()=>'Nobody real ever asks for your seed phrase. Blocked.']]},
+{id:'airdrop',w:1.5,c:s=>Object.keys(s.wallet).length,a:s=>({t:pick(s.cx.coins.filter(c=>!c.dead&&!c.stable)).t,v:rint(50,2000)}),t:'Free airdrop',d:(s,a)=>`A site says you qualify for a free <b>${fmt(a.v)}</b> of $${a.t}. You just need to connect your wallet.`,def:1,ch:[
+ ['Connect and claim',(s,a)=>{if(R()<.35){const v=walletVal()*.3;for(const k in s.wallet)s.wallet[k].u*=.7;add('hap',-8);return `It was a wallet drainer. It took ${fmt(v)}.`}const c=coin(a.t);if(!c)return 'The coin is gone.';const w=s.wallet[a.t]??={u:0,c:0};w.u+=a.v/c.p;return `Legit, somehow. ${fmt(a.v)} of $${a.t} landed in your wallet.`}],
+ ['Close the tab',()=>'Probably wise.']]},
 {id:'pet',w:1,c:s=>!s.pet,t:'Stray kitten',d:()=>'A tiny kitten follows you home, meowing at your door.',def:0,ch:[
  ['Adopt',()=>{s.pet=1;add('hap',10);return 'You have a cat now. It owns you.'}],
  ['Take it to a shelter',()=>'It will find a good home.']]},
@@ -418,7 +465,7 @@ const EVM=EM(EV.map(e=>[e.id,e]));
 
 // ---------- state ----------
 const SAVE='hustle-v1',GROW=1.13,CAP=10,MILES=[10,25,50,100,150,200,300,400,500];
-let s=null,tab='life',sel='NOVA',speed=1,holding=false,wiped=false,heir={},hiddenAt=0;
+let s=null,tab='life',sel='NOVA',csel='SATS',speed=1,holding=false,wiped=false,heir={},hiddenAt=0;
 const age=()=>s.startAge+s.day/365;
 const add=(k,v)=>s.st[k]=clamp(s.st[k]+v,0,100);
 const job=()=>s.job&&JM[s.job];
@@ -447,16 +494,59 @@ const expenses=()=>15+(homeP()?0:30)+s.kids*35+(s.rel===2?10:0)+upkeep();
 const canBorrow=L=>{const f=flows();return mpay(L)+f.mort<=(f.job+f.biz+f.rent)*.4};
 function listing(){const nw=Math.max(netWorth(),60000),ok=PROPS.filter(p=>p.base<=nw*4),[loc,m]=pick(LOCS);return {uid:uid(),t:pick(ok.slice(-4)).id,loc,m:m*(.92+R()*.16)}}
 function relist(){s.re.list=Array.from({length:6},listing);s.re.next=s.day+30}
-function upgrade(){ // saves from before property & the garage existed
-  if(s.re)return;
-  Object.assign(s,{props:[],cars:[],home:null,re:{idx:1,list:[],next:0}});
-  for(const[k,t]of[['apt','condo'],['house','house'],['mansion','mansion'],['island','island']])if(s.own[k]){s.props.push({uid:uid(),t,loc:'Riverside',m:1,paid:PM[t].base,bought:s.day,loan:0,pay:0,from:s.day});s.home??=s.props.at(-1).uid;delete s.own[k]}
-  for(const[k,t]of[['car','hatch'],['sports','sports']])if(s.own[k]){s.cars.push({uid:uid(),t,paid:CM[t].price,v:CM[t].price*.7,bought:s.day});delete s.own[k]}
-  for(const k in s.own)if(!SM[k])delete s.own[k];
-  relist();
+function upgrade(){ // bring older saves up to date
+  if(!s.cx){s.wallet={};initCrypto();const m=s.port.MOON;if(m){s.wallet.MOON={u:m.sh,c:m.cost};delete s.port.MOON}delete s.px.MOON}
+  if(!s.re){
+    Object.assign(s,{props:[],cars:[],home:null,re:{idx:1,list:[],next:0}});
+    for(const[k,t]of[['apt','condo'],['house','house'],['mansion','mansion'],['island','island']])if(s.own[k]){s.props.push({uid:uid(),t,loc:'Riverside',m:1,paid:PM[t].base,bought:s.day,loan:0,pay:0,from:s.day});s.home??=s.props.at(-1).uid;delete s.own[k]}
+    for(const[k,t]of[['car','hatch'],['sports','sports']])if(s.own[k]){s.cars.push({uid:uid(),t,paid:CM[t].price,v:CM[t].price*.7,bought:s.day});delete s.own[k]}
+    for(const k in s.own)if(!SM[k])delete s.own[k];
+    relist();
+  }
+  s.cz??={chip:100,net:0,played:0,rh:[],ban:0};
 }
 function flows(){const f={job:s.job?jobPay():0,biz:0,pend:0,spon:sponsor(),exp:expenses(),rent:s.props.reduce((t,p)=>t+rentOf(p),0),mort:s.props.reduce((t,p)=>t+(p.loan>0?p.pay:0),0)};for(const b of BIZ){const o=s.biz[b.id];if(o?.n)f[o.mgr?'biz':'pend']+=bizInc(b,o)}return f}
-function netWorth(){let w=s.cash;for(const t in s.port)w+=s.port[t].sh*s.px[t].p;for(const id in s.biz)w+=s.biz[id].spent*.5;for(const id in s.own)w+=SM[id].cost*.6;for(const p of s.props)w+=pval(p)-p.loan;for(const c of s.cars)w+=c.v;return w}
+const pfmt=n=>n>=1?fmt(n):'$'+(n<1e-6?n.toExponential(1):n.toPrecision(3));
+const units=u=>u>=1000?big(u):u>=1?u.toFixed(2):u.toPrecision(3);
+const coin=k=>s.cx.coins.find(c=>c.t===k);
+const walletVal=()=>Object.entries(s.wallet).reduce((t,[k,w])=>t+w.u*(coin(k)?.p||0),0);
+function initCrypto(){s.cx={bull:true,launched:0,coins:COINS.map(c=>({...c,o:c.p,h:[c.p]}))};for(let i=0;i<239;i++)cryptoDay(1)}
+function cryptoDay(quiet){
+  const X=s.cx;
+  if(R()<(X.bull?.004:.006)){X.bull=!X.bull;if(!quiet)chirp('@coinwire','CoinWire',X.bull?'crypto is so back. green candles everywhere':'crypto winter is here. hold on to your seed phrases',1)}
+  const m=(X.bull?.0012:-.0015)+gauss()*.02;
+  for(const c of X.coins){
+    c.o=c.p;if(!c.stable&&!c.dead)c.p=Math.max(1e-8,c.p*Math.exp(c.mu-c.v*c.v/2+m*c.b+c.v*gauss()));
+    c.h.push(c.p);if(c.h.length>240)c.h.shift();
+    if(c.fd&&s.day>=c.fd){const held=s.wallet[c.t];c.fd=0;
+      if(c.fate==='moon'){const x=rint(5,40);c.p*=x;c.v=.1;chirp('@coinwire','CoinWire',`$${c.t} is up ${(x-1)*100}% this week and nobody knows why`,1);if(held)log(`$${c.t} mooned: up ${x}×.`,'good')}
+      else{c.p*=.02;c.dead=s.day;chirp('@degen_dan','Degen Dan',`$${c.t} devs pulled the liquidity. it's over 💀`);if(held)log(`$${c.t} got rugged. Down 98%.`,'bad')}}
+  }
+  if(quiet)return;
+  for(const c of X.coins)if(c.stable&&s.wallet[c.t])s.wallet[c.t].u*=1+c.apy/365;
+  if(R()<1/45&&X.coins.filter(c=>c.meme&&!c.dead).length<7){
+    let k;do k=pick(MEME)+pick(['','INU','X','AI','2']);while(coin(k));
+    const p=+(10**-rint(2,5)*rint(1,9)).toPrecision(2);
+    X.coins.push({t:k,n:`${k[0]+k.slice(1).toLowerCase()} ${pick(['Coin','Token','Protocol','Swap'])}`,p,o:p,h:[p],v:.13,mu:.002,b:2.5,meme:1,born:s.day,fate:R()<.22?'moon':'rug',fd:s.day+rint(15,180)});
+    X.launched++;chirp('@degen_dan','Degen Dan',`$${k} just launched. still early 👀`);
+  }
+  X.coins=X.coins.filter(c=>!c.dead||s.wallet[c.t]||s.day-c.dead<60);
+}
+const rc=n=>n===0?'g':RED.has(n)?'red':'blk';
+const rlMult=(k,n)=>k[0]==='n'?(+k.slice(1)===n?36:0):n===0?0:({red:RED.has(n),black:!RED.has(n),odd:n%2===1,even:n%2===0,low:n<=18,high:n>18}[k]?2:k[0]==='d'&&Math.ceil(n/12)===+k[1]?3:0);
+function hv(h){let t=0,a=0;for(const c of h){const r=c>>2;t+=Math.min(r,10);if(r===1)a++}return a&&t+10<=21?t+10:t}
+function drawCard(){const z=s.cz;if(!z.shoe||z.shoe.length<52){z.shoe=[];for(let d=0;d<6;d++)for(let c=4;c<56;c++)z.shoe.push(c);for(let i=z.shoe.length-1;i>0;i--){const j=Math.floor(R()*(i+1));[z.shoe[i],z.shoe[j]]=[z.shoe[j],z.shoe[i]]}}return z.shoe.pop()}
+function slotSpin(){const W=SLOT.reduce((t,x)=>t+x[1],0),r=[0,0,0].map(()=>{let k=R()*W;for(const x of SLOT)if((k-=x[1])<0)return x[0];return SLOT[0][0]}),[a,b,c]=r;
+  return {r,m:a===b&&b===c?SLOT.find(x=>x[0]===a)[2]:a===b||b===c||a===c?.7:0}}
+function stake(){const z=s.cz;if(s.day<z.ban||s.cash<z.chip)return 0;s.cash-=z.chip;return z.chip}
+function settle(bet,ret,game){const z=s.cz,d=ret-bet;s.cash+=ret;z.net+=d;z.played++;add('hap',d>0?2:d<0?-1:0);if(Math.abs(d)>=Math.max(1e5,netWorth()*.05))log(`${d>0?'Won':'Lost'} ${fmt(Math.abs(d))} at ${game}.`,d>0?'good':'bad')}
+function bjEnd(){const b=s.cz.bj,p=hv(b.p),nat=b.p.length===2&&p===21;
+  if(p<21||(p===21&&!nat))while(hv(b.d)<17)b.d.push(drawCard());
+  const d=hv(b.d),dnat=b.d.length===2&&d===21;
+  const ret=p>21?0:nat&&!dnat?b.bet*2.5:dnat&&!nat?0:d>21||p>d?b.bet*2:p===d?b.bet:0;
+  b.msg=p>21?'Bust.':nat&&!dnat?'Blackjack! Paid 3 to 2.':dnat&&!nat?'Dealer has blackjack.':ret>b.bet?(d>21?'Dealer busts. You win.':'You win.'):ret===b.bet?'Push. Your bet comes back.':'Dealer wins.';
+  b.done=1;settle(b.bet,ret,'blackjack')}
+function netWorth(){let w=s.cash;for(const t in s.port)w+=s.port[t].sh*s.px[t].p;for(const id in s.biz)w+=s.biz[id].spent*.5;for(const id in s.own)w+=SM[id].cost*.6;for(const p of s.props)w+=pval(p)-p.loan;for(const c of s.cars)w+=c.v;return w+walletVal()}
 function log(t,k='info'){s.log.unshift({d:s.day,t,k});if(s.log.length>80)s.log.pop()}
 function chirp(h,n,x,v){s.feed.unshift({h,n,x,v,l:0,tl:rint(3,40)*(v?40:1),d:s.day});if(s.feed.length>60)s.feed.pop()}
 function toast(m){const t=document.createElement('div');t.className='toast';t.innerHTML=m;$('#toasts').append(t);setTimeout(()=>t.remove(),2800)}
@@ -464,12 +554,12 @@ function toast(m){const t=document.createElement('div');t.className='toast';t.in
 function newGame(name,bg,h={}){
   const b=BG[bg];
   s={v:1,name,handle:'@'+(name.toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,15)||'you'),day:0,startAge:18,cash:b.cash+(h.inherit||0),st:{...b.st},edu:b.edu||0,study:null,
-     job:b.job||null,jobDays:0,rank:0,biz:{},port:{},px:{},mkt:{bull:true},fol:b.fol||0,feed:[],own:{},props:[],cars:[],home:null,re:{idx:1,list:[],next:0},cd:{},inbox:[],later:[],log:[],rel:0,kids:0,pet:0,
+     job:b.job||null,jobDays:0,rank:0,biz:{},port:{},px:{},mkt:{bull:true},fol:b.fol||0,feed:[],own:{},wallet:{},cz:{chip:100,net:0,played:0,rh:[],ban:0},props:[],cars:[],home:null,re:{idx:1,list:[],next:0},cd:{},inbox:[],later:[],log:[],rel:0,kids:0,pet:0,
      gen:h.gen||1,boost:0,lastPost:0,dead:0,lastSeen:Date.now()};
   s.legacy=1+.25*(s.gen-1);
   for(const k of STOCKS)s.px[k.t]={p:k.p,o:k.p,h:[k.p]};
   for(let i=0;i<239;i++)marketDay(1);
-  relist();
+  initCrypto();relist();
   log(h.gen?`${esc(name)} begins generation ${s.gen} with a ${fmt(h.inherit)} inheritance.`:`${esc(name)} turns 18 and moves out. Time to hustle.`,'good');
   chirp('@hustleculture','Hustle Culture','new week, new grind. what are you building? 👇',1);
 }
@@ -494,7 +584,7 @@ function day(){
   s.fol+=shopSum('fame')+carSum('fame')+s.props.reduce((t,p)=>t+(PM[p.t].fame||0),0);if(s.day-s.lastPost>30)s.fol*=.999;
   for(const p of s.feed)if(p.l<p.tl)p.l+=Math.ceil((p.tl-p.l)*.35);
   if(R()<.3)npcChatter();
-  marketDay();
+  marketDay();cryptoDay();
   if(s.day%91===0)dividends();
   s.later=s.later.filter(p=>p.d>s.day||(runLater(p),false));
   s.inbox=s.inbox.filter(it=>{if(s.day-it.d<30)return true;const e=EVM[it.id];if(!e.c||e.c(s))log(`<b>${e.t}</b> (you never decided): ${e.ch[e.def][1](s,it.a)}`);return false});
@@ -512,7 +602,7 @@ function marketDay(quiet){
 }
 function shock(t,p){const q=s.px[t];q.p=Math.max(.01,q.p*(1+p));q.h[q.h.length-1]=q.p}
 function news(){const k=pick(STOCKS),up=R()<.55,p=(up?1:-1)*(.06+R()*.16);shock(k.t,p);chirp('@MarketWire','MarketWire',`$${k.t} ${up?'▲':'▼'} ${Math.abs(p*100).toFixed(0)}% — ${pick(up?GOOD:BAD).replace('{n}',k.n)}`,1)}
-function crash(){s.mkt.bull=false;s.re.idx*=.9;for(const k of STOCKS)shock(k.t,-(.12+R()*.2));chirp('@MarketWire','MarketWire','FLASH CRASH: markets plunge across the board',1);log('The stock market crashed!','bad');toast('Market crash!')}
+function crash(){s.mkt.bull=false;s.re.idx*=.9;for(const c of s.cx.coins)if(!c.stable)c.p*=.7;for(const k of STOCKS)shock(k.t,-(.12+R()*.2));chirp('@MarketWire','MarketWire','FLASH CRASH: markets plunge across the board',1);log('The stock market crashed!','bad');toast('Market crash!')}
 function dividends(){let t=0;for(const k of STOCKS){const h=s.port[k.t];if(h&&k.div)t+=h.sh*s.px[k.t].p*k.div/4}if(t>0){s.cash+=t;log(`Dividends paid: ${fmt(t)}`,'good')}}
 function npcChatter(){const[h,n]=pick(NPC);chirp(h,n,s.fol>300&&R()<.15?pick(ABOUT).replace('{h}',s.handle):pick(CHAT))}
 function runLater(p){
@@ -579,6 +669,16 @@ const ACT={
     log(`Sold your ${pname(p)} for ${fmt(v)} (${v>=p.paid?'+':''}${fmt(v-p.paid)} on what you paid).`,v>=p.paid?'good':'bad')},
   cbuy:id=>{const k=CM[id];if(s.cash<k.price)return;s.cash-=k.price;s.cars.push({uid:uid(),t:id,paid:k.price,v:k.dep>0?k.price*.9:k.price,bought:s.day});add('hap',4);log(`Bought ${art(k.n.toLowerCase())}.`,'good')},
   csell:u=>{const i=s.cars.findIndex(c=>c.uid===+u);if(i<0)return;const c=s.cars[i];s.cash+=c.v;s.cars.splice(i,1);log(`Sold your ${CM[c.t].n.toLowerCase()} for ${fmt(c.v)}.`,c.v>=c.paid?'good':'bad')},
+  xsel:x=>csel=x,
+  xbuy:(k,x)=>{const c=coin(k),amt=x==='all'?s.cash:+x;if(!c||c.dead||amt<=0||amt>s.cash)return;const w=s.wallet[k]??={u:0,c:0};w.u+=amt*.99/c.p;w.c+=amt;s.cash-=amt;log(`Bought ${fmt(amt)} of $${k}.`)},
+  xsell:(k,x)=>{const c=coin(k),w=s.wallet[k];if(!c||!w)return;const f=x==='all'?1:+x,u=w.u*f,v=u*c.p*.99,cost=w.c*f;w.u-=u;w.c-=cost;s.cash+=v;if(f===1)delete s.wallet[k];log(`Sold ${fmt(v)} of $${k} (${v>=cost?'+':''}${fmt(v-cost)}).`,v>=cost?'good':'bad')},
+  chip:x=>{s.cz.chip=+x},
+  deal:()=>{const b=stake();if(!b)return;const z=s.cz;z.bj={p:[drawCard(),drawCard()],d:[drawCard(),drawCard()],bet:b,done:0,msg:''};if(hv(z.bj.p)===21||hv(z.bj.d)===21)bjEnd()},
+  hit:()=>{const b=s.cz.bj;if(!b||b.done)return;b.p.push(drawCard());if(hv(b.p)>=21)bjEnd()},
+  stand:()=>{const b=s.cz.bj;if(b&&!b.done)bjEnd()},
+  dbl:()=>{const b=s.cz.bj;if(!b||b.done||b.p.length!==2||s.cash<b.bet)return;s.cash-=b.bet;b.bet*=2;b.p.push(drawCard());bjEnd()},
+  slot:()=>{const b=stake();if(!b)return;const{r,m}=slotSpin();s.cz.slot={r,w:b*m};settle(b,b*m,'the slots')},
+  rl:k=>{const b=stake();if(!b)return;const z=s.cz,n=rint(0,36),m=rlMult(k,n);z.rh.unshift(n);z.rh.length=Math.min(z.rh.length,14);z.rlast={n,k,w:b*m};settle(b,b*m,'roulette')},
   own:id=>{const i=SM[id];if(s.own[id]||s.cash<i.cost)return;s.cash-=i.cost;s.own[id]=1;add('hap',5);log(`Bought ${art(i.n)}`,'good')},
   unown:id=>{if(!s.own[id])return;s.cash+=SM[id].cost*.6;delete s.own[id];log(`Sold your ${SM[id].n}.`)},
   inbox:()=>{const it=s.inbox[0];if(!it)return;const e=EVM[it.id];
@@ -718,6 +818,54 @@ chirp(){
      <div class="by"><b>${esc(p.n)}</b>${p.v?' <span class="ver" title="Verified">✓</span>':''} <span class="mut">${p.h} · ${s.day-p.d?`${s.day-p.d}d`:'now'}</span>${p.tag?`<span class="tag ${p.bad?'dn':''}">${p.tag}</span>`:''}</div>
      <p>${esc(p.x)}</p><div class="mut num" style="font-size:var(--text-xs)">${big(p.l)} likes</div></div></li>`).join('')}</ol></div>`;
 },
+crypto(){
+  const X=s.cx,c=coin(csel)||X.coins[0],w=s.wallet[c.t];csel=c.t;let val=0,cost=0;for(const k in s.wallet){val+=s.wallet[k].u*(coin(k)?.p||0);cost+=s.wallet[k].c}
+  const d=c.p/c.o-1,d30=c.p/c.h[Math.max(0,c.h.length-31)]-1;
+  return `<section class="lede"><div><h2 class="headline">Crypto</h2>
+    <p class="dek">${X.bull?'A bull run. Everything is green and everyone is a genius.':'Crypto winter. Prices are bleeding and the timeline has gone quiet.'} ${val?`Your wallet holds <b class="num">${fmt(val)}</b>, ${sign(val-cost)} on what you put in.`:'Your wallet is empty.'}</p></div>
+    <div class="side"><p class="mut"><span class="figure">${fmt(s.cash)}</span><br>ready to buy</p></div></section>
+  <div class="mkt">
+   <div class="scroll"><table class="ledger"><thead><tr><th>Coin</th><th>Name</th><th class="r">Price</th><th class="r">Day</th></tr></thead><tbody>
+   ${X.coins.map(k=>{const d=k.p/k.o-1;return `<tr class="pick ${k.t===c.t?'on':''} ${k.dead?'dim':''}" data-a="xsel" data-x="${k.t}" tabindex="0"><td><b>${k.t}</b>${s.wallet[k.t]?' <span class="mut">·held</span>':''}</td><td class="mut">${k.n}${k.dead?' · rugged':k.born!=null&&s.day-k.born<30?' · new':''}</td><td class="r num">${pfmt(k.p)}</td><td class="r num ${k.stable?'':d>=0?'up':'dn'}">${k.stable?'—':pct(d)}</td></tr>`}).join('')}
+   </tbody></table></div>
+   <section>
+    <h3 style="margin-top:0">${c.n}</h3>
+    <p class="mut">${c.t} · ${c.stable?`stablecoin, pays ${(c.apy*100).toFixed(0)}% a year just for holding it`:c.dead?'rugged, the developers are gone':c.meme?'meme coin, anything can happen':'blockchain'}</p>
+    <p style="margin-top:var(--space-2xs)"><span class="price">${pfmt(c.p)}</span> ${c.stable?'':`<span class="num ${d>=0?'up':'dn'}">${pct(d)}</span> <span class="mut">today, ${pct(d30)} over 30 days</span>`}</p>
+    <canvas id="chart"></canvas>
+    <p>${w?`You hold <b class="num">${units(w.u)} ${c.t}</b>, worth <b class="num">${fmt(w.u*c.p)}</b> (<span class="num ${w.u*c.p>=w.c?'up':'dn'}">${pct(w.u*c.p/w.c-1)}</span>).`:'<span class="mut">You hold none of this one.</span>'}</p>
+    <div class="trade">${['100','1000','10000'].map(n=>`<button data-a="xbuy" data-x="${c.t}" data-y="${n}" ${c.dead||s.cash<+n?'disabled':''}>Buy ${fmt(+n)}</button>`).join('')}<button class="pri" data-a="xbuy" data-x="${c.t}" data-y="all" ${c.dead||s.cash<1?'disabled':''}>All in</button>
+     <button data-a="xsell" data-x="${c.t}" data-y=".25" ${w?'':'disabled'}>Sell 25%</button><button data-a="xsell" data-x="${c.t}" data-y=".5" ${w?'':'disabled'}>Sell 50%</button><button class="bad" data-a="xsell" data-x="${c.t}" data-y="all" ${w?'':'disabled'}>Sell all</button></div>
+   </section>
+  </div>
+  <p class="note">Every trade costs a 1% fee. New meme coins launch every few weeks. A few go up a hundredfold; most get rugged. Hustle Dollar holds at $1 and pays interest every day.</p>`;
+},
+casino(){
+  const z=s.cz,ban=s.day<z.ban,can=!ban&&s.cash>=z.chip,b=z.bj,live=b&&!b.done,L=z.rlast;
+  const cards=(h,hide)=>h.map((c,i)=>hide&&i===1?'<span class="pc back"></span>':`<span class="pc ${(c&3)===1||(c&3)===2?'red':''}">${RK[c>>2]}${ST[c&3]}</span>`).join('');
+  return `<section class="lede"><div><h2 class="headline">Casino</h2>
+    <p class="dek">${z.played?`You're <b class="num ${z.net>=0?'up':'dn'}">${z.net>=0?'up':'down'} ${fmt(Math.abs(z.net))}</b> across ${z.played} games.`:'The house always wins in the end. Tonight might be different.'}${ban?` You've barred yourself for ${z.ban-s.day} more days.`:''}</p></div>
+    <div class="side"><p class="mut">Bet per game</p><div class="row chips">${CHIPS.map(v=>`<button class="${z.chip===v?'on':''}" data-a="chip" data-x="${v}" ${s.cash<v&&z.chip!==v?'disabled':''}>${fmt(v)}</button>`).join('')}</div></div></section>
+  <div class="casino">
+   <section><h3>Blackjack</h3>
+    <div class="felt"><div class="hand"><span class="mut">Dealer${b&&!live?` · ${hv(b.d)}`:''}</span><div>${b?cards(b.d,live):''}</div></div>
+     <div class="hand"><span class="mut">You${b?` · ${hv(b.p)}`:''}</span><div>${b?cards(b.p):''}</div></div></div>
+    <p class="result">${b?.msg||'Dealer stands on 17. Blackjack pays 3 to 2.'}</p>
+    <div class="row">${live?`<button data-a="hit">Hit</button><button class="pri" data-a="stand">Stand</button><button data-a="dbl" ${b.p.length===2&&s.cash>=b.bet?'':'disabled'}>Double</button>`:`<button class="pri" data-a="deal" ${can?'':'disabled'}>Deal for ${fmt(z.chip)}</button>`}</div>
+   </section>
+   <section><h3>Slots</h3>
+    <div class="reels">${(z.slot?.r||['7','BAR','★']).map(x=>`<span>${x}</span>`).join('')}</div>
+    <p class="result">${z.slot?(z.slot.w?`Paid <b class="num">${fmt(z.slot.w)}</b>.`:'Nothing this time.'):'Three 7s pay 150×. Any pair gives back 0.7×.'}</p>
+    <button class="pri" data-a="slot" ${can?'':'disabled'}>Spin for ${fmt(z.chip)}</button>
+   </section>
+   <section class="wide"><h3>Roulette</h3>
+    <div class="wheel"><span class="rn big ${L?rc(L.n):''}">${L?L.n:'—'}</span><div class="hist">${z.rh.slice(1).map(n=>`<span class="rn ${rc(n)}">${n}</span>`).join('')}</div></div>
+    <p class="result">${L?`${L.n}, ${L.n===0?'green':RED.has(L.n)?'red':'black'}. ${L.w?`You win <b class="num">${fmt(L.w)}</b>.`:'You lose.'}`:'Single zero. Outside bets pay even money, dozens pay 2 to 1, a single number pays 35 to 1.'}</p>
+    <div class="row">${RBETS.map(([k,l])=>`<button data-a="rl" data-x="${k}" ${can?'':'disabled'}>${l}</button>`).join('')}</div>
+    <div class="scroll"><div class="board"><button class="rn g" data-a="rl" data-x="n0" ${can?'':'disabled'}>0</button>${[3,2,1].flatMap(r=>Array.from({length:12},(_,i)=>i*3+r)).map(n=>`<button class="rn ${rc(n)}" data-a="rl" data-x="n${n}" ${can?'':'disabled'}>${n}</button>`).join('')}</div></div>
+   </section>
+  </div>`;
+},
 home(){
   const f=flows(),idx=s.re.idx;let val=0,debt=0;for(const p of s.props){val+=pval(p);debt+=p.loan}
   return `<section class="lede"><div><h2 class="headline">Property</h2>
@@ -757,7 +905,7 @@ shop(){
   </tbody></table></div>`;
 },
 };
-const TABS=[['life','Life'],['work','Work'],['biz','Business'],['stock','Markets'],['chirp','Chirp'],['home','Property'],['garage','Garage'],['shop','Lifestyle']];
+const TABS=[['life','Life'],['work','Work'],['biz','Business'],['stock','Markets'],['crypto','Crypto'],['chirp','Chirp'],['home','Property'],['garage','Garage'],['shop','Lifestyle'],['casino','Casino']];
 
 function hdr(){
   if(!s)return;const f=flows(),net=f.job+f.biz+f.pend+f.spon+f.rent-f.exp-f.mort;
@@ -774,17 +922,18 @@ function render(){
   if(!s)return;hdr();
   $('#nav').innerHTML=TABS.map(([k,l])=>`<button class="${tab===k?'on':''}" data-a="tab" data-x="${k}">${l}</button>`).join('')+'<button class="reset" data-a="reset">Start a new life</button>';
   $('#view').innerHTML=VIEWS[tab]();
-  if(tab==='stock')drawChart();
+  if(tab==='stock'){const p=s.port[sel];drawChart(s.px[sel].h,p&&p.cost/p.sh)}
+  if(tab==='crypto'){const c=coin(csel),w=s.wallet[csel];if(c)drawChart(c.h,w&&w.c/w.u,pfmt)}
 }
-function drawChart(){
+function drawChart(h,avg,f=fmt){
   const c=$('#chart');if(!c)return;const dpr=devicePixelRatio||1,W=c.clientWidth,H=c.clientHeight;c.width=W*dpr;c.height=H*dpr;
   const T=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
-  const g=c.getContext('2d');g.scale(dpr,dpr);const h=s.px[sel].h,lo=Math.min(...h),hi=Math.max(...h),P=6;
+  const g=c.getContext('2d');g.scale(dpr,dpr);const lo=Math.min(...h),hi=Math.max(...h),P=6;
   const X=i=>P+i/(h.length-1)*(W-P*2),Y=v=>H-P-(v-lo)/(hi-lo||1)*(H-P*2-14);
   g.beginPath();h.forEach((v,i)=>i?g.lineTo(X(i),Y(v)):g.moveTo(X(i),Y(v)));
   g.strokeStyle=T(h[h.length-1]>=h[0]?'--color-up':'--color-down');g.lineWidth=1.5;g.lineJoin='round';g.stroke();
-  const p=s.port[sel];if(p){const a=p.cost/p.sh;if(a>=lo&&a<=hi){g.setLineDash([3,4]);g.strokeStyle=T('--color-ink-3');g.lineWidth=1;g.beginPath();g.moveTo(P,Y(a));g.lineTo(W-P,Y(a));g.stroke();g.setLineDash([]);g.fillStyle=T('--color-ink-3');g.font=`11px ${T('--font-mono')}`;g.fillText('your average',W-P-80,Y(a)-4)}}
-  g.fillStyle=T('--color-ink-2');g.font=`11px ${T('--font-mono')}`;g.fillText(`${fmt(hi)} · ${h.length}-day high`,P,12);g.fillText(`${fmt(lo)} low`,P,H-5);
+  if(avg){const a=avg;if(a>=lo&&a<=hi){g.setLineDash([3,4]);g.strokeStyle=T('--color-ink-3');g.lineWidth=1;g.beginPath();g.moveTo(P,Y(a));g.lineTo(W-P,Y(a));g.stroke();g.setLineDash([]);g.fillStyle=T('--color-ink-3');g.font=`11px ${T('--font-mono')}`;g.fillText('your average',W-P-80,Y(a)-4)}}
+  g.fillStyle=T('--color-ink-2');g.font=`11px ${T('--font-mono')}`;g.fillText(`${f(hi)} · ${h.length}-day high`,P,12);g.fillText(`${f(lo)} low`,P,H-5);
 }
 
 // ---------- loop, input, save ----------
@@ -814,14 +963,21 @@ function selfTest(){ // open with ?test=1 — never touches your real save
   const hp=homeP();ok(hp&&hp.loan>0&&s.home===hp.uid,'mortgage buy moves you in');const l0=hp.loan;for(let i=0;i<365;i++)day();ok(P(hp.uid).loan<l0,'mortgage amortises');
   s.cash=2e7;ACT.cbuy('hatch');ACT.cbuy('classic');const h0=s.cars[0].v;for(let i=0;i<365;i++)day();ok(s.cars[0].v<h0,'cars depreciate');
   ACT.live(hp.uid);ACT.moveout(hp.uid);ok(!s.home,'move out');ACT.psell(hp.uid);ok(!s.props.length,'sell property');
+  let tot=0;for(let i=0;i<200000;i++)tot+=slotSpin().m;const rtp=tot/2e5;ok(rtp>.86&&rtp<.97,'slots RTP '+rtp.toFixed(3));
+  ok(rlMult('red',1)===2&&rlMult('red',0)===0&&rlMult('black',1)===0&&rlMult('n17',17)===36&&rlMult('n17',18)===0&&rlMult('d2',13)===3&&rlMult('low',18)===2,'roulette payouts');
+  ok(hv([4,52])===21&&hv([4,5,36])===21&&hv([40,44,48])===30&&hv([4,20])===16,'hand values');
+  s.cash=1e7;s.cz.chip=100;const c0=s.cash;for(let i=0;i<3000;i++){ACT.deal();while(!s.cz.bj.done)hv(s.cz.bj.p)<17?ACT.hit():ACT.stand()}
+  const edge=(s.cash-c0)/3e5;ok(s.cz.played===3000&&edge>-.15&&edge<.08,'blackjack edge '+edge.toFixed(3));
+  s.cash=1e5;ACT.xbuy('SATS','10000');const u0=s.wallet.SATS.u;ok(u0>0&&s.cash===9e4,'crypto buy');ACT.xsell('SATS','.5');ok(Math.abs(s.wallet.SATS.u-u0/2)<1e-12,'crypto sell half');
   s.cash=5e9;relist();ACT.pbuy(s.re.list[0].uid);ACT.pbuy(s.re.list[1].uid);s.props.at(-1).from=0;s.home=s.props[0].uid;ok(s.props.length===2,'two properties');s.cash=5e6;
+  for(let i=0;i<1500;i++)cryptoDay();ok(s.cx.launched>0,'meme coins launch');ACT.xbuy(s.cx.coins[0].t,'1000');
   const base=JSON.stringify({...s,job:'swe',rel:1,fol:20000,cash:2e6,biz:{truck:{n:12,mgr:0,pend:0,spent:1e5},cafe:{n:3,mgr:1,pend:0,spent:1e5}},port:{NOVA:{sh:50,cost:5000}}});
   for(const e of EV)for(const[,fx]of e.ch){s=JSON.parse(base);s.st.hap=10;const m=fx(s,e.a?e.a(s):0);ok(typeof m==='string','event '+e.id)}
   for(const k in POSTS){s=JSON.parse(base);ACT.post(k)}
   for(const k in VIEWS){tab=k;VIEWS[k]()}
-  newGame('Old','street');delete s.re;s.own={apt:1,car:1,bike:1};upgrade();ok(s.props.length===1&&s.cars.length===1&&s.own.bike&&homeP(),'old saves upgrade');
+  newGame('Old','street');delete s.re;delete s.cx;delete s.cz;s.own={apt:1,car:1,bike:1};s.port.MOON={sh:10,cost:12};upgrade();ok(s.props.length===1&&s.cars.length===1&&s.own.bike&&homeP()&&s.wallet.MOON.u===10&&!s.port.MOON&&s.cz,'old saves upgrade');
   newGame('Sim','rich');let d=0;for(;d<40000&&!s.dead;d++){day();if(d%7===0){s.inbox=[];ACT.colAll()}}
-  const vals=[s.cash,netWorth(),s.fol,...Object.values(s.st),...Object.values(s.px).map(q=>q.p)];
+  const vals=[s.cash,netWorth(),s.fol,...Object.values(s.st),...Object.values(s.px).map(q=>q.p),...s.cx.coins.map(c=>c.p),walletVal()];
   ok(vals.every(Number.isFinite),'finite after sim');ok(s.dead,'eventually dies');
   console.log(`self-test passed · simulated ${d} days, died at ${Math.floor(age())}`);
 }
