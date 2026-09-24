@@ -155,8 +155,60 @@ input:focus-visible{outline:2px solid var(--color-focus);outline-offset:1px}
 @media (prefers-reduced-motion:reduce){.toast{animation:none}button{transition:none}}
 
 /* casino */
-.casino{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 var(--space-xl)}
-.casino .wide{grid-column:1/-1}
+.back{border:0;padding:0;margin-bottom:var(--space-sm);color:var(--color-ink-2);background:none}
+.back:hover:not(:disabled){background:none;color:var(--color-ink);text-decoration:underline}
+.table{max-width:46rem;margin-top:var(--space-md)}
+.dice{display:flex;gap:var(--space-sm)}
+.dice span{width:5.5rem;height:5.5rem;display:grid;place-items:center;border:var(--rule-ink);border-radius:var(--radius);background:var(--color-paper-2);font:700 var(--text-2xl) var(--font-display)}
+.coin{width:8rem;height:8rem;border-radius:50%;display:grid;place-items:center;border:3px double var(--color-accent);color:var(--color-accent);font:700 var(--text-lg) var(--font-display)}
+/* trading screen */
+.tbar{display:flex;flex-wrap:wrap;border-bottom:var(--rule);margin-bottom:var(--space-md)}
+.tbar>div{padding:0 var(--space-md) var(--space-xs) 0;margin-right:var(--space-md);border-right:var(--rule)}
+.tbar>div:last-child{border-right:0}
+.tbar small{display:block;font-size:var(--text-xs);color:var(--color-ink-3)}
+.tbar b{font-size:var(--text-md)}
+.tui{display:grid;grid-template-columns:15rem minmax(0,1fr) 16rem;gap:var(--space-md);align-items:start}
+.watch{border:var(--rule)}
+.wh{display:flex;justify-content:space-between;padding:var(--space-2xs) var(--space-xs);font-size:var(--text-xs);color:var(--color-ink-3);border-bottom:var(--rule)}
+.wrow{display:grid;grid-template-columns:minmax(0,1fr) auto 4.6rem;gap:var(--space-2xs);align-items:center;width:100%;border:0;border-bottom:var(--rule);border-radius:0;text-align:left;padding:var(--space-2xs) var(--space-xs)}
+.wrow:last-child{border-bottom:0}
+.wrow small{display:block;font-size:var(--text-xs);color:var(--color-ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wrow.on,.wrow:hover:not(:disabled){background:var(--color-paper-2);color:var(--color-ink)}
+.pill{justify-self:end;min-width:4.4rem;text-align:center;padding:.2rem .35rem;border-radius:var(--radius);font:600 var(--text-xs) var(--font-mono);color:var(--color-paper)}
+.pill.up{background:var(--color-up)}.pill.dn{background:var(--color-down)}
+.qhead{display:flex;justify-content:space-between;align-items:flex-start;gap:var(--space-sm)}
+.qt{font-size:var(--text-lg)}.qt .mut{font-size:var(--text-md);font-weight:400}
+.chip{font-size:var(--text-xs);color:var(--color-ink-2);border:var(--rule);padding:.15rem .5rem;border-radius:var(--radius);white-space:nowrap}
+.stats4{display:grid;grid-template-columns:repeat(auto-fill,minmax(8.5rem,1fr));gap:var(--space-3xs) var(--space-md);padding:var(--space-xs) 0;margin-top:var(--space-xs);border-top:var(--rule);border-bottom:var(--rule)}
+.stats4 div{display:flex;justify-content:space-between;gap:var(--space-2xs);font-size:var(--text-sm)}
+.stats4 span{color:var(--color-ink-3)}
+.tfbar{display:flex;gap:var(--space-3xs);margin-top:var(--space-sm);flex-wrap:wrap}
+.tfbar button{padding:.3rem .6rem;font-size:var(--text-xs);border-color:var(--color-rule)}
+.tfbar button.on{background:var(--color-ink);border-color:var(--color-ink);color:var(--color-paper)}
+.tfbar .sp{flex:1}
+#tchart{width:100%;height:20rem;display:block;margin-top:var(--space-2xs);cursor:crosshair}
+.news{list-style:none;margin:0;padding:0}
+.news li{padding:var(--space-2xs) 0;border-bottom:var(--rule);font-size:var(--text-sm)}
+.news small{color:var(--color-ink-3);margin-right:var(--space-2xs)}
+.ticket{border:var(--rule);padding:var(--space-sm);display:flex;flex-direction:column;gap:var(--space-xs)}
+.seg{display:grid;grid-template-columns:1fr 1fr}
+.seg button{border-radius:0;border-color:var(--color-rule)}
+.seg button.on.buy{background:var(--color-up);border-color:var(--color-up);color:var(--color-paper)}
+.seg button.on.sell{background:var(--color-down);border-color:var(--color-down);color:var(--color-paper)}
+.ticket dl{display:grid;grid-template-columns:1fr auto;gap:var(--space-2xs);margin:0;font-size:var(--text-sm)}
+.ticket dt{color:var(--color-ink-3)}.ticket dd{margin:0;text-align:right}
+.qty{display:grid;grid-template-columns:2.75rem minmax(0,1fr) 2.75rem;align-items:center;text-align:center;border:var(--rule)}
+.qty button{border:0;border-radius:0;font-size:var(--text-md)}
+.qty b{font-size:var(--text-lg)}
+.presets{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--space-3xs)}
+.presets button{padding:.35rem;border-color:var(--color-rule)}
+.place{width:100%;padding:.85rem;font-size:var(--text-base);border:0;color:var(--color-paper)}
+.place.buy,.place.buy:hover:not(:disabled){background:var(--color-up);color:var(--color-paper)}
+.place.sell,.place.sell:hover:not(:disabled){background:var(--color-down);color:var(--color-paper)}
+.place:hover:not(:disabled){filter:brightness(1.12)}
+.place:disabled{background:var(--color-paper-2);color:var(--color-ink-3)}
+@media (max-width:1280px){.tui{grid-template-columns:13rem minmax(0,1fr)}.ticket{grid-column:2}}
+@media (max-width:860px){.tui{grid-template-columns:minmax(0,1fr)}.ticket{grid-column:auto}.watch{order:3}}
 .chips{gap:var(--space-3xs)}
 .chips button{padding:.4rem .55rem}
 .chips button.on{background:var(--color-ink);border-color:var(--color-ink);color:var(--color-paper)}
@@ -178,7 +230,7 @@ input:focus-visible{outline:2px solid var(--color-focus);outline-offset:1px}
 .hist .rn{border:var(--rule);min-width:1.9rem;height:1.9rem;font-size:var(--text-xs)}
 .board{display:grid;grid-template-columns:repeat(13,2.25rem);gap:var(--space-3xs);margin-top:var(--space-sm)}
 .board .g{grid-row:1/4;height:auto}
-@media (max-width:1100px){.mkt,.cols,.casino{grid-template-columns:minmax(0,1fr);gap:0}}
+@media (max-width:1100px){.mkt,.cols{grid-template-columns:minmax(0,1fr);gap:0}}
 @media (max-width:860px){
   body{height:auto;overflow:visible}
   .mast{padding:var(--space-sm) var(--space-sm) 0}
@@ -261,14 +313,14 @@ const BIZ=[
  {id:'rocket',n:'Rocket Company',cost:9e9,inc:1.6e7},
 ];
 const STOCKS=[
- {t:'NOVA',n:'Nova Robotics',sec:'Tech',p:120,v:.028,mu:.0007,b:1.3},
- {t:'BYTE',n:'ByteHive',sec:'Tech',p:45,v:.034,mu:.0009,b:1.4},
- {t:'GRNX',n:'GreenX Energy',sec:'Energy',p:30,v:.03,mu:.00075,b:1.1},
- {t:'PETR',n:'PetroMax',sec:'Energy',p:80,v:.017,mu:.0003,b:.8,div:.035},
- {t:'MUNC',n:'Munch Foods',sec:'Consumer',p:55,v:.012,mu:.00025,b:.6,div:.025},
- {t:'LUXE',n:'Luxe Maison',sec:'Consumer',p:210,v:.02,mu:.0005,b:1},
- {t:'MEDI',n:'MediCore',sec:'Health',p:95,v:.022,mu:.00055,b:.7},
- {t:'BANC',n:'Banco Unido',sec:'Finance',p:60,v:.015,mu:.0003,b:1.1,div:.04},
+ {t:'NOVA',n:'Nova Robotics',sec:'Tech',p:120,v:.028,mu:.0007,b:1.3,pe:38,sh:2.1e+09},
+ {t:'BYTE',n:'ByteHive',sec:'Tech',p:45,v:.034,mu:.0009,b:1.4,pe:55,sh:3.4e+09},
+ {t:'GRNX',n:'GreenX Energy',sec:'Energy',p:30,v:.03,mu:.00075,b:1.1,pe:0,sh:8e+08},
+ {t:'PETR',n:'PetroMax',sec:'Energy',p:80,v:.017,mu:.0003,b:.8,div:.035,pe:9,sh:4e+09},
+ {t:'MUNC',n:'Munch Foods',sec:'Consumer',p:55,v:.012,mu:.00025,b:.6,div:.025,pe:18,sh:1.5e+09},
+ {t:'LUXE',n:'Luxe Maison',sec:'Consumer',p:210,v:.02,mu:.0005,b:1,pe:27,sh:5e+08},
+ {t:'MEDI',n:'MediCore',sec:'Health',p:95,v:.022,mu:.00055,b:.7,pe:22,sh:1.1e+09},
+ {t:'BANC',n:'Banco Unido',sec:'Finance',p:60,v:.015,mu:.0003,b:1.1,div:.04,pe:11,sh:6e+09},
 ];
 const SHOP=[
  {id:'bike',n:'Bicycle',cost:300,up:0,hap:.02,fame:0},
@@ -350,7 +402,16 @@ const MEME=['PUG','ZAP','YOLO','GIGA','CHAD','NYAN','BLOB','HODL','WAGMI','COPE'
 const CHIPS=[10,100,1000,1e4,1e5,1e6],RK=['','A','2','3','4','5','6','7','8','9','10','J','Q','K'],ST=['♠','♥','♦','♣'];
 const SLOT=[['7',2,150],['BAR',4,40],['★',6,15],['♦',8,8],['♣',10,4]]; // symbol, reel weight, three-of-a-kind multiplier
 const RED=new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
+const GAMES=[
+ {id:'bj',n:'Blackjack',edge:'0.5–2%',d:'Beat the dealer to 21 without going over. Blackjack pays 3 to 2.'},
+ {id:'rl',n:'Roulette',edge:'2.7%',d:'Single-zero wheel. Bet on a colour, a dozen or one number at 35 to 1.'},
+ {id:'dice',n:'Dice',edge:'2–4%',d:'Two dice. Call under 7, over 7, or exactly 7.'},
+ {id:'coin',n:'Coin flip',edge:'2%',d:'Heads or tails. A right call pays 1.96×.'},
+ {id:'slot',n:'Slots',edge:'about 8%',d:'Three reels. Three 7s pay 150×.'},
+];
+const TF={'1W':7,'1M':30,'3M':90,'All':240};
 const RBETS=[['red','Red'],['black','Black'],['odd','Odd'],['even','Even'],['low','1–18'],['high','19–36'],['d1','1st 12'],['d2','2nd 12'],['d3','3rd 12']];
+const GM=Object.fromEntries(GAMES.map(g=>[g.id,g]));
 const EM=Object.fromEntries,JM=EM(JOBS.map(j=>[j.id,j])),BM=EM(BIZ.map(b=>[b.id,b])),SK=EM(STOCKS.map(k=>[k.t,k])),SM=EM(SHOP.map(i=>[i.id,i])),AM=EM(ACTS.map(a=>[a.id,a])),PM=EM(PROPS.map(p=>[p.id,p])),CM=EM(CARS.map(c=>[c.id,c]));
 
 // ---------- events (choices) ----------
@@ -465,6 +526,7 @@ const EVM=EM(EV.map(e=>[e.id,e]));
 
 // ---------- state ----------
 const SAVE='hustle-v1',GROW=1.13,CAP=10,MILES=[10,25,50,100,150,200,300,400,500];
+let cg=null,tf='3M',cmode='candle',hov=null,ot={side:'buy',qty:10}; // screen state, not saved
 let s=null,tab='life',sel='NOVA',csel='SATS',speed=1,holding=false,wiped=false,heir={},hiddenAt=0;
 const age=()=>s.startAge+s.day/365;
 const add=(k,v)=>s.st[k]=clamp(s.st[k]+v,0,100);
@@ -534,18 +596,20 @@ function cryptoDay(quiet){
 }
 const rc=n=>n===0?'g':RED.has(n)?'red':'blk';
 const rlMult=(k,n)=>k[0]==='n'?(+k.slice(1)===n?36:0):n===0?0:({red:RED.has(n),black:!RED.has(n),odd:n%2===1,even:n%2===0,low:n<=18,high:n>18}[k]?2:k[0]==='d'&&Math.ceil(n/12)===+k[1]?3:0);
+const hsh=(a,b)=>{const x=Math.sin(a*12.9898+b*78.233)*43758.5453;return x-Math.floor(x)}; // stable pseudo-random per day
+const volAt=(k,i)=>{const h=s.px[k.t].h,r=i?Math.abs(h[i]/h[i-1]-1):0;return k.sh*.004*(1+40*r)*(.6+.8*hsh(s.day-h.length+1+i,k.t.length))};
 function hv(h){let t=0,a=0;for(const c of h){const r=c>>2;t+=Math.min(r,10);if(r===1)a++}return a&&t+10<=21?t+10:t}
 function drawCard(){const z=s.cz;if(!z.shoe||z.shoe.length<52){z.shoe=[];for(let d=0;d<6;d++)for(let c=4;c<56;c++)z.shoe.push(c);for(let i=z.shoe.length-1;i>0;i--){const j=Math.floor(R()*(i+1));[z.shoe[i],z.shoe[j]]=[z.shoe[j],z.shoe[i]]}}return z.shoe.pop()}
 function slotSpin(){const W=SLOT.reduce((t,x)=>t+x[1],0),r=[0,0,0].map(()=>{let k=R()*W;for(const x of SLOT)if((k-=x[1])<0)return x[0];return SLOT[0][0]}),[a,b,c]=r;
   return {r,m:a===b&&b===c?SLOT.find(x=>x[0]===a)[2]:a===b||b===c||a===c?.7:0}}
 function stake(){const z=s.cz;if(s.day<z.ban||s.cash<z.chip)return 0;s.cash-=z.chip;return z.chip}
-function settle(bet,ret,game){const z=s.cz,d=ret-bet;s.cash+=ret;z.net+=d;z.played++;add('hap',d>0?2:d<0?-1:0);if(Math.abs(d)>=Math.max(1e5,netWorth()*.05))log(`${d>0?'Won':'Lost'} ${fmt(Math.abs(d))} at ${game}.`,d>0?'good':'bad')}
+function settle(bet,ret,game,key){const z=s.cz,d=ret-bet,r=(z.g??={})[key]??={n:0,net:0};r.n++;r.net+=d;s.cash+=ret;z.net+=d;z.played++;add('hap',d>0?2:d<0?-1:0);if(Math.abs(d)>=Math.max(1e5,netWorth()*.05))log(`${d>0?'Won':'Lost'} ${fmt(Math.abs(d))} at ${game}.`,d>0?'good':'bad')}
 function bjEnd(){const b=s.cz.bj,p=hv(b.p),nat=b.p.length===2&&p===21;
   if(p<21||(p===21&&!nat))while(hv(b.d)<17)b.d.push(drawCard());
   const d=hv(b.d),dnat=b.d.length===2&&d===21;
   const ret=p>21?0:nat&&!dnat?b.bet*2.5:dnat&&!nat?0:d>21||p>d?b.bet*2:p===d?b.bet:0;
   b.msg=p>21?'Bust.':nat&&!dnat?'Blackjack! Paid 3 to 2.':dnat&&!nat?'Dealer has blackjack.':ret>b.bet?(d>21?'Dealer busts. You win.':'You win.'):ret===b.bet?'Push. Your bet comes back.':'Dealer wins.';
-  b.done=1;settle(b.bet,ret,'blackjack')}
+  b.done=1;settle(b.bet,ret,'blackjack','bj')}
 function netWorth(){let w=s.cash;for(const t in s.port)w+=s.port[t].sh*s.px[t].p;for(const id in s.biz)w+=s.biz[id].spent*.5;for(const id in s.own)w+=SM[id].cost*.6;for(const p of s.props)w+=pval(p)-p.loan;for(const c of s.cars)w+=c.v;return w+walletVal()}
 function log(t,k='info'){s.log.unshift({d:s.day,t,k});if(s.log.length>80)s.log.pop()}
 function chirp(h,n,x,v){s.feed.unshift({h,n,x,v,l:0,tl:rint(3,40)*(v?40:1),d:s.day});if(s.feed.length>60)s.feed.pop()}
@@ -673,12 +737,20 @@ const ACT={
   xbuy:(k,x)=>{const c=coin(k),amt=x==='all'?s.cash:+x;if(!c||c.dead||amt<=0||amt>s.cash)return;const w=s.wallet[k]??={u:0,c:0};w.u+=amt*.99/c.p;w.c+=amt;s.cash-=amt;log(`Bought ${fmt(amt)} of $${k}.`)},
   xsell:(k,x)=>{const c=coin(k),w=s.wallet[k];if(!c||!w)return;const f=x==='all'?1:+x,u=w.u*f,v=u*c.p*.99,cost=w.c*f;w.u-=u;w.c-=cost;s.cash+=v;if(f===1)delete s.wallet[k];log(`Sold ${fmt(v)} of $${k} (${v>=cost?'+':''}${fmt(v-cost)}).`,v>=cost?'good':'bad')},
   chip:x=>{s.cz.chip=+x},
+  cg:x=>{cg=x||null;$('#view').scrollTop=0},
+  dice:k=>{const b=stake();if(!b)return;const a=rint(1,6),c=rint(1,6),n=a+c,m=k==='seven'?(n===7?5.8:0):(k==='under'?n<7:n>7)?2.35:0;s.cz.dice={a,b:c,w:b*m};settle(b,b*m,'dice','dice')},
+  flip:k=>{const b=stake();if(!b)return;const r=R()<.5?'h':'t',m=r===k?1.96:0;s.cz.flip={r,w:b*m};settle(b,b*m,'the coin flip','coin')},
+  tf:x=>{tf=x},cmode:x=>{cmode=x},
+  side:x=>{ot.side=x},
+  qty:x=>{const st=10**Math.max(0,Math.floor(Math.log10(Math.max(1,ot.qty-(x==='-'?1:0)))));ot.qty=Math.max(1,ot.qty+(x==='+'?st:-st))},
+  qset:x=>{const p=s.px[sel].p,h=s.port[sel];ot.qty=x==='max'?Math.max(1,ot.side==='buy'?Math.floor(s.cash/p):h?.sh||1):+x},
+  order:()=>{const n=ot.qty,p=s.px[sel].p;if(ot.side==='buy'){if(n*p>s.cash)return;ACT.buy(sel,n)}else{const h=s.port[sel];if(!h||h.sh<n)return;ACT.sell(sel,n)}toast(`Filled: ${ot.side==='buy'?'bought':'sold'} ${big(n)} ${sel} at ${fmt(p)}`)},
   deal:()=>{const b=stake();if(!b)return;const z=s.cz;z.bj={p:[drawCard(),drawCard()],d:[drawCard(),drawCard()],bet:b,done:0,msg:''};if(hv(z.bj.p)===21||hv(z.bj.d)===21)bjEnd()},
   hit:()=>{const b=s.cz.bj;if(!b||b.done)return;b.p.push(drawCard());if(hv(b.p)>=21)bjEnd()},
   stand:()=>{const b=s.cz.bj;if(b&&!b.done)bjEnd()},
   dbl:()=>{const b=s.cz.bj;if(!b||b.done||b.p.length!==2||s.cash<b.bet)return;s.cash-=b.bet;b.bet*=2;b.p.push(drawCard());bjEnd()},
-  slot:()=>{const b=stake();if(!b)return;const{r,m}=slotSpin();s.cz.slot={r,w:b*m};settle(b,b*m,'the slots')},
-  rl:k=>{const b=stake();if(!b)return;const z=s.cz,n=rint(0,36),m=rlMult(k,n);z.rh.unshift(n);z.rh.length=Math.min(z.rh.length,14);z.rlast={n,k,w:b*m};settle(b,b*m,'roulette')},
+  slot:()=>{const b=stake();if(!b)return;const{r,m}=slotSpin();s.cz.slot={r,w:b*m};settle(b,b*m,'the slots','slot')},
+  rl:k=>{const b=stake();if(!b)return;const z=s.cz,n=rint(0,36),m=rlMult(k,n);z.rh.unshift(n);z.rh.length=Math.min(z.rh.length,14);z.rlast={n,k,w:b*m};settle(b,b*m,'roulette','rl')},
   own:id=>{const i=SM[id];if(s.own[id]||s.cash<i.cost)return;s.cash-=i.cost;s.own[id]=1;add('hap',5);log(`Bought ${art(i.n)}`,'good')},
   unown:id=>{if(!s.own[id])return;s.cash+=SM[id].cost*.6;delete s.own[id];log(`Sold your ${SM[id].n}.`)},
   inbox:()=>{const it=s.inbox[0];if(!it)return;const e=EVM[it.id];
@@ -784,28 +856,47 @@ biz(){
   <p class="note">Every milestone (${MILES.slice(0,5).join(', ')} and on) doubles a business's income. Managers keep earning while you're away.</p>`;
 },
 stock(){
-  const k=SK[sel],q=s.px[sel],h=s.port[sel],M=s.mkt;
-  let val=0,cost=0;for(const t in s.port){val+=s.port[t].sh*s.px[t].p;cost+=s.port[t].cost}
-  const d=q.p/q.o-1,d30=q.p/q.h[Math.max(0,q.h.length-31)]-1,maxN=Math.floor(s.cash/q.p);
-  return `<section class="lede">
-    <div><h2 class="headline">Markets</h2>
-     <p class="dek">${M.bull?'A bull market. Prices are drifting up.':'A bear market. Prices are sliding.'} ${val?`Your portfolio is worth <b class="num">${fmt(val)}</b>, ${sign(val-cost)} against what you paid.`:'You hold no shares yet.'}</p></div>
-    <div class="side"><p class="mut"><span class="figure">${fmt(s.cash)}</span><br>buying power</p></div>
-  </section>
-  <div class="mkt">
-   <table class="ledger"><thead><tr><th>Ticker</th><th>Company</th><th class="r">Last</th><th class="r">Day</th></tr></thead><tbody>
-   ${STOCKS.map(k=>{const q=s.px[k.t],d=q.p/q.o-1;return `<tr class="pick ${k.t===sel?'on':''}" data-a="sel" data-x="${k.t}" tabindex="0"><td><b>${k.t}</b>${s.port[k.t]?' <span class="mut">·held</span>':''}</td><td class="mut">${k.n}</td><td class="r num">${fmt(q.p)}</td><td class="r num ${d>=0?'up':'dn'}">${pct(d)}</td></tr>`}).join('')}
-   </tbody></table>
+  const k=SK[sel],q=s.px[sel],h=s.port[sel],M=s.mkt,d=q.p/q.o-1,H=q.h,buy=ot.side==='buy';
+  let val=0,cost=0,dpl=0;for(const x in s.port){const o=s.port[x],y=s.px[x];val+=o.sh*y.p;cost+=o.cost;dpl+=o.sh*(y.p-y.o)}
+  const idx=STOCKS.reduce((t,k)=>t+s.px[k.t].p/k.p,0)/STOCKS.length*1000,idxd=STOCKS.reduce((t,k)=>t+s.px[k.t].p/s.px[k.t].o,0)/STOCKS.length-1;
+  const dh=Math.max(q.o,q.p)*(1+.006*hsh(s.day,3)),dl=Math.min(q.o,q.p)*(1-.006*hsh(s.day,5));
+  const ok=buy?ot.qty*q.p<=s.cash:h&&h.sh>=ot.qty,news=s.feed.filter(p=>p.h==='@MarketWire'&&p.x.includes('$'+sel)).slice(0,5);
+  const st=(l,v)=>`<div><span>${l}</span><b class="num">${v}</b></div>`,pl=(n)=>`<span class="num ${n>=0?'up':'dn'}">${n>=0?'+':''}${fmt(n)}</span>`;
+  return `<div class="tbar">
+    <div><small>Hustle 500</small><b class="num">${idx.toFixed(2)}</b> <span class="num ${idxd>=0?'up':'dn'}">${pct(idxd)}</span></div>
+    <div><small>Market</small><b class="${M.bull?'up':'dn'}">${M.bull?'Bull':'Bear'}</b></div>
+    <div><small>Total assets</small><b class="num">${fmt(val+s.cash)}</b></div>
+    <div><small>Market value</small><b class="num">${fmt(val)}</b></div>
+    <div><small>Day P/L</small><b>${pl(dpl)}</b></div>
+    <div><small>Total P/L</small><b>${pl(val-cost)}</b></div>
+  </div>
+  <div class="tui">
+   <div class="watch"><div class="wh"><span>Watchlist</span><span>Day</span></div>
+    ${STOCKS.map(k=>{const q=s.px[k.t],d=q.p/q.o-1;return `<button class="wrow ${k.t===sel?'on':''}" data-a="sel" data-x="${k.t}"><span><b>${k.t}</b>${s.port[k.t]?' <span class="mut">·held</span>':''}<small>${k.n}</small></span><span class="num">${fmt(q.p)}</span><span class="pill ${d>=0?'up':'dn'}">${pct(d)}</span></button>`}).join('')}
+   </div>
    <section>
-    <h3 style="margin-top:0">${k.n}</h3>
-    <p class="mut">${k.t} · ${k.sec}${k.div?` · pays ${(k.div*100).toFixed(1)}% a year in dividends`:''}</p>
-    <p style="margin-top:var(--space-2xs)"><span class="price">${fmt(q.p)}</span> <span class="num ${d>=0?'up':'dn'}">${pct(d)}</span> <span class="mut">today, ${pct(d30)} over 30 days</span></p>
-    <canvas id="chart"></canvas>
-    <p>${h?`You own <b class="num">${big(h.sh)}</b> at an average of <span class="num">${fmt(h.cost/h.sh)}</span>, now worth <b class="num">${fmt(h.sh*q.p)}</b> (<span class="num ${h.sh*q.p>=h.cost?'up':'dn'}">${pct(h.sh*q.p/h.cost-1)}</span>).`:'<span class="mut">You own none of this one.</span>'}</p>
-    <div class="trade">${['1','10','100'].map(n=>`<button data-a="buy" data-x="${sel}" data-y="${n}" ${maxN<+n?'disabled':''}>Buy ${n}</button>`).join('')}<button class="pri" data-a="buy" data-x="${sel}" data-y="max" ${maxN<1?'disabled':''}>Buy max</button>
-     ${['1','10','100'].map(n=>`<button data-a="sell" data-x="${sel}" data-y="${n}" ${!h||h.sh<+n?'disabled':''}>Sell ${n}</button>`).join('')}<button class="bad" data-a="sell" data-x="${sel}" data-y="all" ${h?'':'disabled'}>Sell all</button></div>
+    <div class="qhead"><div><h2 class="qt">${k.t} <span class="mut">${k.n}</span></h2>
+      <p><span class="price ${d>=0?'up':'dn'}">${fmt(q.p)}</span> <span class="num ${d>=0?'up':'dn'}">${d>=0?'+':''}${fmt(q.p-q.o)} (${pct(d)})</span></p></div><span class="chip">${k.sec}</span></div>
+    <div class="stats4">${st('Open',fmt(q.o))}${st('High',fmt(dh))}${st('Low',fmt(dl))}${st('Prev close',fmt(q.o))}${st('240d high',fmt(Math.max(...H)))}${st('240d low',fmt(Math.min(...H)))}${st('Volume',big(volAt(k,H.length-1)))}${st('Mkt cap',fmt(q.p*k.sh))}${st('P/E',k.pe?(k.pe*q.p/k.p).toFixed(1):'—')}${st('Div yield',k.div?(k.div*100).toFixed(1)+'%':'—')}</div>
+    <div class="tfbar">${Object.keys(TF).map(x=>`<button class="${tf===x?'on':''}" data-a="tf" data-x="${x}">${x}</button>`).join('')}<span class="sp"></span><button class="${cmode==='line'?'on':''}" data-a="cmode" data-x="line">Line</button><button class="${cmode==='candle'?'on':''}" data-a="cmode" data-x="candle">Candles</button></div>
+    <canvas id="tchart"></canvas>
+    <h3>News</h3>
+    ${news.length?`<ul class="news">${news.map(p=>`<li><small>${s.day-p.d?`${s.day-p.d}d ago`:'today'}</small>${esc(p.x)}</li>`).join('')}</ul>`:`<p class="mut">No headlines about ${k.t} lately.</p>`}
    </section>
-  </div>`;
+   <div class="ticket">
+    <div class="seg"><button class="${buy?'on buy':''}" data-a="side" data-x="buy">Buy</button><button class="${buy?'':'on sell'}" data-a="side" data-x="sell">Sell</button></div>
+    <dl><dt>Order type</dt><dd>Market</dd><dt>Last price</dt><dd class="num">${fmt(q.p)}</dd></dl>
+    <div class="qty"><button data-a="qty" data-x="-" aria-label="Fewer shares">−</button><b class="num">${big(ot.qty)}</b><button data-a="qty" data-x="+" aria-label="More shares">+</button></div>
+    <div class="presets">${['1','10','100'].map(v=>`<button data-a="qset" data-x="${v}">${v}</button>`).join('')}<button data-a="qset" data-x="max">Max</button></div>
+    <dl><dt>Estimated ${buy?'cost':'proceeds'}</dt><dd class="num">${fmt(ot.qty*q.p)}</dd><dt>${buy?'Buying power':'Shares held'}</dt><dd class="num">${buy?fmt(s.cash):big(h?.sh||0)}</dd>${h?`<dt>Your avg cost</dt><dd class="num">${fmt(h.cost/h.sh)}</dd>`:''}</dl>
+    <button class="place ${buy?'buy':'sell'}" data-a="order" ${ok?'':'disabled'}>${buy?'Buy':'Sell'} ${big(ot.qty)} ${k.t}</button>
+    ${ok?'':`<p class="mut" style="font-size:var(--text-xs)">${buy?'Not enough buying power.':"You don't hold that many shares."}</p>`}
+   </div>
+  </div>
+  <h3>Positions</h3>
+  ${Object.keys(s.port).length?`<div class="scroll"><table class="ledger"><thead><tr><th>Symbol</th><th class="r">Qty</th><th class="r">Avg cost</th><th class="r">Last</th><th class="r">Market value</th><th class="r">Day P/L</th><th class="r">Total P/L</th></tr></thead><tbody>
+   ${Object.entries(s.port).map(([x,o])=>{const y=s.px[x],v=o.sh*y.p;return `<tr class="pick ${x===sel?'on':''}" data-a="sel" data-x="${x}" tabindex="0"><td><b>${x}</b></td><td class="r num">${big(o.sh)}</td><td class="r num">${fmt(o.cost/o.sh)}</td><td class="r num">${fmt(y.p)}</td><td class="r num">${fmt(v)}</td><td class="r">${pl(o.sh*(y.p-y.o))}</td><td class="r">${pl(v-o.cost)} <span class="num ${v>=o.cost?'up':'dn'}">${pct(v/o.cost-1)}</span></td></tr>`}).join('')}
+  </tbody></table></div>`:'<p class="mut">No positions yet. Pick a stock from the watchlist and place an order.</p>'}`;
 },
 chirp(){
   const w=cdLeft('post'),sp=sponsor();
@@ -841,30 +932,17 @@ crypto(){
   <p class="note">Every trade costs a 1% fee. New meme coins launch every few weeks. A few go up a hundredfold; most get rugged. Hustle Dollar holds at $1 and pays interest every day.</p>`;
 },
 casino(){
-  const z=s.cz,ban=s.day<z.ban,can=!ban&&s.cash>=z.chip,b=z.bj,live=b&&!b.done,L=z.rlast;
-  const cards=(h,hide)=>h.map((c,i)=>hide&&i===1?'<span class="pc back"></span>':`<span class="pc ${(c&3)===1||(c&3)===2?'red':''}">${RK[c>>2]}${ST[c&3]}</span>`).join('');
-  return `<section class="lede"><div><h2 class="headline">Casino</h2>
-    <p class="dek">${z.played?`You're <b class="num ${z.net>=0?'up':'dn'}">${z.net>=0?'up':'down'} ${fmt(Math.abs(z.net))}</b> across ${z.played} games.`:'The house always wins in the end. Tonight might be different.'}${ban?` You've barred yourself for ${z.ban-s.day} more days.`:''}</p></div>
-    <div class="side"><p class="mut">Bet per game</p><div class="row chips">${CHIPS.map(v=>`<button class="${z.chip===v?'on':''}" data-a="chip" data-x="${v}" ${s.cash<v&&z.chip!==v?'disabled':''}>${fmt(v)}</button>`).join('')}</div></div></section>
-  <div class="casino">
-   <section><h3>Blackjack</h3>
-    <div class="felt"><div class="hand"><span class="mut">Dealer${b&&!live?` · ${hv(b.d)}`:''}</span><div>${b?cards(b.d,live):''}</div></div>
-     <div class="hand"><span class="mut">You${b?` · ${hv(b.p)}`:''}</span><div>${b?cards(b.p):''}</div></div></div>
-    <p class="result">${b?.msg||'Dealer stands on 17. Blackjack pays 3 to 2.'}</p>
-    <div class="row">${live?`<button data-a="hit">Hit</button><button class="pri" data-a="stand">Stand</button><button data-a="dbl" ${b.p.length===2&&s.cash>=b.bet?'':'disabled'}>Double</button>`:`<button class="pri" data-a="deal" ${can?'':'disabled'}>Deal for ${fmt(z.chip)}</button>`}</div>
-   </section>
-   <section><h3>Slots</h3>
-    <div class="reels">${(z.slot?.r||['7','BAR','★']).map(x=>`<span>${x}</span>`).join('')}</div>
-    <p class="result">${z.slot?(z.slot.w?`Paid <b class="num">${fmt(z.slot.w)}</b>.`:'Nothing this time.'):'Three 7s pay 150×. Any pair gives back 0.7×.'}</p>
-    <button class="pri" data-a="slot" ${can?'':'disabled'}>Spin for ${fmt(z.chip)}</button>
-   </section>
-   <section class="wide"><h3>Roulette</h3>
-    <div class="wheel"><span class="rn big ${L?rc(L.n):''}">${L?L.n:'—'}</span><div class="hist">${z.rh.slice(1).map(n=>`<span class="rn ${rc(n)}">${n}</span>`).join('')}</div></div>
-    <p class="result">${L?`${L.n}, ${L.n===0?'green':RED.has(L.n)?'red':'black'}. ${L.w?`You win <b class="num">${fmt(L.w)}</b>.`:'You lose.'}`:'Single zero. Outside bets pay even money, dozens pay 2 to 1, a single number pays 35 to 1.'}</p>
-    <div class="row">${RBETS.map(([k,l])=>`<button data-a="rl" data-x="${k}" ${can?'':'disabled'}>${l}</button>`).join('')}</div>
-    <div class="scroll"><div class="board"><button class="rn g" data-a="rl" data-x="n0" ${can?'':'disabled'}>0</button>${[3,2,1].flatMap(r=>Array.from({length:12},(_,i)=>i*3+r)).map(n=>`<button class="rn ${rc(n)}" data-a="rl" data-x="n${n}" ${can?'':'disabled'}>${n}</button>`).join('')}</div></div>
-   </section>
-  </div>`;
+  const z=s.cz,ban=s.day<z.ban,can=!ban&&s.cash>=z.chip;
+  const intro=`${z.played?`You're <b class="num ${z.net>=0?'up':'dn'}">${z.net>=0?'up':'down'} ${fmt(Math.abs(z.net))}</b> across ${z.played} games.`:'The house always wins in the end. Tonight might be different.'}${ban?` You've barred yourself for ${z.ban-s.day} more days.`:''}`;
+  if(!cg)return `<section class="lede"><div><h2 class="headline">Casino</h2><p class="dek">${intro}</p></div></section>
+  <div class="scroll"><table class="ledger"><thead><tr><th>Game</th><th>How it works</th><th class="r">House edge</th><th class="r">Played</th><th class="r">Your result</th><th></th></tr></thead><tbody>
+  ${GAMES.map(g=>{const r=z.g?.[g.id];return `<tr class="pick" data-a="cg" data-x="${g.id}" tabindex="0"><td><b>${g.n}</b></td><td class="mut">${g.d}</td><td class="r num">${g.edge}</td><td class="r num">${r?.n||0}</td><td class="r num ${r?r.net>=0?'up':'dn':''}">${r?(r.net>=0?'+':'')+fmt(r.net):'—'}</td><td class="act"><button class="pri" data-a="cg" data-x="${g.id}">Play</button></td></tr>`}).join('')}
+  </tbody></table></div>`;
+  const G=GM[cg];
+  return `<button class="back" data-a="cg">← All games</button>
+  <section class="lede"><div><h2 class="headline">${G.n}</h2><p class="dek">${G.d} ${(r=>r?`You have played ${r.n} time${r.n>1?"s":""} and are <b class="num ${r.net>=0?"up":"dn"}">${r.net>=0?"up":"down"} ${fmt(Math.abs(r.net))}</b>.`:"")(z.g?.[cg])}${ban?` Barred for ${z.ban-s.day} more days.`:""}</p></div>
+   <div class="side"><p class="mut">Bet per game</p><div class="row chips">${CHIPS.map(v=>`<button class="${z.chip===v?'on':''}" data-a="chip" data-x="${v}" ${s.cash<v&&z.chip!==v?'disabled':''}>${fmt(v)}</button>`).join('')}</div></div></section>
+  <div class="table">${TABLES[cg](z,can)}</div>`;
 },
 home(){
   const f=flows(),idx=s.re.idx;let val=0,debt=0;for(const p of s.props){val+=pval(p);debt+=p.loan}
@@ -905,6 +983,26 @@ shop(){
   </tbody></table></div>`;
 },
 };
+const cardHtml=(h,hide)=>h.map((c,i)=>hide&&i===1?'<span class="pc back"></span>':`<span class="pc ${(c&3)===1||(c&3)===2?'red':''}">${RK[c>>2]}${ST[c&3]}</span>`).join('');
+const TABLES={
+bj:(z,can)=>{const b=z.bj,live=b&&!b.done;return `<div class="felt"><div class="hand"><span class="mut">Dealer${b&&!live?` · ${hv(b.d)}`:''}</span><div>${b?cardHtml(b.d,live):''}</div></div>
+   <div class="hand"><span class="mut">You${b?` · ${hv(b.p)}`:''}</span><div>${b?cardHtml(b.p):''}</div></div></div>
+  <p class="result">${b?.msg||'Dealer stands on 17. Blackjack pays 3 to 2.'}</p>
+  <div class="row">${live?`<button data-a="hit">Hit</button><button class="pri" data-a="stand">Stand</button><button data-a="dbl" ${b.p.length===2&&s.cash>=b.bet?'':'disabled'}>Double</button>`:`<button class="pri" data-a="deal" ${can?'':'disabled'}>Deal for ${fmt(z.chip)}</button>`}</div>`},
+slot:(z,can)=>`<div class="reels">${(z.slot?.r||['7','BAR','★']).map(x=>`<span>${x}</span>`).join('')}</div>
+  <p class="result">${z.slot?(z.slot.w?`Paid <b class="num">${fmt(z.slot.w)}</b>.`:'Nothing this time.'):'Three 7s pay 150×, three BARs 40×, three stars 15×. Any pair gives back 0.7×.'}</p>
+  <button class="pri" data-a="slot" ${can?'':'disabled'}>Spin for ${fmt(z.chip)}</button>`,
+rl:(z,can)=>{const L=z.rlast;return `<div class="wheel"><span class="rn big ${L?rc(L.n):''}">${L?L.n:'—'}</span><div class="hist">${z.rh.slice(1).map(n=>`<span class="rn ${rc(n)}">${n}</span>`).join('')}</div></div>
+  <p class="result">${L?`${L.n}, ${L.n===0?'green':RED.has(L.n)?'red':'black'}. ${L.w?`You win <b class="num">${fmt(L.w)}</b>.`:'You lose.'}`:'Outside bets pay even money, dozens pay 2 to 1, a single number pays 35 to 1.'}</p>
+  <div class="row">${RBETS.map(([k,l])=>`<button data-a="rl" data-x="${k}" ${can?'':'disabled'}>${l}</button>`).join('')}</div>
+  <div class="scroll"><div class="board"><button class="rn g" data-a="rl" data-x="n0" ${can?'':'disabled'}>0</button>${[3,2,1].flatMap(r=>Array.from({length:12},(_,i)=>i*3+r)).map(n=>`<button class="rn ${rc(n)}" data-a="rl" data-x="n${n}" ${can?'':'disabled'}>${n}</button>`).join('')}</div></div>`},
+dice:(z,can)=>{const D=z.dice;return `<div class="dice">${D?`<span>${D.a}</span><span>${D.b}</span>`:'<span>–</span><span>–</span>'}</div>
+  <p class="result">${D?`Rolled ${D.a+D.b}. ${D.w?`You win <b class="num">${fmt(D.w)}</b>.`:'You lose.'}`:'Under 7 or over 7 pays 2.35×. Exactly 7 pays 5.8×.'}</p>
+  <div class="row">${[['under','Under 7'],['seven','Exactly 7'],['over','Over 7']].map(([k,l])=>`<button class="pri" data-a="dice" data-x="${k}" ${can?'':'disabled'}>${l}</button>`).join('')}</div>`},
+coin:(z,can)=>{const F=z.flip;return `<div class="coin">${F?(F.r==='h'?'Heads':'Tails'):'?'}</div>
+  <p class="result">${F?(F.w?`Right call. Paid <b class="num">${fmt(F.w)}</b>.`:'Wrong call.'):'Call it. A right call pays 1.96×.'}</p>
+  <div class="row"><button class="pri" data-a="flip" data-x="h" ${can?'':'disabled'}>Heads</button><button class="pri" data-a="flip" data-x="t" ${can?'':'disabled'}>Tails</button></div>`},
+};
 const TABS=[['life','Life'],['work','Work'],['biz','Business'],['stock','Markets'],['crypto','Crypto'],['chirp','Chirp'],['home','Property'],['garage','Garage'],['shop','Lifestyle'],['casino','Casino']];
 
 function hdr(){
@@ -922,8 +1020,34 @@ function render(){
   if(!s)return;hdr();
   $('#nav').innerHTML=TABS.map(([k,l])=>`<button class="${tab===k?'on':''}" data-a="tab" data-x="${k}">${l}</button>`).join('')+'<button class="reset" data-a="reset">Start a new life</button>';
   $('#view').innerHTML=VIEWS[tab]();
-  if(tab==='stock'){const p=s.port[sel];drawChart(s.px[sel].h,p&&p.cost/p.sh)}
+  if(tab==='stock')drawStock();
   if(tab==='crypto'){const c=coin(csel),w=s.wallet[csel];if(c)drawChart(c.h,w&&w.c/w.u,pfmt)}
+}
+function drawStock(){
+  const c=$('#tchart');if(!c)return;const dpr=devicePixelRatio||1,W=c.clientWidth,H=c.clientHeight;c.width=W*dpr;c.height=H*dpr;
+  const T=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim(),g=c.getContext('2d');g.scale(dpr,dpr);
+  const k=SK[sel],all=s.px[sel].h,n=Math.min(TF[tf],all.length),st=all.length-n,grp=cmode==='candle'?Math.max(1,Math.ceil(n/60)):1,bars=[];
+  for(let i=0;i<n;i+=grp){const ix=Array.from({length:Math.min(grp,n-i)},(_,j)=>st+i+j),seg=ix.map(j=>all[j]),o=ix[0]?all[ix[0]-1]:seg[0],cl=seg.at(-1),day=s.day-all.length+1+ix[0];
+    bars.push({o,c:cl,hi:Math.max(o,...seg)*(1+.005*hsh(day,1)),lo:Math.min(o,...seg)*(1-.005*hsh(day,2)),v:ix.reduce((t,j)=>t+volAt(k,j),0),ago:all.length-1-ix.at(-1)})}
+  const AX=62,PW=W-AX,PH=H*.76,VT=PH+10,VH=H-VT-16,lo0=Math.min(...bars.map(b=>b.lo)),hi0=Math.max(...bars.map(b=>b.hi)),pad=(hi0-lo0||hi0*.02)*.06,lo=lo0-pad,hi=hi0+pad,vmax=Math.max(...bars.map(b=>b.v));
+  const X=i=>(i+.5)*PW/bars.length,Y=v=>6+(hi-v)/(hi-lo)*(PH-6),up=T('--color-up'),dn=T('--color-down'),mono=T('--font-mono');
+  g.font=`11px ${mono}`;g.strokeStyle=T('--color-rule');g.fillStyle=T('--color-ink-3');g.lineWidth=1;
+  for(let j=0;j<=4;j++){const v=lo+(hi-lo)*j/4,y=Y(v);g.beginPath();g.moveTo(0,y);g.lineTo(PW,y);g.stroke();g.fillText(fmt(v),PW+6,y+4)}
+  g.fillText(`${n} days ago`,0,H-3);g.textAlign='right';g.fillText('Today',PW,H-3);g.textAlign='left';
+  const rise=bars.at(-1).c>=bars[0].o;
+  if(cmode==='line'){g.beginPath();bars.forEach((b,i)=>i?g.lineTo(X(i),Y(b.c)):g.moveTo(X(i),Y(b.c)));g.strokeStyle=rise?up:dn;g.lineWidth=1.6;g.lineJoin='round';g.stroke();
+    g.lineTo(X(bars.length-1),PH);g.lineTo(X(0),PH);g.globalAlpha=.12;g.fillStyle=rise?up:dn;g.fill();g.globalAlpha=1}
+  else{const bw=Math.max(1,PW/bars.length*.64);for(const[i,b]of bars.entries()){const col=b.c>=b.o?up:dn,x=X(i);g.strokeStyle=g.fillStyle=col;g.beginPath();g.moveTo(x,Y(b.hi));g.lineTo(x,Y(b.lo));g.stroke();
+    const y1=Y(Math.max(b.o,b.c)),y2=Y(Math.min(b.o,b.c));g.fillRect(x-bw/2,y1,bw,Math.max(1,y2-y1))}}
+  g.globalAlpha=.45;for(const[i,b]of bars.entries()){g.fillStyle=b.c>=b.o?up:dn;const bh=b.v/vmax*VH,bw=Math.max(1,PW/bars.length*.64);g.fillRect(X(i)-bw/2,VT+VH-bh,bw,bh)}g.globalAlpha=1;
+  const last=all.at(-1),ly=Y(last);g.setLineDash([2,3]);g.strokeStyle=rise?up:dn;g.beginPath();g.moveTo(0,ly);g.lineTo(PW,ly);g.stroke();
+  const p=s.port[sel];if(p){const a=p.cost/p.sh;if(a>lo&&a<hi){g.strokeStyle=T('--color-accent');g.beginPath();g.moveTo(0,Y(a));g.lineTo(PW,Y(a));g.stroke();g.fillStyle=T('--color-accent');g.fillText('your avg',4,Y(a)-4)}}
+  g.setLineDash([]);g.fillStyle=rise?up:dn;g.fillRect(PW+2,ly-9,AX-2,18);g.fillStyle=T('--color-paper');g.fillText(fmt(last),PW+6,ly+4);
+  if(hov!=null&&hov<PW){const i=clamp(Math.floor(hov/PW*bars.length),0,bars.length-1),b=bars[i],x=X(i);
+    g.strokeStyle=T('--color-ink-3');g.setLineDash([3,3]);g.beginPath();g.moveTo(x,0);g.lineTo(x,H-16);g.stroke();g.setLineDash([]);
+    const lines=[b.ago?`${b.ago} days ago`:'Today',`O ${fmt(b.o)}  H ${fmt(b.hi)}`,`L ${fmt(b.lo)}  C ${fmt(b.c)}`,`Vol ${big(b.v)}`],bx=x>PW/2?8:PW-200;
+    g.fillStyle=T('--color-paper-2');g.fillRect(bx,8,192,lines.length*16+10);g.strokeStyle=T('--color-rule');g.strokeRect(bx,8,192,lines.length*16+10);
+    g.fillStyle=T('--color-ink');lines.forEach((l,j)=>g.fillText(l,bx+8,26+j*16))}
 }
 function drawChart(h,avg,f=fmt){
   const c=$('#chart');if(!c)return;const dpr=devicePixelRatio||1,W=c.clientWidth,H=c.clientHeight;c.width=W*dpr;c.height=H*dpr;
@@ -938,6 +1062,8 @@ function drawChart(h,avg,f=fmt){
 
 // ---------- loop, input, save ----------
 document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b||b.disabled)return;ACT[b.dataset.a](b.dataset.x,b.dataset.y);if(s&&$('#modal').hidden)render();else hdr()});
+document.addEventListener('mousemove',e=>{if(e.target.id==='tchart'){hov=e.offsetX;drawStock()}});
+document.addEventListener('mouseout',e=>{if(e.target.id==='tchart'){hov=null;drawStock()}});
 document.addEventListener('keydown',e=>{const r=e.target.closest?.('tr[data-a]');if(r&&(e.key==='Enter'||e.key===' ')){e.preventDefault();r.click()}});
 addEventListener('pointerdown',()=>holding=true);
 addEventListener('pointerup',()=>holding=false);addEventListener('pointercancel',()=>holding=false);
@@ -974,7 +1100,10 @@ function selfTest(){ // open with ?test=1 — never touches your real save
   const base=JSON.stringify({...s,job:'swe',rel:1,fol:20000,cash:2e6,biz:{truck:{n:12,mgr:0,pend:0,spent:1e5},cafe:{n:3,mgr:1,pend:0,spent:1e5}},port:{NOVA:{sh:50,cost:5000}}});
   for(const e of EV)for(const[,fx]of e.ch){s=JSON.parse(base);s.st.hap=10;const m=fx(s,e.a?e.a(s):0);ok(typeof m==='string','event '+e.id)}
   for(const k in POSTS){s=JSON.parse(base);ACT.post(k)}
-  for(const k in VIEWS){tab=k;VIEWS[k]()}
+  for(const k in VIEWS){tab=k;VIEWS[k]()}for(const g of GAMES){cg=g.id;VIEWS.casino()}cg=null;
+  s.cash=1e6;sel='NOVA';ot={side:'buy',qty:7};const n0=s.port.NOVA?.sh||0;ACT.order();ok(s.port.NOVA.sh===n0+7,'order ticket buys');ot.side='sell';ot.qty=3;ACT.order();ok(s.port.NOVA.sh===n0+4,'order ticket sells');ot={side:'buy',qty:10};
+  s.cz.chip=100;for(let i=0;i<20000;i++){ACT.dice(['under','over','seven'][i%3]);ACT.flip(i%2?'h':'t')}const dg=s.cz.g.dice,cf=s.cz.g.coin;
+  ok(dg.n===20000&&cf.n===20000&&dg.net/2e6>-.08&&dg.net/2e6<.02&&cf.net/2e6>-.05&&cf.net/2e6<.01,'dice and coin edges');
   newGame('Old','street');delete s.re;delete s.cx;delete s.cz;s.own={apt:1,car:1,bike:1};s.port.MOON={sh:10,cost:12};upgrade();ok(s.props.length===1&&s.cars.length===1&&s.own.bike&&homeP()&&s.wallet.MOON.u===10&&!s.port.MOON&&s.cz,'old saves upgrade');
   newGame('Sim','rich');let d=0;for(;d<40000&&!s.dead;d++){day();if(d%7===0){s.inbox=[];ACT.colAll()}}
   const vals=[s.cash,netWorth(),s.fol,...Object.values(s.st),...Object.values(s.px).map(q=>q.p),...s.cx.coins.map(c=>c.p),walletVal()];
