@@ -1,3 +1,24 @@
 [
-  { "date": "2026-09-25", "macrostructure": "Workbench (app, broadsheet ledger)", "theme": "custom", "theme_axes": "light / roman-serif / cool", "vibe": "salmon financial broadsheet, ink, one oxford blue", "enrichment": "none", "nav": "N6 masthead", "footer": "none (app)", "brief": "The Hustle · idle life sim redesign" }
+  {
+    "date": "2026-09-25",
+    "macrostructure": "Workbench (app, broadsheet ledger)",
+    "theme": "custom",
+    "theme_axes": "dark / roman-serif / warm",
+    "vibe": "after-hours financial paper, black, brass accent",
+    "enrichment": "none",
+    "nav": "N6 masthead",
+    "footer": "none (app)",
+    "brief": "The Hustle · user asked to keep a black scheme; added Property + Garage tabs"
+  },
+  {
+    "date": "2026-09-25",
+    "macrostructure": "Workbench (app, broadsheet ledger)",
+    "theme": "custom",
+    "theme_axes": "light / roman-serif / cool",
+    "vibe": "salmon financial broadsheet, ink, one oxford blue",
+    "enrichment": "none",
+    "nav": "N6 masthead",
+    "footer": "none (app)",
+    "brief": "The Hustle · idle life sim redesign"
+  }
 ]

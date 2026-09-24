@@ -9,15 +9,15 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:opsz,wght@6..72,500;6..72,600;6..72,700&display=swap" rel="stylesheet">
 <style>
-/* Hallmark · genre: editorial · macrostructure: Workbench (app · broadsheet ledger) · theme: custom "Salmon Ledger" (Newsprint-derived) · tone: financial broadsheet · anchor hue: 62 · accent: oxford blue 255 · enrichment: none · nav: N6 masthead · footer: none (app)
+/* Hallmark · genre: editorial · macrostructure: Workbench (app · broadsheet ledger) · theme: custom "Night Ledger" (dark broadsheet) · tone: after-hours financial paper · anchor hue: 60 · accent: brass 85 · enrichment: none · nav: N6 masthead · footer: none (app)
  * pre-emit critique: P5 H4 E4 S5 R4 V5
  */
 :root{
-  --color-paper:oklch(94% .028 62);--color-paper-2:oklch(90.5% .036 58);--color-paper-3:oklch(97.5% .012 70);
-  --color-ink:oklch(21% .015 45);--color-ink-2:oklch(42% .02 45);--color-ink-3:oklch(56% .022 50);
-  --color-rule:oklch(79% .035 55);--color-accent:oklch(37% .1 255);--color-accent-2:oklch(29% .1 255);
-  --color-up:oklch(43% .12 150);--color-down:oklch(48% .17 27);--color-warn:oklch(50% .11 70);
-  --color-scrim:oklch(21% .015 45 / .5);--color-focus:oklch(37% .1 255);
+  --color-paper:oklch(15.5% .006 60);--color-paper-2:oklch(21% .009 60);--color-paper-3:oklch(18.5% .008 60);
+  --color-ink:oklch(93% .012 75);--color-ink-2:oklch(74% .014 70);--color-ink-3:oklch(55% .012 65);
+  --color-rule:oklch(29% .01 60);--color-accent:oklch(80% .11 85);--color-accent-2:oklch(87% .09 88);
+  --color-up:oklch(78% .14 155);--color-down:oklch(70% .16 25);--color-warn:oklch(76% .12 60);
+  --color-scrim:oklch(5% 0 0 / .72);--color-focus:oklch(80% .11 85);
   --font-display:"Newsreader",Georgia,"Times New Roman",serif;
   --font-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
   --font-mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
@@ -25,7 +25,7 @@
   --text-xs:.75rem;--text-sm:.8125rem;--text-base:.9375rem;--text-md:1.125rem;--text-lg:1.5rem;--text-xl:2.25rem;--text-2xl:3.25rem;
   --ease-out:cubic-bezier(.16,1,.3,1);--dur-short:140ms;
   --rule:1px solid var(--color-rule);--rule-ink:1px solid var(--color-ink);--radius:2px;
-  color-scheme:light;
+  color-scheme:dark;
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
@@ -72,7 +72,7 @@ button:hover:not(:disabled){background:var(--color-ink);color:var(--color-paper)
 button:active:not(:disabled){transform:translateY(1px)}
 button:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--color-focus);outline-offset:2px}
 button:disabled{border-color:var(--color-rule);color:var(--color-ink-3);cursor:not-allowed}
-button.pri{background:var(--color-accent);border-color:var(--color-accent);color:var(--color-paper-3)}
+button.pri{background:var(--color-accent);border-color:var(--color-accent);color:var(--color-paper)}
 button.pri:hover:not(:disabled){background:var(--color-accent-2);border-color:var(--color-accent-2)}
 button.pri:disabled{background:transparent;border-color:var(--color-rule);color:var(--color-ink-3)}
 button.bad{border-color:var(--color-down);color:var(--color-down)}
@@ -252,15 +252,38 @@ const STOCKS=[
 ];
 const SHOP=[
  {id:'bike',n:'Bicycle',cost:300,up:0,hap:.02,fame:0},
- {id:'phone',n:'Flagship Phone',cost:1400,up:1,hap:.02,fame:.5},
- {id:'car',n:'Used Hatchback',cost:9000,up:8,hap:.04,fame:0},
- {id:'apt',n:'City Apartment',cost:180000,up:35,hap:.07,fame:1,home:1},
- {id:'sports',n:'Sports Car',cost:240000,up:90,hap:.08,fame:4},
- {id:'house',n:'Suburban House',cost:700000,up:110,hap:.1,fame:2,home:1},
- {id:'mansion',n:'Hilltop Mansion',cost:1.2e7,up:2500,hap:.18,fame:25,home:1},
+ {id:'phone',n:'Flagship phone',cost:1400,up:1,hap:.02,fame:.5},
+ {id:'pc',n:'Gaming rig',cost:4000,up:2,hap:.03,fame:0},
+ {id:'wardrobe',n:'Designer wardrobe',cost:25000,up:10,hap:.03,fame:3},
+ {id:'art',n:'Art collection',cost:2e6,up:300,hap:.06,fame:15},
  {id:'yacht',n:'Superyacht',cost:6e7,up:15000,hap:.2,fame:70},
- {id:'jet',n:'Private Jet',cost:1.5e8,up:40000,hap:.22,fame:140},
- {id:'island',n:'Private Island',cost:1e9,up:120000,hap:.3,fame:350},
+ {id:'jet',n:'Private jet',cost:1.5e8,up:40000,hap:.22,fame:140},
+];
+// property value = base × location × housing index; yld = a year's rent as a share of value; biz = investment only, can't live there
+const PROPS=[
+ {id:'studio',n:'Studio flat',base:90000,yld:.055,hap:.03},
+ {id:'condo',n:'Two-bed condo',base:260000,yld:.05,hap:.05},
+ {id:'town',n:'Townhouse',base:480000,yld:.045,hap:.07},
+ {id:'house',n:'Family house',base:750000,yld:.042,hap:.09},
+ {id:'beach',n:'Beach house',base:1.6e6,yld:.045,hap:.12,fame:3},
+ {id:'pent',n:'Penthouse',base:4e6,yld:.035,hap:.14,fame:8},
+ {id:'block',n:'Apartment block',base:1.2e7,yld:.065,biz:1},
+ {id:'mansion',n:'Hilltop mansion',base:2.5e7,yld:.02,hap:.18,fame:25},
+ {id:'tower',n:'Office tower',base:1.5e8,yld:.07,biz:1},
+ {id:'island',n:'Private island',base:1e9,yld:.01,hap:.3,fame:350},
+];
+const LOCS=[['Eastgate',.8],['Old Town',.9],['Riverside',1],['Parkview',1.05],['Midtown',1.15],['Harbour',1.2],['Hillside',1.3],['Northshore',1.4]];
+// dep = value lost per year (negative = gains); vol = collectible price swings per year
+const CARS=[
+ {id:'hatch',n:'Used hatchback',price:9000,dep:.12,up:6,hap:.03,fame:0},
+ {id:'sedan',n:'Family sedan',price:32000,dep:.14,up:12,hap:.04,fame:0},
+ {id:'suv',n:'Luxury SUV',price:95000,dep:.16,up:28,hap:.06,fame:.5},
+ {id:'ev',n:'Electric saloon',price:120000,dep:.18,up:10,hap:.06,fame:1},
+ {id:'sports',n:'Sports coupé',price:240000,dep:.15,up:80,hap:.08,fame:4},
+ {id:'classic',n:'Classic roadster, 1967',price:180000,dep:-.05,vol:.12,up:40,hap:.07,fame:3},
+ {id:'super',n:'Supercar',price:650000,dep:.12,up:200,hap:.12,fame:12},
+ {id:'hyper',n:'Hypercar',price:3.2e6,dep:.06,up:800,hap:.16,fame:40},
+ {id:'vintage',n:'Vintage racer',price:9e6,dep:-.06,vol:.15,up:2500,hap:.15,fame:60},
 ];
 const ACTS=[
  {id:'gym',n:'Hit the gym',cd:3,c:15,fx:()=>{add('hea',3);add('loo',1);add('hap',1);return 'Good pump.'}},
@@ -293,7 +316,7 @@ const POSTS={
  flex:{n:'Flex',q:()=>Math.min(100,Math.log10(Math.max(1,netWorth()))*12),need:()=>netWorth()>=25000,why:'Net worth $25K+',tx:['just checked my portfolio 📈 net worth: {nw}','hard work pays off. that\'s the post.','they said i couldn\'t. i did. 🏆','new week, new money 💸']},
  shill:{n:'Promote biz',q:()=>40,need:()=>BIZ.some(b=>s.biz[b.id]?.n),why:'Own a business · +25% biz income 10d',tx:['come through to my {biz}! first 10 customers get 20% off','my {biz} is hiring! DM me','new menu at my {biz} 👀','proud of what we built at {biz} 🙌']},
 };
-const EM=Object.fromEntries,JM=EM(JOBS.map(j=>[j.id,j])),BM=EM(BIZ.map(b=>[b.id,b])),SK=EM(STOCKS.map(k=>[k.t,k])),SM=EM(SHOP.map(i=>[i.id,i])),AM=EM(ACTS.map(a=>[a.id,a]));
+const EM=Object.fromEntries,JM=EM(JOBS.map(j=>[j.id,j])),BM=EM(BIZ.map(b=>[b.id,b])),SK=EM(STOCKS.map(k=>[k.t,k])),SM=EM(SHOP.map(i=>[i.id,i])),AM=EM(ACTS.map(a=>[a.id,a])),PM=EM(PROPS.map(p=>[p.id,p])),CM=EM(CARS.map(c=>[c.id,c]));
 
 // ---------- events (choices) ----------
 const EV=[
@@ -355,7 +378,7 @@ const EV=[
  ['Pledge',(s,a)=>{s.cash-=a;add('hap',10);const f=Math.round(s.fol*.05+300);s.fol+=f;return `The photographers love you. +${big(f)} followers.`}],
  ['Skip it',()=>'You stay in and watch TV.']]},
 {id:'midlife',w:1.5,c:()=>age()>=40&&age()<55,a:()=>rint(60000,150000),t:'Midlife crisis',d:(s,a)=>`You're feeling old. A shiny convertible costs <b>${fmt(a)}</b>…`,def:1,ch:[
- ['Buy the convertible',(s,a)=>{s.cash-=a;add('hap',18);add('loo',3);return 'Wind in your hair. Worth it.'}],
+ ['Buy the convertible',(s,a)=>{s.cash-=a;s.cars.push({uid:uid(),t:'sports',paid:a,v:a*.9,bought:s.day});add('hap',18);add('loo',3);return 'Wind in your hair. It is parked in your garage now.'}],
  ['Take up pottery',()=>{add('hap',6);return 'Your mugs are lopsided and you love them.'}]]},
 {id:'burnout',w:4,c:s=>s.st.hap<20&&s.job,t:'Burning out',d:()=>"You can't remember the last time you felt rested. Something has to give.",def:1,ch:[
  ['Quit & recharge',()=>{fire();add('hap',30);add('hea',5);return 'You quit. The sun already feels brighter.'}],
@@ -369,12 +392,27 @@ const EV=[
 {id:'angel',w:1.5,c:s=>s.cash>5000,a:s=>Math.round(s.cash*.1),t:'Startup pitch',d:(s,a)=>`A college friend's startup, <b>${pick(['Snackr','Pawsome','Cloudly','Fitbuddy','Quikrent'])}</b>, asks for <b>${fmt(a)}</b> as an angel investment.`,def:1,ch:[
  ['Invest',(s,a)=>{s.cash-=a;const r=R();s.later.push(r<.2?{d:s.day+rint(200,500),k:'cash',v:a*rint(8,25),m:'The startup got acquired! Your angel stake paid'}:r<.45?{d:s.day+rint(150,400),k:'cash',v:a*1.5,m:'The startup had a modest exit. You got'}:{d:s.day+rint(100,300),k:'msg',m:'The startup shut down. Your angel money is gone.'});return 'You wire the money. Startups take time…'}],
  ['Pass',()=>'You wish them luck.']]},
-{id:'robbery',w:1,c:s=>s.cash>5000&&!s.own.mansion,a:s=>Math.round(s.cash*.05),t:'Mugged!',d:(s,a)=>`A mugger corners you and demands your phone and banking app. About <b>${fmt(a)}</b> at stake.`,def:1,ch:[
+{id:'robbery',w:1,c:s=>s.cash>5000&&homeP()?.t!=='mansion',a:s=>Math.round(s.cash*.05),t:'Mugged!',d:(s,a)=>`A mugger corners you and demands your phone and banking app. About <b>${fmt(a)}</b> at stake.`,def:1,ch:[
  ['Fight back',(s,a)=>{if(R()<.5){add('hap',5);return 'You scared them off! Pure adrenaline.'}s.cash-=a;add('hea',-18);return `You lost the fight and ${fmt(a)}.`}],
  ['Hand it over',(s,a)=>{s.cash-=a;add('hap',-5);return `You lost ${fmt(a)}, but you're safe.`}]]},
 {id:'reunion',w:1,c:()=>age()>28,t:'High school reunion',d:()=>'Your class reunion is this weekend.',def:1,ch:[
  ['Go and flex',()=>{if(netWorth()>1e5){add('hap',10);return 'Everyone asks how you did it. You glow.'}add('hap',-6);return 'Everyone seems richer than you. Ouch.'}],
  ['Skip it',()=>'Some things are better left in the past.']]},
+{id:'tenant',w:2,c:s=>s.props.some(renting),a:s=>{const p=pick(s.props.filter(renting));return {u:p.uid,n:pname(p),r:Math.round(rentOf(p)*30)}},t:'Tenant trouble',d:(s,a)=>`The tenant at your ${a.n} has stopped paying. They owe about <b>${fmt(a.r)}</b> and want more time.`,def:0,ch:[
+ ['Give them a month',(s,a)=>{const p=P(a.u);if(p)p.from=s.day+30;add('hap',2);return 'No rent from that place for a month, but it was the kind thing to do.'}],
+ ['Evict them',(s,a)=>{const p=P(a.u);if(!p)return 'You no longer own it.';s.cash-=2500;p.from=s.day+rint(25,45);add('hap',-3);return `Legal fees cost ${fmt(2500)}, and it sits empty until someone new moves in.`}]]},
+{id:'leak',w:2,c:s=>s.props.length,a:s=>{const p=pick(s.props);return {u:p.uid,n:pname(p),f:Math.round(pval(p)*.012)}},t:'Burst pipe',d:(s,a)=>`A pipe burst at your ${a.n}. A good plumber quotes <b>${fmt(a.f)}</b>. A cheap one will do it for a third of that.`,def:1,ch:[
+ ['Hire the good one',(s,a)=>{s.cash-=a.f;return 'Fixed properly. No more surprises.'}],
+ ['Go cheap',(s,a)=>{s.cash-=a.f/3;if(R()<.5){const p=P(a.u);if(p)p.m*=.95;return 'The patch failed. Water damage took 5% off the value.'}return 'It held. Money saved.'}]]},
+{id:'offer',w:1.2,c:s=>s.props.length,a:s=>{const p=pick(s.props);return {u:p.uid,n:pname(p),p:Math.round(pval(p)*(1.1+R()*.15))}},t:'An offer on the table',d:(s,a)=>`A developer wants your ${a.n} and offers <b>${fmt(a.p)}</b>, above market value.`,def:1,ch:[
+ ['Accept',(s,a)=>{const i=s.props.findIndex(p=>p.uid===a.u);if(i<0)return 'You no longer own it.';const p=s.props[i];s.cash+=a.p-p.loan;s.props.splice(i,1);if(s.home===p.uid)s.home=null;return `Sold for ${fmt(a.p)}${p.loan?', mortgage cleared':''}.`}],
+ ['Keep it',()=>'You hold on to it.']]},
+{id:'dent',w:1.5,c:s=>s.cars.length,a:s=>{const c=pick(s.cars);return {u:c.uid,n:CM[c.t].n.toLowerCase(),f:Math.round(c.v*.08)}},t:'Fender bender',d:(s,a)=>`Someone reversed into your ${a.n} in a car park and drove off. Repairs cost <b>${fmt(a.f)}</b>.`,def:1,ch:[
+ ['Get it fixed',(s,a)=>{s.cash-=a.f;return 'Good as new.'}],
+ ['Drive it dented',(s,a)=>{const c=s.cars.find(c=>c.uid===a.u);if(c)c.v*=.8;add('hap',-3);return 'The dent takes 20% off its resale value.'}]]},
+{id:'collector',w:1.2,c:s=>s.cars.some(c=>CM[c.t].vol),a:s=>{const c=s.cars.find(c=>CM[c.t].vol);return {u:c.uid,n:CM[c.t].n.toLowerCase(),p:Math.round(c.v*(1.25+R()*.4))}},t:'A collector calls',d:(s,a)=>`A collector offers <b>${fmt(a.p)}</b> for your ${a.n}, well above what it would fetch at auction.`,def:1,ch:[
+ ['Sell it',(s,a)=>{const i=s.cars.findIndex(c=>c.uid===a.u);if(i<0)return 'You already sold it.';s.cars.splice(i,1);s.cash+=a.p;return `Sold for ${fmt(a.p)}.`}],
+ ['Not for sale',()=>{add('hap',2);return 'Some things are worth keeping.'}]]},
 {id:'pet',w:1,c:s=>!s.pet,t:'Stray kitten',d:()=>'A tiny kitten follows you home, meowing at your door.',def:0,ch:[
  ['Adopt',()=>{s.pet=1;add('hap',10);return 'You have a cat now. It owns you.'}],
  ['Take it to a shelter',()=>'It will find a good home.']]},
@@ -397,9 +435,31 @@ const bmax=(b,n)=>Math.floor(Math.log(s.cash*(GROW-1)/(b.cost*GROW**n)+1)/Math.l
 const buyout=id=>{const o=s.biz[id];return bcost(BM[id],Math.max(0,o.n-5),5)*2};
 const shopSum=k=>SHOP.reduce((t,i)=>t+(s.own[i.id]?i[k]:0),0);
 const sponsor=()=>s.fol<1000?0:s.fol*.0015*(.5+s.st.loo/100);
-const expenses=()=>15+(SHOP.some(i=>i.home&&s.own[i.id])?0:30)+s.kids*35+(s.rel===2?10:0)+shopSum('up');
-function flows(){const f={job:s.job?jobPay():0,biz:0,pend:0,spon:sponsor(),exp:expenses()};for(const b of BIZ){const o=s.biz[b.id];if(o?.n)f[o.mgr?'biz':'pend']+=bizInc(b,o)}return f}
-function netWorth(){let w=s.cash;for(const t in s.port)w+=s.port[t].sh*s.px[t].p;for(const id in s.biz)w+=s.biz[id].spent*.5;for(const id in s.own)w+=SM[id].cost*.6;return w}
+const MR=.055/365,MN=30*365,mpay=L=>L*MR/(1-(1+MR)**-MN);
+const uid=()=>s.nid=(s.nid||0)+1;
+const pval=p=>PM[p.t].base*p.m*s.re.idx;
+const pname=p=>`${PM[p.t].n}, ${p.loc}`;
+const P=u=>s.props.find(p=>p.uid===u);
+const homeP=()=>s.home&&P(s.home);
+const renting=p=>p.uid!==s.home&&s.day>=p.from;
+const rentOf=p=>renting(p)?pval(p)*PM[p.t].yld/365:0;
+const carSum=k=>s.cars.reduce((t,c)=>t+CM[c.t][k],0);
+const bestCar=()=>s.cars.reduce((m,c)=>!m||CM[c.t].hap>CM[m.t].hap?c:m,null);
+const upkeep=()=>shopSum('up')+carSum('up')+s.props.reduce((t,p)=>t+pval(p)*.01/365,0);
+const expenses=()=>15+(homeP()?0:30)+s.kids*35+(s.rel===2?10:0)+upkeep();
+const canBorrow=L=>{const f=flows();return mpay(L)+f.mort<=(f.job+f.biz+f.rent)*.4};
+function listing(){const nw=Math.max(netWorth(),60000),ok=PROPS.filter(p=>p.base<=nw*4),[loc,m]=pick(LOCS);return {uid:uid(),t:pick(ok.slice(-4)).id,loc,m:m*(.92+R()*.16)}}
+function relist(){s.re.list=Array.from({length:6},listing);s.re.next=s.day+30}
+function upgrade(){ // saves from before property & the garage existed
+  if(s.re)return;
+  Object.assign(s,{props:[],cars:[],home:null,re:{idx:1,list:[],next:0}});
+  for(const[k,t]of[['apt','condo'],['house','house'],['mansion','mansion'],['island','island']])if(s.own[k]){s.props.push({uid:uid(),t,loc:'Riverside',m:1,paid:PM[t].base,bought:s.day,loan:0,pay:0,from:s.day});s.home??=s.props.at(-1).uid;delete s.own[k]}
+  for(const[k,t]of[['car','hatch'],['sports','sports']])if(s.own[k]){s.cars.push({uid:uid(),t,paid:CM[t].price,v:CM[t].price*.7,bought:s.day});delete s.own[k]}
+  for(const k in s.own)if(!SM[k])delete s.own[k];
+  relist();
+}
+function flows(){const f={job:s.job?jobPay():0,biz:0,pend:0,spon:sponsor(),exp:expenses(),rent:s.props.reduce((t,p)=>t+rentOf(p),0),mort:s.props.reduce((t,p)=>t+(p.loan>0?p.pay:0),0)};for(const b of BIZ){const o=s.biz[b.id];if(o?.n)f[o.mgr?'biz':'pend']+=bizInc(b,o)}return f}
+function netWorth(){let w=s.cash;for(const t in s.port)w+=s.port[t].sh*s.px[t].p;for(const id in s.biz)w+=s.biz[id].spent*.5;for(const id in s.own)w+=SM[id].cost*.6;for(const p of s.props)w+=pval(p)-p.loan;for(const c of s.cars)w+=c.v;return w}
 function log(t,k='info'){s.log.unshift({d:s.day,t,k});if(s.log.length>80)s.log.pop()}
 function chirp(h,n,x,v){s.feed.unshift({h,n,x,v,l:0,tl:rint(3,40)*(v?40:1),d:s.day});if(s.feed.length>60)s.feed.pop()}
 function toast(m){const t=document.createElement('div');t.className='toast';t.innerHTML=m;$('#toasts').append(t);setTimeout(()=>t.remove(),2800)}
@@ -407,11 +467,12 @@ function toast(m){const t=document.createElement('div');t.className='toast';t.in
 function newGame(name,bg,h={}){
   const b=BG[bg];
   s={v:1,name,handle:'@'+(name.toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,15)||'you'),day:0,startAge:18,cash:b.cash+(h.inherit||0),st:{...b.st},edu:b.edu||0,study:null,
-     job:b.job||null,jobDays:0,rank:0,biz:{},port:{},px:{},mkt:{bull:true},fol:b.fol||0,feed:[],own:{},cd:{},inbox:[],later:[],log:[],rel:0,kids:0,pet:0,
+     job:b.job||null,jobDays:0,rank:0,biz:{},port:{},px:{},mkt:{bull:true},fol:b.fol||0,feed:[],own:{},props:[],cars:[],home:null,re:{idx:1,list:[],next:0},cd:{},inbox:[],later:[],log:[],rel:0,kids:0,pet:0,
      gen:h.gen||1,boost:0,lastPost:0,dead:0,lastSeen:Date.now()};
   s.legacy=1+.25*(s.gen-1);
   for(const k of STOCKS)s.px[k.t]={p:k.p,o:k.p,h:[k.p]};
   for(let i=0;i<239;i++)marketDay(1);
+  relist();
   log(h.gen?`${esc(name)} begins generation ${s.gen} with a ${fmt(h.inherit)} inheritance.`:`${esc(name)} turns 18 and moves out. Time to hustle.`,'good');
   chirp('@hustleculture','Hustle Culture','new week, new grind. what are you building? 👇',1);
 }
@@ -419,17 +480,21 @@ function newGame(name,bg,h={}){
 // ---------- simulation ----------
 function day(){
   s.day++;const A=age(),f=flows();
-  s.cash+=f.job+f.biz+f.spon-f.exp;
+  s.cash+=f.job+f.biz+f.spon+f.rent-f.exp-f.mort;
+  for(const p of s.props)if(p.loan>0){p.loan-=p.pay-p.loan*MR;if(p.loan<=1){p.loan=p.pay=0;log(`Paid off the mortgage on your ${pname(p)}.`,'good')}}
+  s.re.idx*=Math.exp((s.mkt.bull?.00016:-.0001)+.0035*gauss());
+  for(const c of s.cars){const k=CM[c.t];c.v=Math.max(k.price*.08,c.v*Math.exp(-k.dep/365+(k.vol?k.vol/19.1*gauss():0)))}
+  if(s.day>=s.re.next)relist();
   for(const b of BIZ){const o=s.biz[b.id];if(o?.n&&!o.mgr){const g=bizInc(b,o);o.pend=Math.min(o.pend+g,g*CAP)}}
   if(s.cash<0){s.cash*=1.0003;add('hap',-.05)}
-  if(s.job){s.jobDays++;if(s.jobDays%120===0&&s.st.hap>20){s.rank++;log(`Promoted to <b>${jobTitle()}</b>! Now ${fmt(jobPay())}/day.`,'good');toast(' Promotion!')}}
-  if(s.study&&--s.study.left<=0){const e=EDU[s.study.lvl];s.edu=s.study.lvl;add('sma',e.sma);s.study=null;log(`Graduated with a ${e.n}`,'good');toast(' Graduated!')}
+  if(s.job){s.jobDays++;if(s.jobDays%120===0&&s.st.hap>20){s.rank++;log(`Promoted to <b>${jobTitle()}</b>! Now ${fmt(jobPay())}/day.`,'good');toast('Promotion!')}}
+  if(s.study&&--s.study.left<=0){const e=EDU[s.study.lvl];s.edu=s.study.lvl;add('sma',e.sma);s.study=null;log(`Graduated with a ${e.n}`,'good');toast('Graduated!')}
   const J=job();
   // stats drift toward a baseline, so an idle life is dull but survivable; choices push you above or below it
-  add('hap',(50-s.st.hap)*.004-(J?J.str*.02:0)-(s.study?.03:0)+(s.rel?.03:0)+s.kids*.015+s.pet*.015+shopSum('hap'));
+  add('hap',(50-s.st.hap)*.004-(J?J.str*.02:0)-(s.study?.03:0)+(s.rel?.03:0)+s.kids*.015+s.pet*.015+shopSum('hap')+(PM[homeP()?.t]?.hap||0)+(bestCar()?CM[bestCar().t].hap:0));
   add('hea',(85-Math.max(0,A-35)*1.2-s.st.hea)*.003+(s.st.hap>70?.01:0)-(s.st.hap<15?.04:0));
   if(A>30)add('loo',-.004);
-  s.fol+=shopSum('fame');if(s.day-s.lastPost>30)s.fol*=.999;
+  s.fol+=shopSum('fame')+carSum('fame')+s.props.reduce((t,p)=>t+(PM[p.t].fame||0),0);if(s.day-s.lastPost>30)s.fol*=.999;
   for(const p of s.feed)if(p.l<p.tl)p.l+=Math.ceil((p.tl-p.l)*.35);
   if(R()<.3)npcChatter();
   marketDay();
@@ -442,7 +507,7 @@ function day(){
 }
 function marketDay(quiet){
   const M=s.mkt;
-  if(R()<(M.bull?.003:.008)){M.bull=!M.bull;if(!quiet)chirp('@MarketWire','MarketWire',M.bull?' analysts call it: a new bull market has begun.':' stocks slide as recession fears grow. bear market territory.',1)}
+  if(R()<(M.bull?.003:.008)){M.bull=!M.bull;if(!quiet)chirp('@MarketWire','MarketWire',M.bull?'analysts call it: a new bull market has begun.':'stocks slide as recession fears grow. bear market territory.',1)}
   const m=(M.bull?.0005:-.0008)+gauss()*.007,sec={};
   for(const k of STOCKS){sec[k.sec]??=gauss()*.006;const q=s.px[k.t];q.o=q.p;q.p=Math.max(.01,q.p*Math.exp(k.mu-k.v*k.v/2+m*k.b+sec[k.sec]+k.v*gauss()));q.h.push(q.p);if(q.h.length>240)q.h.shift()}
   if(quiet)return;
@@ -450,18 +515,18 @@ function marketDay(quiet){
 }
 function shock(t,p){const q=s.px[t];q.p=Math.max(.01,q.p*(1+p));q.h[q.h.length-1]=q.p}
 function news(){const k=pick(STOCKS),up=R()<.55,p=(up?1:-1)*(.06+R()*.16);shock(k.t,p);chirp('@MarketWire','MarketWire',`$${k.t} ${up?'▲':'▼'} ${Math.abs(p*100).toFixed(0)}% — ${pick(up?GOOD:BAD).replace('{n}',k.n)}`,1)}
-function crash(){s.mkt.bull=false;for(const k of STOCKS)shock(k.t,-(.12+R()*.2));chirp('@MarketWire','MarketWire',' FLASH CRASH: markets plunge across the board',1);log('The stock market crashed!','bad');toast(' Market crash!')}
+function crash(){s.mkt.bull=false;s.re.idx*=.9;for(const k of STOCKS)shock(k.t,-(.12+R()*.2));chirp('@MarketWire','MarketWire','FLASH CRASH: markets plunge across the board',1);log('The stock market crashed!','bad');toast('Market crash!')}
 function dividends(){let t=0;for(const k of STOCKS){const h=s.port[k.t];if(h&&k.div)t+=h.sh*s.px[k.t].p*k.div/4}if(t>0){s.cash+=t;log(`Dividends paid: ${fmt(t)}`,'good')}}
 function npcChatter(){const[h,n]=pick(NPC);chirp(h,n,s.fol>300&&R()<.15?pick(ABOUT).replace('{h}',s.handle):pick(CHAT))}
 function runLater(p){
-  if(p.k==='cash'){s.cash+=p.v;log(`${p.m} ${fmt(p.v)}`,'good');toast(` ${p.m} ${fmt(p.v)}`)}
+  if(p.k==='cash'){s.cash+=p.v;log(`${p.m} ${fmt(p.v)}`,'good');toast(`${p.m} ${fmt(p.v)}`)}
   else if(p.k==='shock'){shock(p.t,p.v);chirp('@MarketWire','MarketWire',`$${p.t} ${p.v>0?'rips':'tanks'} ${Math.round(Math.abs(p.v)*100)}% on rumors`,1)}
   else{log(p.m,'bad');toast(p.m)}
 }
 function newEvent(){
   const W=e=>typeof e.w==='function'?e.w(s):e.w,ok=EV.filter(e=>(!e.c||e.c(s))&&!s.inbox.some(i=>i.id===e.id));
   let r=R()*ok.reduce((t,e)=>t+W(e),0);
-  for(const e of ok)if((r-=W(e))<=0){s.inbox.push({id:e.id,d:s.day,a:e.a?e.a(s):0});toast(' A new decision is waiting');return}
+  for(const e of ok)if((r-=W(e))<=0){s.inbox.push({id:e.id,d:s.day,a:e.a?e.a(s):0});toast('A new decision is waiting');return}
 }
 function die(){s.dead=1;log(`${esc(s.name)} passed away at ${Math.floor(age())}.`,'bad');save();deathModal()}
 function offline(ms){
@@ -505,6 +570,18 @@ const ACT={
     s.cd.post=s.day+4;s.lastPost=s.day;add('hap',bad?-5:2);
     toast(`${P.n}: ${gain>=0?'+':''}${big(gain)} followers${viral?', it went viral':bad?', and it backfired':''}`);
     if(viral)log(`Your ${P.n.toLowerCase()} went viral! +${big(gain)} followers`,'good')},
+  pbuy:(u,x)=>{const i=s.re.list.findIndex(l=>l.uid===+u);if(i<0)return;const l=s.re.list[i],v=PM[l.t].base*l.m*s.re.idx,mort=x==='m';
+    if(s.cash<(mort?v*.2:v)||(mort&&!canBorrow(v*.8)))return;
+    s.cash-=mort?v*.2:v;const p={...l,paid:v,bought:s.day,loan:mort?v*.8:0,pay:mort?mpay(v*.8):0,from:s.day+rint(5,20)};
+    s.props.push(p);s.re.list.splice(i,1,listing());if(!homeP()&&!PM[p.t].biz)s.home=p.uid;add('hap',5);
+    log(`Bought ${art(pname(p))} for ${fmt(v)}${mort?' with a mortgage':''}${s.home===p.uid?', and moved in':''}.`,'good')},
+  live:u=>{const p=P(+u);if(!p||PM[p.t].biz)return;const o=homeP();if(o)o.from=s.day+rint(5,20);s.home=p.uid;log(`Moved into your ${pname(p)}.`)},
+  moveout:u=>{const p=P(+u);if(!p||s.home!==p.uid)return;s.home=null;p.from=s.day+rint(5,20);log(`Moved out of your ${pname(p)}. It goes up for rent.`)},
+  payoff:u=>{const p=P(+u);if(!p?.loan||s.cash<p.loan)return;s.cash-=p.loan;p.loan=p.pay=0;log(`Paid off the mortgage on your ${pname(p)}.`,'good')},
+  psell:u=>{const i=s.props.findIndex(p=>p.uid===+u);if(i<0)return;const p=s.props[i],v=pval(p);s.cash+=v*.97-p.loan;s.props.splice(i,1);if(s.home===p.uid)s.home=null;
+    log(`Sold your ${pname(p)} for ${fmt(v)} (${v>=p.paid?'+':''}${fmt(v-p.paid)} on what you paid).`,v>=p.paid?'good':'bad')},
+  cbuy:id=>{const k=CM[id];if(s.cash<k.price)return;s.cash-=k.price;s.cars.push({uid:uid(),t:id,paid:k.price,v:k.dep>0?k.price*.9:k.price,bought:s.day});add('hap',4);log(`Bought ${art(k.n.toLowerCase())}.`,'good')},
+  csell:u=>{const i=s.cars.findIndex(c=>c.uid===+u);if(i<0)return;const c=s.cars[i];s.cash+=c.v;s.cars.splice(i,1);log(`Sold your ${CM[c.t].n.toLowerCase()} for ${fmt(c.v)}.`,c.v>=c.paid?'good':'bad')},
   own:id=>{const i=SM[id];if(s.own[id]||s.cash<i.cost)return;s.cash-=i.cost;s.own[id]=1;add('hap',5);log(`Bought ${art(i.n)}`,'good')},
   unown:id=>{if(!s.own[id])return;s.cash+=SM[id].cost*.6;delete s.own[id];log(`Sold your ${SM[id].n}.`)},
   inbox:()=>{const it=s.inbox[0];if(!it)return;const e=EVM[it.id];
@@ -545,12 +622,14 @@ const sign=(n,cls=true)=>`<span class="num${cls?n>=0?' up':' dn':''}">${n>=0?'+'
 function lifeLine(){
   const b=[s.job?`works as ${art(jobTitle())}`:'is between jobs',['is single','is seeing someone','is married'][s.rel]];
   if(s.kids)b.push(`has ${s.kids===1?'one kid':s.kids+' kids'}`);
-  if(s.pet)b.push('lives with a cat');
+  b.push(homeP()?`lives in ${art(PM[homeP().t].n.toLowerCase())} in ${homeP().loc}`:'rents a room');
+  if(bestCar())b.push(`drives ${art(CM[bestCar().t].n.toLowerCase())}`);
+  if(s.pet)b.push('has a cat');
   return b.join(', ').replace(/, ([^,]*)$/,' and $1')+'.';
 }
 const VIEWS={
 life(){
-  const f=flows(),e=EDU[s.edu+1],home=SHOP.some(i=>i.home&&s.own[i.id]);
+  const f=flows(),e=EDU[s.edu+1],home=homeP();
   return `<section class="lede">
     <div><h2 class="headline">${esc(s.name)}, ${Math.floor(age())}</h2>
      <p class="dek">${esc(s.name)} ${lifeLine()} ${s.edu?`Holds ${art(EDU[s.edu].n)}.`:'Finished high school.'}</p></div>
@@ -571,7 +650,9 @@ life(){
      <tr><td>Managed businesses</td><td class="r">${sign(f.biz)}</td></tr>
      <tr><td>Tills to collect</td><td class="r num warn">+${fmt(f.pend)}</td></tr>
      <tr><td>Sponsorships</td><td class="r">${sign(f.spon)}</td></tr>
-     <tr><td>Living costs${home?'':', rent included'}</td><td class="r">${sign(-f.exp)}</td></tr>
+     <tr><td>Rent from tenants</td><td class="r">${sign(f.rent)}</td></tr>
+     <tr><td>Mortgage payments</td><td class="r">${sign(-f.mort)}</td></tr>
+     <tr><td>Living costs and upkeep${home?'':', rent included'}</td><td class="r">${sign(-f.exp)}</td></tr>
     </tbody></table></section>
   </div>`;
 },
@@ -640,19 +721,49 @@ chirp(){
      <div class="by"><b>${esc(p.n)}</b>${p.v?' <span class="ver" title="Verified">✓</span>':''} <span class="mut">${p.h} · ${s.day-p.d?`${s.day-p.d}d`:'now'}</span>${p.tag?`<span class="tag ${p.bad?'dn':''}">${p.tag}</span>`:''}</div>
      <p>${esc(p.x)}</p><div class="mut num" style="font-size:var(--text-xs)">${big(p.l)} likes</div></div></li>`).join('')}</ol></div>`;
 },
+home(){
+  const f=flows(),idx=s.re.idx;let val=0,debt=0;for(const p of s.props){val+=pval(p);debt+=p.loan}
+  return `<section class="lede"><div><h2 class="headline">Property</h2>
+    <p class="dek">${s.props.length?`You own ${s.props.length===1?'one property':s.props.length+' properties'} worth <b class="num">${fmt(val)}</b>${debt?`, with <b class="num">${fmt(debt)}</b> still owed to the bank`:''}. Tenants pay you <b class="num">${fmt(f.rent)}</b> a day.`:'You own nothing yet, so rent costs you $30 a day. A small flat on a mortgage can cost less than that.'}</p></div>
+    <div class="side"><p class="mut"><span class="figure ${idx>=1?'up':'dn'}">${pct(idx-1)}</span><br>house prices this lifetime</p></div></section>
+  ${s.props.length?`<h3>Your properties</h3><div class="scroll"><table class="ledger"><thead><tr><th>Property</th><th class="r">Paid</th><th class="r">Worth now</th><th class="r">Owed</th><th class="r">Rent a day</th><th>Status</th><th></th></tr></thead><tbody>
+   ${s.props.map(p=>{const v=pval(p),k=PM[p.t],home=s.home===p.uid;return `<tr><td><b>${pname(p)}</b></td><td class="r num">${fmt(p.paid)}</td><td class="r num ${v>=p.paid?'up':'dn'}">${fmt(v)}</td><td class="r num">${p.loan?fmt(p.loan):'—'}</td><td class="r num">${home?'—':fmt(v*k.yld/365)}</td>
+    <td>${home?'Your home':s.day<p.from?`Finding a tenant, ${p.from-s.day}d`:'Rented out'}</td>
+    <td class="act">${home?`<button data-a="moveout" data-x="${p.uid}">Move out</button>`:k.biz?'':`<button data-a="live" data-x="${p.uid}">Live here</button>`}${p.loan?`<button data-a="payoff" data-x="${p.uid}" ${s.cash<p.loan?'disabled':''}>Pay off</button>`:''}<button class="bad" data-a="psell" data-x="${p.uid}">Sell for ${fmt(v*.97-p.loan)}</button></td></tr>`}).join('')}
+   </tbody></table></div>`:''}
+  <h3>For sale</h3>
+  <div class="scroll"><table class="ledger"><thead><tr><th>Listing</th><th class="r">Price</th><th class="r">Rent a day</th><th class="r">Mortgage a day</th><th></th></tr></thead><tbody>
+  ${s.re.list.map(l=>{const k=PM[l.t],v=k.base*l.m*idx,ok=s.cash>=v*.2&&canBorrow(v*.8);return `<tr class="${s.cash>=v||ok?'':'dim'}"><td><b>${k.n}, ${l.loc}</b>${k.biz?' <span class="mut">· investment only</span>':''}</td><td class="r num">${fmt(v)}</td><td class="r num">${fmt(v*k.yld/365)}</td><td class="r num">${fmt(mpay(v*.8))}</td>
+   <td class="act"><button data-a="pbuy" data-x="${l.uid}" ${s.cash<v?'disabled':''}>Buy outright</button><button class="pri" data-a="pbuy" data-x="${l.uid}" data-y="m" ${ok?'':'disabled'}>Mortgage, ${fmt(v*.2)} down</button></td></tr>`}).join('')}
+  </tbody></table></div>
+  <p class="note">New listings in ${s.re.next-s.day} days. Mortgages take 20% down and run 30 years at 5.5%, and the bank only lends while repayments stay under 40% of your income. Selling costs 3% in fees. Anything you don't live in gets rented out once a tenant is found.</p>`;
+},
+garage(){
+  let val=0;for(const c of s.cars)val+=c.v;const b=bestCar();
+  return `<section class="lede"><div><h2 class="headline">Garage</h2>
+    <p class="dek">${s.cars.length?`${s.cars.length===1?'One car':s.cars.length+' cars'} worth <b class="num">${fmt(val)}</b>. Your ${CM[b.t].n.toLowerCase()} is the one that lifts your mood. Every car adds followers and upkeep.`:'No car yet. Most lose value the moment you drive them off the lot. Classics are the exception.'}</p></div></section>
+  ${s.cars.length?`<h3>Your cars</h3><div class="scroll"><table class="ledger"><thead><tr><th>Car</th><th class="r">Paid</th><th class="r">Worth now</th><th class="r">Upkeep a day</th><th></th></tr></thead><tbody>
+   ${s.cars.map(c=>`<tr><td><b>${CM[c.t].n}</b><div class="sub">owned ${Math.floor((s.day-c.bought)/365)}y ${(s.day-c.bought)%365}d</div></td><td class="r num">${fmt(c.paid)}</td><td class="r num ${c.v>=c.paid?'up':'dn'}">${fmt(c.v)}</td><td class="r num">${fmt(CM[c.t].up)}</td><td class="act"><button class="bad" data-a="csell" data-x="${c.uid}">Sell for ${fmt(c.v)}</button></td></tr>`).join('')}
+   </tbody></table></div>`:''}
+  <h3>Dealership</h3>
+  <div class="scroll"><table class="ledger"><thead><tr><th>Model</th><th class="r">Price</th><th class="r">Value a year</th><th class="r">Upkeep a day</th><th class="r">Mood</th><th class="r">Followers a year</th><th></th></tr></thead><tbody>
+  ${CARS.map(k=>`<tr class="${s.cash>=k.price?'':'dim'}"><td><b>${k.n}</b>${k.vol?' <span class="mut">· collectible</span>':''}</td><td class="r num">${fmt(k.price)}</td><td class="r num ${k.dep<0?'up':'dn'}">${k.dep<0?'+':'−'}${Math.abs(k.dep*100).toFixed(0)}%</td><td class="r num">${fmt(k.up)}</td><td class="r num">+${Math.round(k.hap/.004)}</td><td class="r num">${k.fame?big(k.fame*365):'—'}</td><td class="act"><button class="pri" data-a="cbuy" data-x="${k.id}" ${s.cash<k.price?'disabled':''}>Buy</button></td></tr>`).join('')}
+  </tbody></table></div>
+  <p class="note">Only your best car lifts your mood, but every car adds followers. New cars lose 10% the day you drive them away. Collectibles swing in value and tend to climb.</p>`;
+},
 shop(){
   return `<section class="lede"><div><h2 class="headline">Lifestyle</h2>
-    <p class="dek">Nice things lift your everyday mood, and flashy ones pull in followers. All of them cost upkeep. Owning a home saves $30 a day in rent. Sell anything back for 60%.</p></div></section>
+    <p class="dek">Nice things lift your everyday mood, and flashy ones pull in followers. All of them cost upkeep. Sell anything back for 60%. Homes are under Property and cars are in the Garage.</p></div></section>
   <div class="scroll"><table class="ledger"><thead><tr><th>Item</th><th class="r">Price</th><th class="r">Mood</th><th class="r">Followers a year</th><th class="r">Upkeep a day</th><th></th></tr></thead><tbody>
-  ${SHOP.map(i=>{const o=s.own[i.id];return `<tr class="${o||s.cash>=i.cost?'':'dim'}"><td><b>${i.n}</b>${i.home?' <span class="mut">· home</span>':''}</td><td class="r num">${fmt(i.cost)}</td><td class="r num">+${Math.round(i.hap/.004)}</td><td class="r num">${i.fame?big(i.fame*365):'—'}</td><td class="r num">${i.up?fmt(i.up):'—'}</td>
+  ${SHOP.map(i=>{const o=s.own[i.id];return `<tr class="${o||s.cash>=i.cost?'':'dim'}"><td><b>${i.n}</b></td><td class="r num">${fmt(i.cost)}</td><td class="r num">+${Math.round(i.hap/.004)}</td><td class="r num">${i.fame?big(i.fame*365):'—'}</td><td class="r num">${i.up?fmt(i.up):'—'}</td>
    <td class="act">${o?`<button class="bad" data-a="unown" data-x="${i.id}">Sell for ${fmt(i.cost*.6)}</button>`:`<button class="pri" data-a="own" data-x="${i.id}" ${s.cash<i.cost?'disabled':''}>Buy</button>`}</td></tr>`}).join('')}
   </tbody></table></div>`;
 },
 };
-const TABS=[['life','Life'],['work','Work'],['biz','Business'],['stock','Markets'],['chirp','Chirp'],['shop','Lifestyle']];
+const TABS=[['life','Life'],['work','Work'],['biz','Business'],['stock','Markets'],['chirp','Chirp'],['home','Property'],['garage','Garage'],['shop','Lifestyle']];
 
 function hdr(){
-  if(!s)return;const f=flows(),net=f.job+f.biz+f.pend+f.spon-f.exp;
+  if(!s)return;const f=flows(),net=f.job+f.biz+f.pend+f.spon+f.rent-f.exp-f.mort;
   $('#dateline').textContent=`Year ${Math.floor(s.day/365)+1}, day ${s.day%365+1} · generation ${s.gen}`;
   $('#hCash').textContent=fmt(s.cash);$('#hCash').className=s.cash<0?'dn':'';
   $('#hNw').textContent=fmt(netWorth());
@@ -702,10 +813,16 @@ function selfTest(){ // open with ?test=1 — never touches your real save
   ok(Math.abs(bcost(BIZ[0],0,2)-(120+120*GROW))<1e-6,'bcost sum');
   newGame('Test','street');s.cash=1e7;ACT.bbuy('lemon','max');ok(s.biz.lemon.n>=25&&bmax(BIZ[0],s.biz.lemon.n)===0,'buy max spends down');
   s.cash=1e6;ACT.buy('NOVA','10');ACT.sell('NOVA','all');ok(!s.port.NOVA,'sell all');
+  s.cash=2e5;s.job='crew';relist();s.re.list[0]={...s.re.list[0],t:'studio'};const lu=s.re.list[0].uid;ACT.pbuy(lu,'m');
+  const hp=homeP();ok(hp&&hp.loan>0&&s.home===hp.uid,'mortgage buy moves you in');const l0=hp.loan;for(let i=0;i<365;i++)day();ok(P(hp.uid).loan<l0,'mortgage amortises');
+  s.cash=2e7;ACT.cbuy('hatch');ACT.cbuy('classic');const h0=s.cars[0].v;for(let i=0;i<365;i++)day();ok(s.cars[0].v<h0,'cars depreciate');
+  ACT.live(hp.uid);ACT.moveout(hp.uid);ok(!s.home,'move out');ACT.psell(hp.uid);ok(!s.props.length,'sell property');
+  s.cash=5e9;relist();ACT.pbuy(s.re.list[0].uid);ACT.pbuy(s.re.list[1].uid);s.props.at(-1).from=0;s.home=s.props[0].uid;ok(s.props.length===2,'two properties');s.cash=5e6;
   const base=JSON.stringify({...s,job:'swe',rel:1,fol:20000,cash:2e6,biz:{truck:{n:12,mgr:0,pend:0,spent:1e5},cafe:{n:3,mgr:1,pend:0,spent:1e5}},port:{NOVA:{sh:50,cost:5000}}});
   for(const e of EV)for(const[,fx]of e.ch){s=JSON.parse(base);s.st.hap=10;const m=fx(s,e.a?e.a(s):0);ok(typeof m==='string','event '+e.id)}
   for(const k in POSTS){s=JSON.parse(base);ACT.post(k)}
   for(const k in VIEWS){tab=k;VIEWS[k]()}
+  newGame('Old','street');delete s.re;s.own={apt:1,car:1,bike:1};upgrade();ok(s.props.length===1&&s.cars.length===1&&s.own.bike&&homeP(),'old saves upgrade');
   newGame('Sim','rich');let d=0;for(;d<40000&&!s.dead;d++){day();if(d%7===0){s.inbox=[];ACT.colAll()}}
   const vals=[s.cash,netWorth(),s.fol,...Object.values(s.st),...Object.values(s.px).map(q=>q.p)];
   ok(vals.every(Number.isFinite),'finite after sim');ok(s.dead,'eventually dies');
@@ -715,7 +832,7 @@ function selfTest(){ // open with ?test=1 — never touches your real save
 (function boot(){
   if(location.search.includes('test')){try{selfTest()}catch(e){console.error('self-test FAILED:',e.message)}s=null;tab='life';}
   let d=null;if(!wiped)try{d=JSON.parse(localStorage.getItem(SAVE))}catch{}
-  if(d?.v===1){s=d;render();if(s.dead)deathModal();else offline(Date.now()-s.lastSeen)}
+  if(d?.v===1){s=d;upgrade();render();if(s.dead)deathModal();else offline(Date.now()-s.lastSeen)}
   else startModal();
 })();
 </script>

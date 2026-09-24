@@ -8,7 +8,9 @@ An idle life simulator in one HTML file. You turn 18, and from then on one secon
 - **Businesses**: 9 tiers from a lemonade stand to a rocket company. Each business doubles its income at milestones. Managers run it for you, including while you're away.
 - **Stocks**: 9 tickers with bull and bear markets, sector moves, news shocks, crashes and dividends.
 - **Chirp**: a simulated social feed. Post selfies, hot takes, memes and flexes, go viral, get ratio'd, and earn from sponsorships.
-- **Lifestyle**: bikes up to private islands. They make you happier and bring followers, and they cost upkeep.
+- **Property**: a housing market that rises and falls, listings across 8 neighbourhoods, 30-year mortgages with 20% down, and tenants. Live in one place to stop paying rent and rent the rest out, up to office towers and a private island.
+- **Garage**: a dealership from a used hatchback to a vintage racer. Most cars lose value, while collectibles swing in price and tend to climb. Your best car lifts your mood, and every car brings followers.
+- **Lifestyle**: gadgets, art, yachts and jets for mood and followers, each with upkeep.
 - **Generations**: when you die, your heir inherits half your net worth plus a permanent business bonus.
 
 Play: open `index.html`. It saves to localStorage automatically.
