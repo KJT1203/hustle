@@ -120,6 +120,19 @@ aside h2{font-size:var(--text-md);padding-bottom:var(--space-2xs);border-bottom:
 .till .full{color:var(--color-warn);font-weight:700}
 .brow .acts3{display:flex;justify-content:flex-end;gap:var(--space-2xs);flex-wrap:wrap}
 .brow .acts3 button{height:2.75rem;font-size:var(--text-base)}
+/* work + people */
+.side .meter{align-self:stretch}
+.ledger .sub.dn{color:var(--color-down)}
+.plist{margin-top:var(--space-2xs)}
+.prow{display:grid;grid-template-columns:minmax(12rem,1.1fr) minmax(9rem,.9fr) minmax(0,2fr);gap:var(--space-md);align-items:center;padding:var(--space-sm) 0;border-bottom:var(--rule)}
+.who{display:flex;align-items:center;gap:var(--space-xs)}
+.pn{font-size:1.125rem;font-weight:700}
+.close .top2{display:flex;justify-content:space-between;font-size:var(--text-sm)}
+.close .meter{margin-top:.375rem}
+.prow .acts3{display:flex;flex-wrap:wrap;gap:var(--space-2xs);justify-content:flex-end;align-items:center}
+.prow .acts3 button{height:2.5rem}
+.hint{font-size:var(--text-xs);color:var(--color-ink-3)}
+@media (max-width:1100px){.prow{grid-template-columns:minmax(0,1fr) minmax(8rem,12rem)}.prow .acts3{grid-column:1/-1;justify-content:flex-start}}
 @media (max-width:1360px){.brow{grid-template-columns:minmax(0,1.4fr) 4.5rem 6.5rem minmax(0,1fr)}.brow .acts3{grid-column:1/-1;justify-content:flex-start}.brow.head span:last-child{display:none}}
 /* buttons */
 button{font:500 var(--text-sm)/1.2 var(--font-body);color:var(--color-ink);background:transparent;border:var(--rule-ink);border-radius:var(--radius);padding:.5rem .75rem;cursor:pointer;white-space:nowrap;transition:background-color var(--dur-short) var(--ease-out),color var(--dur-short) var(--ease-out)}
@@ -365,20 +378,57 @@ const hue=h=>[...h].reduce((a,c)=>a*31+c.charCodeAt(0)>>>0,7)%360;
 
 // ---------- data ----------
 const EDU=[{n:'High school'},{n:'Diploma',cost:6000,days:180,sma:10},{n:"Bachelor's degree",cost:35000,days:360,sma:12},{n:"Master's degree",cost:80000,days:240,sma:10},{n:'PhD',cost:120000,days:480,sma:15}];
+// fld = career field (experience builds per field); x = years needed in a field; xt = total years; h = health; f = followers
 const JOBS=[
- {id:'crew',n:'Fast Food Crew',e:0,s:0,pay:60,str:2},
- {id:'rider',n:'Delivery Rider',e:0,s:0,pay:72,str:3},
- {id:'retail',n:'Retail Associate',e:0,s:25,pay:88,str:2},
- {id:'admin',n:'Office Admin',e:1,s:35,pay:140,str:1},
- {id:'dev',n:'Junior Developer',e:1,s:50,pay:210,str:2},
- {id:'nurse',n:'Nurse',e:2,s:45,pay:260,str:3},
- {id:'analyst',n:'Financial Analyst',e:2,s:60,pay:380,str:3},
- {id:'swe',n:'Software Engineer',e:2,s:65,pay:480,str:2},
- {id:'lawyer',n:'Lawyer',e:3,s:72,pay:760,str:4},
- {id:'surgeon',n:'Surgeon',e:4,s:78,pay:1150,str:4},
- {id:'ceo',n:'Corporate CEO',e:3,s:80,pay:2600,str:5,f:25000},
+ {id:'crew',n:'Fast Food Crew',fld:'food',e:0,s:0,pay:60,str:2},
+ {id:'rider',n:'Delivery Rider',fld:'delivery',e:0,s:0,pay:72,str:3},
+ {id:'retail',n:'Retail Associate',fld:'retail',e:0,s:25,pay:88,str:2},
+ {id:'chef',n:'Line Chef',fld:'food',e:0,s:25,pay:118,str:4,x:{food:1}},
+ {id:'smgr',n:'Store Manager',fld:'retail',e:0,s:35,pay:165,str:3,x:{retail:2}},
+ {id:'admin',n:'Office Admin',fld:'office',e:1,s:35,pay:140,str:1},
+ {id:'elec',n:'Electrician',fld:'trade',e:1,s:30,pay:190,str:2},
+ {id:'police',n:'Police Officer',fld:'public',e:1,s:35,pay:205,str:4,h:60},
+ {id:'design',n:'Graphic Designer',fld:'creative',e:1,s:40,pay:175,str:2},
+ {id:'dev',n:'Junior Developer',fld:'tech',e:1,s:50,pay:210,str:2},
+ {id:'teacher',n:'Teacher',fld:'public',e:2,s:45,pay:230,str:3},
+ {id:'nurse',n:'Nurse',fld:'health',e:2,s:45,pay:260,str:3},
+ {id:'analyst',n:'Financial Analyst',fld:'finance',e:2,s:60,pay:380,str:3},
+ {id:'swe',n:'Software Engineer',fld:'tech',e:2,s:65,pay:480,str:2,x:{tech:1}},
+ {id:'cdir',n:'Creative Director',fld:'creative',e:2,s:55,pay:520,str:3,x:{creative:3}},
+ {id:'lawyer',n:'Lawyer',fld:'law',e:3,s:72,pay:760,str:4},
+ {id:'pilot',n:'Airline Pilot',fld:'aviation',e:2,s:70,pay:900,str:3,h:70},
+ {id:'surgeon',n:'Surgeon',fld:'health',e:4,s:78,pay:1150,str:4,x:{health:2}},
+ {id:'ceo',n:'Corporate CEO',fld:'exec',e:3,s:80,pay:2600,str:5,f:25000,xt:8},
 ];
-const RANKS=['','Senior ','Lead ','Principal ','Head '];
+const FIELD={food:'food service',delivery:'delivery',retail:'retail',office:'office work',trade:'the trades',public:'public service',creative:'creative work',tech:'tech',health:'healthcare',finance:'finance',law:'law',aviation:'aviation',exec:'management'};
+const IVQ=['Why should we hire you?','Tell us about a time you solved a hard problem.','Where do you see yourself in five years?','What is your biggest weakness?','How do you handle pressure?'];
+const WORK={
+ hard:{n:'Work hard',cd:4,fx:()=>{s.perf=clamp(s.perf+5,0,100);add('hap',-1);return 'Long day. Your boss noticed.'}},
+ slack:{n:'Slack off',cd:3,fx:()=>{s.perf=clamp(s.perf-6,0,100);add('hap',4);return 'An hour of videos. Worth it?'}},
+ net:{n:'Network',cd:14,c:100,fx:()=>{s.perf=clamp(s.perf+4,0,100);if(R()<.3&&friendsN()<10){const p=meet('friend',40);return `Drinks with coworkers. You clicked with ${p.n}.`}return 'Drinks with coworkers. Good for your name around the office.'}},
+ raise:{n:'Ask for a raise',cd:90,fx:()=>{if(R()<raiseOdds()){s.raise=(s.raise||0)+.08;log(`Got a raise. Now ${fmt(jobPay())} a day.`,'good');return `Yes! 8% more. Now ${fmt(jobPay())} a day.`}s.perf=clamp(s.perf-5,0,100);add('hap',-3);return 'Not this time. Your boss suggests "more ownership".'}},
+};
+// people: role decides decay, what you can do together, and how much they lift your mood
+const PNAMES=['Mia','Leo','Ava','Noah','Zara','Ethan','Priya','Omar','Hana','Luca','Sofia','Kenji','Amara','Diego','Ivy','Farid','Nina','Theo','Aisha','Ren','Mei','Jonah','Layla','Arjun','Chloe','Malik','Yuna','Felix','Iris','Tariq','Elif','Mateo'];
+const ROLE={spouse:'Spouse',date:'Partner',child:'Child',parent:'Parent',sibling:'Sibling',friend:'Friend',ex:'Ex'};
+const PW={spouse:.05,date:.04,child:.02,parent:.01,sibling:.008,friend:.008,ex:0};
+const DECAY={spouse:.08,date:.08,friend:.05,parent:.03,sibling:.03,child:.03,ex:.02};
+const PACTS={
+ call:{n:'Call',cd:2,roles:['parent','sibling','friend','date','spouse','child'],fx:p=>{prel(p,4);return `You caught up with ${p.n}.`}},
+ time:{n:'Hang out',cd:4,c:p=>p.role==='friend'?40:0,roles:['parent','sibling','friend','child'],fx:p=>{prel(p,rint(6,10));add('hap',2);return `A good afternoon with ${p.n}.`}},
+ date:{n:'Date night',cd:5,c:()=>Math.round(clamp(netWorth()*.0005,60,5000)),roles:['date','spouse'],fx:p=>{prel(p,rint(8,12));add('hap',4);return `Date night with ${p.n}. You remember why.`}},
+ gift:{n:'Gift',cd:14,c:()=>Math.round(clamp(netWorth()*.001,50,25000)),roles:['parent','sibling','friend','date','spouse','child'],fx:p=>{prel(p,12);return `${p.n} loves it.`}},
+ propose:{n:'Propose',roles:['date'],c:()=>Math.round(Math.max(3000,netWorth()*.02)),need:p=>p.rel<60?'Propose once closeness reaches 60':s.day-p.met<90?`Propose after ${90-(s.day-p.met)} more days together`:'',
+  fx:p=>{if(R()<.3+p.rel/150){p.role='spouse';p.wed=s.day;prel(p,15);add('hap',15);log(`Married ${esc(p.n)}.`,'good');return `${p.n} said yes! You're married.`}prel(p,-15);add('hap',-8);return `${p.n} says they're not ready.`}},
+ baby:{n:'Try for a baby',cd:60,roles:['spouse'],need:p=>kidsHome()>=4?'Four kids at home is plenty':age()>=48?'Too late for another baby':p.rel<50?'Try for a baby once closeness reaches 50':'',
+  fx:()=>{if(R()<.6){const k=addChild();add('hap',12);log(`Welcome, ${esc(k.n)}!`,'good');return `It's a baby! Welcome, ${k.n}.`}return 'Not this time. You can try again in a couple of months.'}},
+ ask:{n:'Ask for money',cd:180,roles:['parent'],need:p=>p.rel<40?'Ask for money once closeness reaches 40':'',fx:p=>{const v=rint(300,3000);s.cash+=v;prel(p,-8);return `${p.n} sends ${fmt(v)}, with a lecture.`}},
+ reconnect:{n:'Reach out',cd:30,roles:['ex'],need:()=>partner()?'Not while you are with someone':'',fx:p=>{if(R()<.35){p.role='date';p.rel=45;p.met=s.day;return `You and ${p.n} are giving it another go.`}prel(p,-5);return `${p.n} left you on read.`}},
+ split:{n:'Break up',bad:1,roles:['date'],fx:p=>endRel(p)},
+ divorce:{n:'Divorce',bad:1,roles:['spouse'],fx:p=>endRel(p)},
+};
+const PACT_ORDER=['call','time','date','gift','propose','baby','ask','reconnect','split','divorce'];
+const RANKS=['','Senior ','Lead ','Principal ','Head ','Chief '];
 const BIZ=[
  {id:'lemon',n:'Lemonade Stand',cost:120,inc:3},
  {id:'truck',n:'Food Truck',cost:2000,inc:30},
@@ -439,9 +489,10 @@ const ACTS=[
  {id:'gym',n:'Hit the gym',cd:3,c:15,fx:()=>{add('hea',3);add('loo',1);add('hap',1);return 'Good pump.'}},
  {id:'read',n:'Read a book',cd:3,c:20,fx:()=>{add('sma',1.5);return 'You feel a little smarter.'}},
  {id:'med',n:'Meditate',cd:2,c:0,fx:()=>{add('hap',3);return 'Inner peace, briefly.'}},
- {id:'out',n:'Night out',cd:5,c:150,fx:()=>{add('hap',8);add('hea',-2);if(R()<.3){const f=rint(5,40)+Math.round(s.fol*.01);s.fol+=f;return `Legendary night. +${f} followers.`}return 'Great night, rough morning.'}},
- {id:'date',n:'Dating app',cd:10,c:40,show:()=>s.rel===0,fx:()=>{if(R()<.2+s.st.loo/250){s.rel=1;add('hap',10);log("You matched with someone great. You're dating!",'good');return "It's a match! You're dating"}add('hap',-2);return 'Swiped all night. Nothing.'}},
- {id:'fam',n:'Family time',cd:4,c:0,show:()=>s.rel||s.kids||s.pet,fx:()=>{add('hap',5);return 'Quality time.'}},
+ {id:'out',n:'Night out',cd:5,c:150,fx:()=>{add('hap',8);add('hea',-2);if(R()<.25&&friendsN()<10){const p=meet('friend',35);return `Great night. You made a new friend: ${p.n}.`}if(R()<.3){const f=rint(5,40)+Math.round(s.fol*.01);s.fol+=f;return `Legendary night. +${f} followers.`}return 'Great night, rough morning.'}},
+ {id:'date',n:'Dating app',cd:10,c:40,show:()=>!partner(),fx:()=>{if(R()<.2+s.st.loo/250){const p=meet('date',40);add('hap',10);log(`You matched with ${esc(p.n)}. You're seeing each other.`,'good');return `It's a match with ${p.n}!`}add('hap',-2);return 'Swiped all night. Nothing.'}},
+ {id:'fam',n:'Family time',cd:4,c:0,show:()=>s.people.some(p=>['parent','sibling','spouse','child'].includes(p.role))||s.pet,fx:()=>{for(const p of s.people)if(['parent','sibling','spouse','child'].includes(p.role))prel(p,3);add('hap',5);return 'Quality time with family.'}},
+ {id:'club',n:'Join a club',cd:30,c:200,fx:()=>{if(friendsN()<10&&R()<.7){const p=meet('friend',40);return `You joined a ${pick(['running','book','chess','climbing','board game'])} club and met ${p.n}.`}return 'Nice people, no real connection yet.'}},
  {id:'doc',n:'Doctor check-up',cd:30,c:400,fx:()=>{add('hea',15);return 'Clean bill of health.'}},
  {id:'spa',n:'Spa day',cd:14,c:600,fx:()=>{add('hap',8);add('loo',2);return 'Glowing.'}},
  {id:'trip',n:'Vacation',cd:120,c:5000,fx:()=>{add('hap',30);add('hea',5);return 'Sun, sea, no emails.'}},
@@ -504,23 +555,51 @@ const EV=[
  ['Take the shifts',(s,a)=>{s.cash+=a;add('hea',-5);add('hap',-6);s.jobDays+=10;return `+${fmt(a)}. You're exhausted, but the boss noticed.`}],
  ['Protect my weekends',()=>{add('hap',3);return 'You enjoy your weekends.'}]]},
 {id:'boss',w:2,c:s=>s.job,t:'Clash with the boss',d:()=>'Your boss takes credit for your work in a big meeting. Everyone is looking at you.',def:1,ch:[
- ['Call it out',()=>{if(R()<.5){s.rank++;return `Leadership sides with you. Promoted to <b>${jobTitle()}</b>!`}const j=jobTitle();fire();return `You were fired from ${j}. Oof.`}],
+ ['Call it out',()=>{if(R()<.5){s.rank=Math.min(s.rank+1,5);return `Leadership sides with you. Promoted to <b>${jobTitle()}</b>!`}const j=jobTitle();fire();return `You were fired from ${j}. Oof.`}],
  ['Let it slide',()=>{add('hap',-4);return 'You let it go. It stings.'}]]},
 {id:'hunter',w:1.5,c:s=>s.job&&s.st.sma>45,t:'Headhunter calling',d:()=>'A recruiter wants to poach you for a rival firm with a big title bump.',def:1,ch:[
- ['Jump ship',()=>{s.rank+=2;s.jobDays=0;add('hap',4);return `New gig: <b>${jobTitle()}</b> at ${fmt(jobPay())}/day.`}],
+ ['Jump ship',()=>{s.rank=Math.min(s.rank+2,5);s.jobDays=0;add('hap',4);return `New gig: <b>${jobTitle()}</b> at ${fmt(jobPay())}/day.`}],
  ['Stay loyal',()=>{s.jobDays+=30;return 'Your loyalty gets noticed. Promotion is closer.'}]]},
-{id:'date',w:2,c:s=>s.rel===0,t:'A spark',d:()=>`Someone cute from your ${pick(['gym','favourite café','building','evening class'])} asks you out to dinner.`,def:1,ch:[
- ['Say yes',()=>{if(R()<.7){s.rel=1;add('hap',10);return "Dinner turns into a second date. You're officially dating"}add('hap',-2);return 'Awkward. Zero chemistry.'}],
+{id:'date',w:2,c:()=>!partner(),t:'A spark',d:()=>`Someone cute from your ${pick(['gym','favourite café','building','evening class'])} asks you out to dinner.`,def:1,ch:[
+ ['Say yes',()=>{if(partner())return 'The moment has passed.';if(R()<.7){const p=meet('date',45);add('hap',10);return `Dinner with ${p.n} turns into a second date. You're seeing each other now.`}add('hap',-2);return 'Awkward. Zero chemistry.'}],
  ['Not now',()=>'You politely decline.']]},
-{id:'propose',w:1.5,c:s=>s.rel===1,a:()=>Math.max(3000,Math.round(netWorth()*.02)),t:'Put a ring on it?',d:(s,a)=>`Things are serious with your partner. A wedding would cost about <b>${fmt(a)}</b>.`,def:1,ch:[
- ['Propose',(s,a)=>{s.cash-=a;s.rel=2;add('hap',15);return "They said yes! You're married."}],
- ['Not yet',()=>{if(R()<.25){s.rel=0;add('hap',-10);return 'Your partner wanted commitment. They left.'}return 'You keep things as they are.'}]]},
-{id:'baby',w:1.5,c:s=>s.rel===2&&s.kids<4&&age()<48,t:'Baby talk',d:()=>`Your spouse brings up having ${s.kids?'another':'a'} kid. Kids cost about $35/day, but bring joy every day.`,def:1,ch:[
- ['Grow the family',()=>{s.kids++;add('hap',12);return `Welcome, baby #${s.kids}!`}],
+{id:'propose',w:1.5,c:()=>partner()?.role==='date'&&partner().rel>=50,a:()=>Math.max(3000,Math.round(netWorth()*.02)),t:'Put a ring on it?',d:(s,a)=>`Things are serious with ${partner()?.n||'your partner'}. A wedding would cost about <b>${fmt(a)}</b>.`,def:1,ch:[
+ ['Propose',(s,a)=>{const p=partner();if(p?.role!=='date')return 'The moment has passed.';s.cash-=a;p.role='spouse';p.wed=s.day;prel(p,15);add('hap',15);return `${p.n} said yes! You're married.`}],
+ ['Not yet',()=>{const p=partner();if(p&&R()<.25)return endRel(p,1);return 'You keep things as they are.'}]]},
+{id:'baby',w:1.5,c:()=>partner()?.role==='spouse'&&kidsHome()<4&&age()<48,t:'Baby talk',d:()=>`${partner()?.n||'Your spouse'} brings up having ${kids().length?'another':'a'} kid. Kids cost about $35 a day until they turn 18, but bring joy every day.`,def:1,ch:[
+ ['Grow the family',()=>{if(partner()?.role!=='spouse')return 'The moment has passed.';const k=addChild();add('hap',12);return `Welcome, ${k.n}!`}],
  ['Wait',()=>'Maybe later.']]},
-{id:'breakup',w:s=>s.st.hap<35?3:.4,c:s=>s.rel>0,a:s=>Math.max(200,Math.round(s.cash*.05)),t:'Rough patch',d:(s,a)=>`You and your ${s.rel===2?'spouse':'partner'} keep fighting. A getaway to reconnect costs <b>${fmt(a)}</b>.`,def:1,ch:[
- ['Book the getaway',(s,a)=>{s.cash-=a;add('hap',8);return 'The trip works. You feel close again.'}],
- ['Let it be',()=>{if(R()<.5){const m=s.rel===2;s.rel=0;if(m){const c=Math.max(0,s.cash*.4);s.cash-=c;add('hap',-20);return `Divorce. The lawyers cost you ${fmt(c)}.`}add('hap',-12);return 'You broke up.'}return 'It blows over… for now.'}]]},
+{id:'breakup',w:()=>partner()?.rel<35?3:.4,c:()=>partner(),a:s=>Math.max(200,Math.round(s.cash*.05)),t:'Rough patch',d:(s,a)=>`You and ${partner()?.n||'your partner'} keep fighting. A getaway to reconnect costs <b>${fmt(a)}</b>.`,def:1,ch:[
+ ['Book the getaway',(s,a)=>{s.cash-=a;const p=partner();if(p)prel(p,15);add('hap',8);return 'The trip works. You feel close again.'}],
+ ['Let it be',()=>{const p=partner();if(p&&R()<.5)return endRel(p,1);return 'It blows over… for now.'}]]},
+{id:'loan',w:2,c:s=>s.cash>1000&&s.people.some(p=>p.role==='friend'&&p.rel>=30),a:s=>{const p=pick(s.people.filter(p=>p.role==='friend'&&p.rel>=30));return {u:p.uid,n:p.n,v:Math.round(Math.max(300,s.cash*.05))}},t:'Can you spot me?',d:(s,a)=>`${a.n} is short on rent and asks to borrow <b>${fmt(a.v)}</b>. They swear they'll pay you back.`,def:1,ch:[
+ ['Lend it',(s,a)=>{s.cash-=a.v;const p=per(a.u);if(p)prel(p,12);s.later.push(R()<.65?{d:s.day+rint(30,120),k:'cash',v:Math.round(a.v*1.1),m:`${a.n} paid you back, with a thank-you on top:`}:{d:s.day+rint(60,150),k:'msg',m:`${a.n} never paid you back.`});return `${a.n} hugs you. The money is gone for now.`}],
+ ['Say no',(s,a)=>{const p=per(a.u);if(p)prel(p,-20);return `${a.n} says they understand. They don't.`}]]},
+{id:'sickparent',w:1.5,c:s=>s.people.some(p=>p.role==='parent'&&ageOf(p)>60),a:s=>{const p=pick(s.people.filter(p=>p.role==='parent'&&ageOf(p)>60));return {u:p.uid,n:p.n,v:Math.round(Math.max(2000,netWorth()*.01))}},t:'A call from the hospital',d:(s,a)=>`${a.n}, your parent, is in hospital. Private care costs <b>${fmt(a.v)}</b>.`,def:2,ch:[
+ ['Pay for the best care',(s,a)=>{s.cash-=a.v;const p=per(a.u);if(p){prel(p,20);p.x=(p.x||0)+3}return `${a.n} pulls through, and is grateful.`}],
+ ['Visit every evening',(s,a)=>{const p=per(a.u);if(p)prel(p,12);add('hap',-4);return `You sit with ${a.n} every evening. It is hard, and it matters.`}],
+ ['Too busy right now',(s,a)=>{const p=per(a.u);if(p){prel(p,-15);if(R()<.25)return parentDies(p)}return `${a.n} recovers, but noticed you weren't there.`}]]},
+{id:'extext',w:1.5,c:s=>s.people.some(p=>p.role==='ex'),a:s=>{const p=pick(s.people.filter(p=>p.role==='ex'));return {u:p.uid,n:p.n}},t:'Hey stranger',d:(s,a)=>`Your ex, ${a.n}, texts you out of nowhere: “been thinking about you.”`,def:1,ch:[
+ ['Text back',(s,a)=>{const pt=partner(),p=per(a.u);if(pt&&R()<.35){prel(pt,-35);add('hap',-8);return `${pt.n} saw the messages. Things are very tense at home.`}if(!pt&&p&&R()<.4){p.role='date';p.rel=50;p.met=s.day;return `One thing led to another. You and ${a.n} are back together.`}add('hap',3);return 'A little nostalgia, nothing more.'}],
+ ['Leave it on read',()=>'Some doors are closed for a reason.']]},
+{id:'romance',w:1.5,c:s=>s.job&&!partner(),t:'Office spark',d:()=>'A coworker keeps finding reasons to stop by your desk.',def:1,ch:[
+ ['Ask them out',()=>{if(partner())return 'The moment has passed.';if(R()<.6){const p=meet('date',50);s.perf=clamp(s.perf-5,0,100);return `You and ${p.n} are seeing each other. HR does not need to know yet.`}add('hap',-5);return 'They just wanted your stapler. Awkward.'}],
+ ['Keep it professional',()=>{s.perf=clamp(s.perf+4,0,100);return 'You stay focused. Your boss notices.'}]]},
+{id:'wedding',w:1.5,c:s=>s.people.some(p=>p.role==='friend'||p.role==='sibling'),a:s=>{const p=pick(s.people.filter(p=>p.role==='friend'||p.role==='sibling'));return {u:p.uid,n:p.n,v:Math.round(Math.max(150,netWorth()*.002))}},t:'Save the date',d:(s,a)=>`${a.n} is getting married. A decent gift would be around <b>${fmt(a.v)}</b>.`,def:1,ch:[
+ ['Go, with a gift',(s,a)=>{s.cash-=a.v;const p=per(a.u);if(p)prel(p,18);add('hap',5);if(R()<.3&&!partner()){const q=meet('date',40);return `Great wedding. You also met ${q.n} on the dance floor.`}return 'You cry during the speeches. Great wedding.'}],
+ ['Skip it',(s,a)=>{const p=per(a.u);if(p)prel(p,-18);return `${a.n} noticed.`}]]},
+{id:'school',w:1.2,c:()=>kids().some(k=>ageOf(k)>=5&&ageOf(k)<17&&!k.priv),a:()=>{const k=kids().find(k=>ageOf(k)>=5&&ageOf(k)<17&&!k.priv)||kids()[0];return {u:k.uid,n:k.n,v:Math.round(Math.max(20000,netWorth()*.03))}},t:'School choice',d:(s,a)=>`${a.n} could go to a private school for <b>${fmt(a.v)}</b>, or the public school down the road.`,def:1,ch:[
+ ['Private school',(s,a)=>{s.cash-=a.v;const k=per(a.u);if(k){k.priv=1;prel(k,8)}return `${a.n} starts at the private school in a blazer that's too big.`}],
+ ['Public school',(s,a)=>{const k=per(a.u);if(k)prel(k,3);return `${a.n} makes friends on the first day.`}]]},
+{id:'anniv',w:1.2,c:()=>partner()?.role==='spouse',a:()=>Math.round(Math.max(300,netWorth()*.004)),t:'Anniversary',d:(s,a)=>`It's your anniversary with ${partner()?.n||'your spouse'}. A proper celebration costs about <b>${fmt(a)}</b>.`,def:1,ch:[
+ ['Plan something special',(s,a)=>{s.cash-=a;const p=partner();if(p)prel(p,20);add('hap',6);return 'A night to remember.'}],
+ ['Keep it low-key',()=>{const p=partner();if(!p)return 'Takeout for one.';if(R()<.5){prel(p,-20);return 'They were hoping for more. It shows.'}prel(p,2);return 'Takeout and a movie. Honestly perfect.'}]]},
+{id:'layoffs',w:1.5,c:s=>s.job,a:()=>Math.round(jobPay()*60),t:'Layoffs coming',d:(s,a)=>`Your company is cutting jobs. HR offers <b>${fmt(a)}</b> to anyone who leaves voluntarily.`,def:1,ch:[
+ ['Take the package',(s,a)=>{if(!s.job)return 'The moment has passed.';s.cash+=a;const j=jobTitle();fire();return `You leave your job as ${j} with ${fmt(a)} in your pocket.`}],
+ ['Keep your head down',()=>{if(!s.job)return 'The moment has passed.';if(R()<.35-s.perf/400){const j=jobTitle();fire();add('hap',-12);return `You were laid off from ${j} anyway, without the package.`}s.perf=clamp(s.perf+5,0,100);return 'You survive the cuts. Everyone works harder now.'}]]},
+{id:'conference',w:1.2,c:s=>s.job&&s.cash>2000,a:()=>rint(1500,4000),t:'Industry conference',d:(s,a)=>`There's a big conference in your field. The trip costs <b>${fmt(a)}</b>.`,def:1,ch:[
+ ['Go and network',(s,a)=>{s.cash-=a;s.perf=clamp(s.perf+10,0,100);if(R()<.5&&friendsN()<10){const p=meet('friend',45);return `Your boss is impressed, and you made a friend: ${p.n}.`}return 'Your boss is impressed.'}],
+ ['Stay home',()=>'You read the highlights online.']]},
 {id:'inspect',w:2,c:s=>s.biz.truck?.n||s.biz.cafe?.n,a:()=>rint(500,3000),t:'Health inspector',d:(s,a)=>`An inspector finds problems at your ${s.biz.cafe?.n?'coffee shop':'food truck'}. They hint that <b>${fmt(a)}</b> would make it all go away.`,def:1,ch:[
  ['Pay the "fee"',(s,a)=>{s.cash-=a;if(R()<.25){const l=Math.round(s.fol*.15);s.fol-=l;add('hap',-8);chirp('@citynews','City News',`bribery scandal: local business owner ${s.handle} caught paying off a health inspector`,1);return `It leaked. <b>-${big(l)} followers</b>.`}return 'Problem solved. Quietly.'}],
  ['Fix it properly',(s,a)=>{s.cash-=a*1.5;return `Repairs cost ${fmt(a*1.5)}, but you sleep well.`}]]},
@@ -604,14 +683,46 @@ const EVM=EM(EV.map(e=>[e.id,e]));
 
 // ---------- state ----------
 const SAVE='hustle-v1',GROW=1.13,CAP=10,MILES=[10,25,50,100,150,200,300,400,500];
-let bmode='1',lastSpeed=1,lastIn=[],cg=null,tf='3M',cmode='candle',hov=null,ot={side:'buy',qty:10}; // screen state, not saved
+let iv=null,bmode='1',lastSpeed=1,lastIn=[],cg=null,tf='3M',cmode='candle',hov=null,ot={side:'buy',qty:10}; // screen state, not saved
 let s=null,tab='dash',sel='NOVA',csel='SATS',speed=1,holding=false,wiped=false,heir={},hiddenAt=0;
 const age=()=>s.startAge+s.day/365;
 const add=(k,v)=>s.st[k]=clamp(s.st[k]+v,0,100);
 const job=()=>s.job&&JM[s.job];
-const jobPay=()=>job().pay*(1+.15*s.rank);
-const jobTitle=()=>RANKS[Math.min(s.rank,4)]+job().n;
-const fire=()=>{s.job=null;s.rank=0;s.jobDays=0};
+const jobPay=()=>job().pay*(1+.15*s.rank)*(1+(s.raise||0));
+const jobTitle=()=>RANKS[Math.min(s.rank,5)]+job().n;
+const promoNeed=()=>55+s.rank*5,topRank=()=>s.rank>=5;
+const fire=()=>{s.job=null;s.rank=0;s.jobDays=0;s.raise=0};
+const xpY=f=>(s.xp[f]||0)/365,xpT=()=>Object.values(s.xp).reduce((a,d)=>a+d,0)/365;
+const raiseOdds=()=>clamp((s.perf-30)/60,.05,.9);
+function jobMiss(j){const m=[];if(s.edu<j.e)m.push(EDU[j.e].n);if(s.st.sma<j.s)m.push(`${j.s} smarts`);if(j.h&&s.st.hea<j.h)m.push(`${j.h} health`);
+  for(const f in j.x||{})if(xpY(f)<j.x[f])m.push(`${j.x[f]} yr${j.x[f]>1?'s':''} in ${FIELD[f]}`);if(j.xt&&xpT()<j.xt)m.push(`${j.xt} yrs experience`);if(j.f&&s.fol<j.f)m.push(`${big(j.f)} followers`);return m}
+const jobReqText=j=>[EDU[j.e].n,j.s?`${j.s} smarts`:'',j.h?`${j.h} health`:'',...Object.entries(j.x||{}).map(([f,y])=>`${y} yr${y>1?'s':''} ${FIELD[f]}`),j.xt?`${j.xt} yrs experience`:'',j.f?`${big(j.f)} followers`:''].filter(Boolean).join(', ');
+const ageOf=p=>(s.day-p.b)/365;
+const per=u=>s.people.find(p=>p.uid===u);
+const prel=(p,v)=>p.rel=clamp(p.rel+v,0,100);
+const partner=()=>s.people.find(p=>p.role==='date'||p.role==='spouse');
+const kids=()=>s.people.filter(p=>p.role==='child');
+const kidsHome=()=>kids().filter(k=>ageOf(k)<18).length;
+const friendsN=()=>s.people.filter(p=>p.role==='friend').length;
+const peopleHap=()=>s.people.reduce((a,p)=>a+(PW[p.role]||0)*(p.rel-40)/(p.rel<40?80:60)*(p.role==='child'&&ageOf(p)>=18?.5:1),0);
+const closeWord=r=>r>=80?'Very close':r>=60?'Close':r>=40?'Friendly':r>=20?'Distant':'Strained';
+function meet(role,rel,b){const used=new Set(s.people.map(p=>p.n)),n=PNAMES.find(x=>!used.has(x)&&R()<.2)||pick(PNAMES);const p={uid:uid(),n,role,rel,b:b??(-s.startAge*365+rint(-4,4)*365),met:s.day,c:{}};s.people.push(p);return p}
+const addChild=()=>meet('child',80,s.day);
+function makeFamily(){const me=-s.startAge*365;for(let i=0;i<2;i++)meet('parent',rint(55,85),me-rint(24,38)*365);for(let i=rint(0,2);i>0;i--)meet('sibling',rint(40,75),me+rint(-6,6)*365);for(let i=rint(1,2);i>0;i--)meet('friend',rint(45,70),me+rint(-2,2)*365)}
+function endRel(p,theyLeft){const sp=p.role==='spouse',who=theyLeft?`${p.n} left you. `:'';p.role='ex';p.rel=Math.min(p.rel,20);
+  if(sp){const c=Math.max(0,s.cash*.4);s.cash-=c;add('hap',-20);return `${who}You and ${p.n} divorced. It cost ${fmt(c)}.`}add('hap',-12);return `${who}You and ${p.n} broke up.`}
+function parentDies(p){s.people.splice(s.people.indexOf(p),1);const v=Math.round(rint(5000,40000)*(.5+p.rel/100));s.cash+=v;add('hap',-20);const m=`${p.n}, your parent, passed away at ${Math.floor(ageOf(p))}. They left you ${fmt(v)}.`;log(esc(m),'bad');toast(esc(m));return m}
+function peopleDay(){
+  for(const p of [...s.people]){
+    p.rel=clamp(p.rel-(DECAY[p.role]||0),0,100);
+    const a=ageOf(p)-(p.x||0);
+    if(p.role==='child'&&!p.out&&ageOf(p)>=18){p.out=1;log(`${esc(p.n)} turns 18 and moves out.`,'good')}
+    else if(p.role==='parent'&&a>68&&R()<Math.min(.5,((a-68)/25)**3*2)/365)parentDies(p);
+    else if((p.role==='date'||p.role==='spouse')&&p.rel<15&&R()<.004){const m=endRel(p,1);log(esc(m),'bad');toast(esc(m))}
+    else if(p.role==='friend'&&p.rel<8&&R()<.01){s.people.splice(s.people.indexOf(p),1);log(`You and ${esc(p.n)} drifted apart.`)}
+  }
+  if(s.job&&friendsN()<10&&R()<1/250){const p=meet('friend',35);log(`You became friends with ${esc(p.n)} from work.`,'good')}
+}
 const bmul=n=>2**MILES.filter(m=>n>=m).length;
 const bizInc=(b,o)=>b.inc*o.n*bmul(o.n)*s.legacy*(s.day<s.boost?1.25:1);
 const bcost=(b,n,q)=>b.cost*GROW**n*(GROW**q-1)/(GROW-1);
@@ -630,7 +741,7 @@ const rentOf=p=>renting(p)?pval(p)*PM[p.t].yld/365:0;
 const carSum=k=>s.cars.reduce((t,c)=>t+CM[c.t][k],0);
 const bestCar=()=>s.cars.reduce((m,c)=>!m||CM[c.t].hap>CM[m.t].hap?c:m,null);
 const upkeep=()=>shopSum('up')+carSum('up')+s.props.reduce((t,p)=>t+pval(p)*.01/365,0);
-const expenses=()=>15+(homeP()?0:30)+s.kids*35+(s.rel===2?10:0)+upkeep();
+const expenses=()=>15+(homeP()?0:30)+kidsHome()*35+(partner()?.role==='spouse'?10:0)+upkeep();
 const canBorrow=L=>{const f=flows();return mpay(L)+f.mort<=(f.job+f.biz+f.rent)*.4};
 function listing(){const nw=Math.max(netWorth(),60000),ok=PROPS.filter(p=>p.base<=nw*4),[loc,m]=pick(LOCS);return {uid:uid(),t:pick(ok.slice(-4)).id,loc,m:m*(.92+R()*.16)}}
 function relist(){s.re.list=Array.from({length:6},listing);s.re.next=s.day+30}
@@ -644,8 +755,10 @@ function upgrade(){ // bring older saves up to date
     relist();
   }
   s.cz??={chip:100,net:0,played:0,rh:[],ban:0};
+  if(!s.people){const r=s.rel,k=s.kids||0;delete s.rel;delete s.kids;s.people=[];makeFamily();if(r)meet(r===2?'spouse':'date',65);for(let i=0;i<k;i++)addChild().b=s.day-rint(1,12)*365;
+    s.xp={};if(s.job)s.xp[JM[s.job].fld]=s.jobDays;s.perf=55;s.raise=0;s.pension=0}
 }
-function flows(){const f={job:s.job?jobPay():0,biz:0,pend:0,spon:sponsor(),exp:expenses(),rent:s.props.reduce((t,p)=>t+rentOf(p),0),mort:s.props.reduce((t,p)=>t+(p.loan>0?p.pay:0),0)};for(const b of BIZ){const o=s.biz[b.id];if(o?.n)f[o.mgr?'biz':'pend']+=bizInc(b,o)}return f}
+function flows(){const f={job:(s.job?jobPay():0)+(s.pension||0),biz:0,pend:0,spon:sponsor(),exp:expenses(),rent:s.props.reduce((t,p)=>t+rentOf(p),0),mort:s.props.reduce((t,p)=>t+(p.loan>0?p.pay:0),0)};for(const b of BIZ){const o=s.biz[b.id];if(o?.n)f[o.mgr?'biz':'pend']+=bizInc(b,o)}return f}
 const pfmt=n=>n>=1?fmt(n):'$'+(n<1e-6?n.toExponential(1):n.toPrecision(3));
 const units=u=>u>=1000?big(u):u>=1?u.toFixed(2):u.toPrecision(3);
 const coin=k=>s.cx.coins.find(c=>c.t===k);
@@ -696,12 +809,12 @@ function toast(m){const t=document.createElement('div');t.className='toast';t.in
 function newGame(name,bg,h={}){
   const b=BG[bg];
   s={v:1,name,handle:'@'+(name.toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,15)||'you'),day:0,startAge:18,cash:b.cash+(h.inherit||0),st:{...b.st},edu:b.edu||0,study:null,
-     job:b.job||null,jobDays:0,rank:0,biz:{},port:{},px:{},mkt:{bull:true},fol:b.fol||0,feed:[],own:{},wallet:{},cz:{chip:100,net:0,played:0,rh:[],ban:0},props:[],cars:[],home:null,re:{idx:1,list:[],next:0},cd:{},inbox:[],later:[],log:[],rel:0,kids:0,pet:0,
+     job:b.job||null,jobDays:0,rank:0,biz:{},port:{},px:{},mkt:{bull:true},fol:b.fol||0,feed:[],own:{},people:[],xp:{},perf:50,raise:0,pension:0,wallet:{},cz:{chip:100,net:0,played:0,rh:[],ban:0},props:[],cars:[],home:null,re:{idx:1,list:[],next:0},cd:{},inbox:[],later:[],log:[],pet:0,
      gen:h.gen||1,boost:0,lastPost:0,dead:0,lastSeen:Date.now()};
   s.legacy=1+.25*(s.gen-1);
   for(const k of STOCKS)s.px[k.t]={p:k.p,o:k.p,h:[k.p]};
   for(let i=0;i<239;i++)marketDay(1);
-  initCrypto();relist();
+  initCrypto();relist();makeFamily();
   log(h.gen?`${esc(name)} begins generation ${s.gen} with a ${fmt(h.inherit)} inheritance.`:`${esc(name)} turns 18 and moves out. Time to hustle.`,'good');
   chirp('@hustleculture','Hustle Culture','new week, new grind. what are you building? 👇',1);
 }
@@ -716,11 +829,15 @@ function day(){
   if(s.day>=s.re.next)relist();
   for(const b of BIZ){const o=s.biz[b.id];if(o?.n&&!o.mgr){const g=bizInc(b,o);o.pend=Math.min(o.pend+g,g*CAP)}}
   if(s.cash<0){s.cash*=1.0003;add('hap',-.05)}
-  if(s.job){s.jobDays++;if(s.jobDays%120===0&&s.st.hap>20){s.rank++;log(`Promoted to <b>${jobTitle()}</b>! Now ${fmt(jobPay())}/day.`,'good');toast('Promotion!')}}
+  if(s.job){const J=job();s.jobDays++;s.xp[J.fld]=(s.xp[J.fld]||0)+1;
+    s.perf=clamp(s.perf+((40+s.st.sma*.3+(s.st.hap-50)*.2-J.str*2)-s.perf)*.02,0,100);
+    if(s.jobDays%120===0&&!topRank()){if(s.perf>=promoNeed()){s.rank++;s.perf-=10;log(`Promoted to <b>${jobTitle()}</b>! Now ${fmt(jobPay())} a day.`,'good');toast('Promotion!')}else log(`Passed over for promotion. You needed a performance of ${promoNeed()}.`,'bad')}
+    if(s.perf<20&&R()<.01){const j=jobTitle();fire();add('hap',-15);log(`Fired from ${j} for poor performance.`,'bad');toast(`Fired from ${j}.`)}}
+  peopleDay();
   if(s.study&&--s.study.left<=0){const e=EDU[s.study.lvl];s.edu=s.study.lvl;add('sma',e.sma);s.study=null;log(`Graduated with a ${e.n}`,'good');toast('Graduated!')}
   const J=job();
   // stats drift toward a baseline, so an idle life is dull but survivable; choices push you above or below it
-  add('hap',(50-s.st.hap)*.004-(J?J.str*.02:0)-(s.study?.03:0)+(s.rel?.03:0)+s.kids*.015+s.pet*.015+shopSum('hap')+(PM[homeP()?.t]?.hap||0)+(bestCar()?CM[bestCar().t].hap:0));
+  add('hap',(50-s.st.hap)*.004-(J?J.str*.02:0)-(s.study?.03:0)+peopleHap()+s.pet*.015+shopSum('hap')+(PM[homeP()?.t]?.hap||0)+(bestCar()?CM[bestCar().t].hap:0));
   add('hea',(85-Math.max(0,A-35)*1.2-s.st.hea)*.003+(s.st.hap>70?.01:0)-(s.st.hap<15?.04:0));
   if(A>30)add('loo',-.004);
   s.fol+=shopSum('fame')+carSum('fame')+s.props.reduce((t,p)=>t+(PM[p.t].fame||0),0);if(s.day-s.lastPost>30)s.fol*=.999;
@@ -780,7 +897,16 @@ const ACT={
   close:()=>closeModal(),
   act:id=>{const a=AM[id];if(s.day<(s.cd[id]||0)||s.cash<a.c)return;s.cash-=a.c;s.cd[id]=s.day+a.cd;toast(a.fx())},
   enroll:()=>{const e=EDU[s.edu+1];if(!e||s.study||s.cash<=0)return;s.cash-=e.cost;s.study={lvl:s.edu+1,left:e.days};log(`Enrolled in a ${e.n} (${e.days} days).`)},
-  apply:id=>{const j=JM[id];if(!canJob(j))return;s.job=id;s.rank=0;s.jobDays=0;log(`Hired as <b>${j.n}</b>`,'good')},
+  apply:id=>{const j=JM[id];if(!canJob(j)||s.day<(s.cd['job_'+id]||0))return;iv={id,q:pick(IVQ)};modal(ivHtml())},
+  answer:k=>{const j=JM[iv.id],ch=ivOdds(j,k);closeModal();
+    if(R()<ch){s.job=j.id;s.rank=0;s.jobDays=0;s.perf=50;s.raise=k==='pay'?.1:0;log(`Hired as <b>${j.n}</b>${k==='pay'?' at 10% over the posted pay':''}.`,'good');toast(`You got the job: ${j.n}`)}
+    else{s.cd['job_'+j.id]=s.day+30;log(`${j.n}: they went with someone else.`,'bad');toast(`No offer after the ${j.n} interview. You can reapply in 30 days.`)}},
+  work:k=>{const W=WORK[k];if(!s.job||s.day<(s.cd['w_'+k]||0)||s.cash<(W.c||0))return;s.cash-=W.c||0;s.cd['w_'+k]=s.day+W.cd;toast(W.fx())},
+  retire:()=>{if(!s.job||age()<55)return;s.pension=(s.pension||0)+jobPay()*.45;const j=jobTitle();fire();log(`Retired from ${j} with a pension of ${fmt(s.pension)} a day.`,'good')},
+  pp:(u,k)=>{const sure=k.endsWith('!');k=k.replace('!','');const p=per(+u),A=PACTS[k];if(!p||!A||!A.roles.includes(p.role))return;
+    if(A.bad&&!sure)return modal(`<h2>${A.n} with ${esc(p.n)}?</h2><p>${k==='divorce'?`Lawyers and the settlement will cost about <b class="num">${fmt(Math.max(0,s.cash*.4))}</b>.`:'This cannot be undone.'}</p><div class="row"><button class="bad" data-a="pp" data-x="${p.uid}" data-y="${k}!">${A.n}</button><button data-a="close">Cancel</button></div>`);
+    const cost=A.c?A.c(p):0;if((p.c?.[k]||0)>s.day||s.cash<cost||A.need?.(p))return;
+    s.cash-=cost;(p.c??={})[k]=s.day+(A.cd||0);const m=A.fx(p);if(sure)closeModal();toast(esc(m));if(A.bad)log(esc(m),'bad')},
   quit:()=>{log(`Quit your job as ${jobTitle()}.`);fire()},
   gig:()=>{s.cash+=gig();s.gigs=(s.gigs||0)+1},
   bbuy:(id,x)=>{const b=BM[id],o=s.biz[id]??={n:0,mgr:0,pend:0,spent:0},q=x==='max'?bmax(b,o.n):+x;if(q<1)return;const c=bcost(b,o.n,q);if(c>s.cash)return;
@@ -838,11 +964,18 @@ const ACT={
   unown:id=>{if(!s.own[id])return;s.cash+=SM[id].cost*.6;delete s.own[id];log(`Sold your ${SM[id].n}.`)},
   reset:()=>modal(`<h2>Start over?</h2><p>This wipes your save for good.</p><div class="row"><button class="bad" data-a="wipe">Wipe my save</button><button data-a="close">Cancel</button></div>`),
   wipe:()=>{wiped=true;localStorage.removeItem(SAVE);location.reload()},
-  heir:()=>startModal({inherit:Math.max(0,netWorth()*.5),gen:s.gen+1,last:s.name}),
+  heir:()=>startModal({inherit:Math.max(0,netWorth()*.5),gen:s.gen+1,last:s.name,kid:kids().sort((a,b)=>a.b-b.b)[0]?.n}),
   begin:bg=>{newGame(($('#nm').value.trim()||pick(NAMES)).slice(0,20),bg,heir);closeModal();save()},
 };
 const gig=()=>4+s.st.sma*.15+(s.job?jobPay()*.02:0);
-const canJob=j=>s.edu>=j.e&&s.st.sma>=j.s&&s.fol>=(j.f||0);
+const canJob=j=>!jobMiss(j).length;
+function ivOdds(j,k){const sc=k==='exp'?xpY(j.fld)*15+(s.st.sma-j.s)*.8:k==='charm'?(s.st.loo-50)*.8+(s.fol>1000?10:0):-10;return clamp(.55+sc/100,.1,.95)}
+function ivHtml(){const j=JM[iv.id],o=k=>`${Math.round(ivOdds(j,k)*100)}% chance`;
+  return `<p class="kicker">Interview · ${j.n}</p><h2>“${iv.q}”</h2><p>How do you answer?</p><div class="choices">
+  <button data-a="answer" data-x="exp">Walk them through your experience<br><small class="mut">${xpY(j.fld)>=.1?`${xpY(j.fld).toFixed(1)} years in ${FIELD[j.fld]}`:`No ${FIELD[j.fld]} experience yet`} · ${o('exp')}</small></button>
+  <button data-a="answer" data-x="charm">Charm them<br><small class="mut">Leans on your looks · ${o('charm')}</small></button>
+  <button data-a="answer" data-x="pay">Ask about the pay first<br><small class="mut">Riskier, but you start 10% higher · ${o('pay')}</small></button>
+  <button data-a="close">Not today</button></div>`}
 
 // ---------- modals ----------
 function modal(h){$('#mbox').innerHTML=h;$('#modal').hidden=false}
@@ -851,14 +984,14 @@ function startModal(h={}){
   heir=h;
   modal(`<p class="kicker">${h.gen?`Generation ${h.gen}`:'The Hustle'}</p><h2>${h.gen?'The family business continues':'You just turned eighteen'}</h2>
   <p>${h.gen?`You inherit <b class="num">${fmt(h.inherit)}</b> and a permanent <b>+${(h.gen-1)*25}%</b> business income bonus.`:'Work, study, open businesses, trade stocks and build a following. Decisions will land on your desk along the way. One second is one day, and the clock keeps running.'}</p>
-  <label>Your name<input id="nm" maxlength="20" value="${h.last?esc(h.last.split(' ')[0])+' Jr.':pick(NAMES)}"></label>
+  <label>Your name<input id="nm" maxlength="20" value="${h.kid?esc(h.kid):h.last?esc(h.last.split(' ')[0])+' Jr.':pick(NAMES)}"></label>
   <label>Pick your start</label>
   <div class="bgs">${Object.entries(BG).map(([k,b])=>`<button data-a="begin" data-x="${k}"><b>${b.n}</b><small>${b.d}</small></button>`).join('')}</div>`);
 }
 function deathModal(){
   const w=netWorth(),nb=BIZ.reduce((t,b)=>t+(s.biz[b.id]?.n||0),0);
   modal(`<p class="kicker">Obituary</p><h2>${esc(s.name)}, ${Math.floor(age())}</h2>
-  <table class="ledger"><tr><td>Net worth</td><td class="r num">${fmt(w)}</td></tr><tr><td>Businesses</td><td>${nb}</td></tr><tr><td>Followers</td><td>${big(s.fol)}</td></tr><tr><td>Career</td><td>${s.job?jobTitle():'—'}</td></tr><tr><td>Family</td><td>${['Single','Partnered','Married'][s.rel]}${s.kids?`, ${s.kids} kid${s.kids>1?'s':''}`:''}</td></tr></table>
+  <table class="ledger"><tr><td>Net worth</td><td class="r num">${fmt(w)}</td></tr><tr><td>Businesses</td><td>${nb}</td></tr><tr><td>Followers</td><td>${big(s.fol)}</td></tr><tr><td>Career</td><td>${s.job?jobTitle():'—'}</td></tr><tr><td>Family</td><td>${partner()?(partner().role==='spouse'?'Married to ':'Seeing ')+esc(partner().n):'Single'}${kids().length?`, ${kids().length} kid${kids().length>1?'s':''}`:''}</td></tr></table>
   <p style="margin-top:var(--space-sm)">Your heir inherits half your net worth: <b class="num">${fmt(Math.max(0,w*.5))}</b>.</p><button class="pri big" data-a="heir">Continue as your heir</button>`);
 }
 
@@ -868,8 +1001,8 @@ const cdLeft=k=>Math.max(0,(s.cd[k]||0)-s.day);
 const art=w=>(/^(?:[aeio]|u(?!s))/i.test(w)?'an ':'a ')+w;
 const sign=(n,cls=true)=>`<span class="num${cls?n>=0?' up':' dn':''}">${n>=0?'+':''}${fmt(n)}</span>`;
 function lifeLine(){
-  const b=[s.job?`works as ${art(jobTitle())}`:'is between jobs',['is single','is seeing someone','is married'][s.rel]];
-  if(s.kids)b.push(`has ${s.kids===1?'one kid':s.kids+' kids'}`);
+  const pt=partner(),kn=kids().length,b=[s.job?`works as ${art(jobTitle())}`:s.pension?'is retired':'is between jobs',pt?`${pt.role==='spouse'?'is married to':'is seeing'} ${esc(pt.n)}`:'is single'];
+  if(kn)b.push(`has ${kn===1?'one kid':kn+' kids'}`);
   b.push(homeP()?`lives in ${art(PM[homeP().t].n.toLowerCase())} in ${homeP().loc}`:'rents a room');
   if(bestCar())b.push(`drives ${art(CM[bestCar().t].n.toLowerCase())}`);
   if(s.pet)b.push('has a cat');
@@ -888,6 +1021,8 @@ function needs(){
   for(const k of ['hea','hap'])if(s.st[k]<25)L.push({k:'low',st:k,a:LOWFIX[k].map(id=>AM[id]).find(a=>(!a.show||a.show())&&!cdLeft(a.id)&&s.cash>=a.c)});
   if(!homeP()){const l=[...s.re.list].sort((a,b)=>PM[a.t].base*a.m-PM[b.t].base*b.m).find(l=>{const v=PM[l.t].base*l.m*s.re.idx;return !PM[l.t].biz&&(s.cash>=v||(s.cash>=v*.2&&canBorrow(v*.8)))});if(l)L.push({k:'home',l})}
   if(s.cz.bj&&!s.cz.bj.done)L.push({k:'bj'});
+  const pt=partner();if(pt&&pt.rel<30)L.push({k:'rel',p:pt});
+  if(s.job&&s.perf<25)L.push({k:'perf'});
   return L;
 }
 function needHtml(n){
@@ -897,6 +1032,8 @@ function needHtml(n){
   if(n.k==='mgr')return row('Worth it now',`Hire a manager for ${n.b.n}`,`It earns ${fmt(bizInc(n.b,s.biz[n.b.id]))} a day, but only while you keep collecting.`,`<button data-a="mgr" data-x="${n.b.id}">Hire for ${fmt(n.b.cost*12)}</button>`);
   if(n.k==='low')return row(n.st==='hea'?'Health':'Mood',`${n.st==='hea'?'Health':'Happiness'} is low`,n.st==='hea'?'If it hits zero, your life ends.':'Unhappy people stop getting promoted, and their health slips.',n.a?`<button data-a="act" data-x="${n.a.id}">${n.a.n}${n.a.c?` · ${fmt(n.a.c)}`:''}</button>`:'');
   if(n.k==='home'){const k=PM[n.l.t],v=k.base*n.l.m*s.re.idx;return row('Save on rent','You pay $30 a day in rent',`${k.n}, ${n.l.loc} is for sale for ${fmt(v)}. On a mortgage it would cost ${fmt(mpay(v*.8))} a day.`,`<button data-a="tab" data-x="home">See listings</button>`)}
+  if(n.k==='rel'){const A=PACTS.date,w=(n.p.c?.date||0)>s.day,c=A.c(n.p);return row('Relationship',`${esc(n.p.n)} feels neglected`,`Closeness is down to ${Math.round(n.p.rel)}. If it keeps falling, they may leave.`,`<button data-a="pp" data-x="${n.p.uid}" data-y="date" ${w||s.cash<c?'disabled':''}>Date night · ${fmt(c)}</button>`)}
+  if(n.k==='perf'){const w=(s.cd.w_hard||0)>s.day;return row('Work','You could be fired',`Your performance is ${Math.round(s.perf)}. Below 20, your boss starts looking for a replacement.`,`<button data-a="work" data-x="hard" ${w?'disabled':''}>Work hard</button>`)}
   if(n.k==='bj')return row('Casino','Your blackjack hand is still open','The dealer is waiting on you.',`<button data-a="gobj">Back to the table</button>`);
   return '';
 }
@@ -910,6 +1047,15 @@ function bestBuy(){ // cheapest income per dollar, counting milestone doublings
     for(const k of [1,nm?nm-o.n:1]){if(k<1||k>100)continue;const c=bcost(b,o.n,k);if(c>s.cash)continue;
       const gain=b.inc*((o.n+k)*bmul(o.n+k)-o.n*bmul(o.n))*s.legacy,pb=c/gain;if(!best||pb<best.pb)best={b,k,c,pb,m:bmul(o.n+k)>bmul(o.n)?o.n+k:0}}}
   return best;
+}
+function personRow(p){
+  const acts=PACT_ORDER.filter(k=>PACTS[k].roles.includes(p.role)).map(k=>{const A=PACTS[k],w=Math.max(0,(p.c?.[k]||0)-s.day),cost=A.c?A.c(p):0,why=A.need?.(p);
+    if(why)return `<span class="hint">${why}</span>`;
+    return `<button class="${A.bad?'bad':k==='propose'||k==='baby'?'pri':''}" data-a="pp" data-x="${p.uid}" data-y="${k}" ${w||s.cash<cost?'disabled':''}>${A.n}${cost?` · ${fmt(cost)}`:''}${w?` · ${w}d`:''}</button>`}).join('');
+  const lo=p.rel<30;
+  return `<div class="prow"><div class="who"><span class="av">${esc(p.n[0])}</span><div><div class="pn">${esc(p.n)}</div><div class="mut" style="font-size:var(--text-xs)">${ROLE[p.role]}${p.out?', moved out':''} · ${Math.max(0,Math.floor(ageOf(p)))}</div></div></div>
+   <div class="close"><div class="top2"><span class="${lo?'dn':'mut'}">${closeWord(p.rel)}</span><span class="num">${Math.round(p.rel)}</span></div>${meter(p.rel,lo?'low':'')}</div>
+   <div class="acts3">${acts}</div></div>`;
 }
 function bizRow(b,i,last){
   const o=s.biz[b.id]||{n:0,pend:0,mgr:0},n=o.n;if(i>last+1&&!n)return '';
@@ -956,7 +1102,7 @@ life(){
      :'<p>Nothing left to study. You have the full set.</p>'}
     <h3>Daily budget</h3>
     <table class="ledger"><tbody>
-     <tr><td>Salary</td><td class="r">${sign(f.job)}</td></tr>
+     <tr><td>Salary and pension</td><td class="r">${sign(f.job)}</td></tr>
      <tr><td>Managed businesses</td><td class="r">${sign(f.biz)}</td></tr>
      <tr><td>Tills to collect</td><td class="r num warn">+${fmt(f.pend)}</td></tr>
      <tr><td>Sponsorships</td><td class="r">${sign(f.spon)}</td></tr>
@@ -967,18 +1113,29 @@ life(){
   </div>`;
 },
 work(){
-  const J=job();
+  const J=job(),yrs=Object.entries(s.xp).filter(([,d])=>d>=30).sort((a,b)=>b[1]-a[1]),toPromo=120-s.jobDays%120;
+  const wbtn=(k,extra='')=>{const W=WORK[k],w=Math.max(0,(s.cd['w_'+k]||0)-s.day);return `<button data-a="work" data-x="${k}" ${w||s.cash<(W.c||0)?'disabled':''}>${W.n}${W.c?` · ${fmt(W.c)}`:''}${extra}${w?` · in ${w}d`:''}</button>`};
   return `<section class="lede">
-    <div><h2 class="headline">${J?jobTitle():'Out of work'}</h2>
-     <p class="dek">${J?`Paid <b class="num">${fmt(jobPay())}</b> a day. Next promotion in ${120-s.jobDays%120} days${s.st.hap<=20?', once your mood recovers':''}.`:'No salary coming in. Pick a position from the board below.'}</p>
-     ${J?`${meter(s.jobDays%120/1.2,'wide')}<button class="bad" data-a="quit">Resign</button>`:''}</div>
-    <div class="side"><p class="mut">Side gigs pay <b class="num">${fmt(gig())}</b> each. ${s.gigs?`${s.gigs} done so far.`:'Tap as often as you like.'}</p><button class="pri big" data-a="gig">Take a gig</button></div>
+    <div><h2 class="headline">${J?jobTitle():s.pension?'Retired':'Out of work'}</h2>
+     <p class="dek">${J?`Paid <b class="num">${fmt(jobPay())}</b> a day in ${FIELD[J.fld]}. ${topRank()?'You are at the top of this ladder. Switch jobs to earn more.':s.perf>=promoNeed()?`On track for promotion in ${toPromo} days.`:`Promotion review in ${toPromo} days. You need a performance of ${promoNeed()}.`}`:'No salary coming in. Pick a position from the board below and go to the interview.'}${s.pension?` Your pension pays <b class="num">${fmt(s.pension)}</b> a day.`:''}</p></div>
+    ${J?`<div class="side"><p class="mut">Performance</p><span class="figure ${s.perf<25?'dn':s.perf>=promoNeed()?'up':''}">${Math.round(s.perf)}</span>${meter(s.perf,s.perf<25?'low':'')}<p class="mut" style="font-size:var(--text-xs)">${s.perf<25?'At risk of being fired.':s.perf>=promoNeed()||topRank()?'Your boss is happy.':`Get it to ${promoNeed()} for the next promotion.`}</p></div>`:''}
   </section>
-  <h3>Job board</h3>
-  <div class="scroll"><table class="ledger"><thead><tr><th>Position</th><th>Requires</th><th class="r">Stress</th><th class="r">Per day</th><th></th></tr></thead><tbody>
-  ${JOBS.map(j=>{const ok=canJob(j),cur=s.job===j.id;return `<tr class="${ok||cur?'':'dim'}"><td><b>${j.n}</b></td><td>${EDU[j.e].n}${j.s?`, ${j.s} smarts`:''}${j.f?`, ${big(j.f)} followers`:''}</td><td class="r num">${j.str}/5</td><td class="r num">${fmt(j.pay)}</td>
-   <td class="act">${cur?'<span class="mut">Current</span>':`<button data-a="apply" data-x="${j.id}" ${ok?'':'disabled'}>Apply</button>`}</td></tr>`}).join('')}
-  </tbody></table></div>`;
+  ${J?`<div class="sec-h"><h2>At work</h2></div><div class="quick">${wbtn('hard')}${wbtn('slack')}${wbtn('net')}${wbtn('raise',` · ${Math.round(raiseOdds()*100)}% odds`)}<button data-a="gig">Side gig · +${fmt(gig())}</button>${age()>=55?'<button data-a="retire">Retire on a pension</button>':''}<button class="bad" data-a="quit">Resign</button></div>`
+     :`<div class="quick" style="margin-top:var(--space-md)"><button class="pri" data-a="gig">Take a gig · +${fmt(gig())}</button></div>`}
+  <div class="sec-h"><h2>Job board</h2><span>${JOBS.filter(j=>canJob(j)&&s.job!==j.id).length} you qualify for</span></div>
+  <div class="scroll"><table class="ledger"><thead><tr><th>Position</th><th>Field</th><th>Requires</th><th class="r">Stress</th><th class="r">Per day</th><th></th></tr></thead><tbody>
+  ${JOBS.map(j=>{const miss=jobMiss(j),cur=s.job===j.id,wait=Math.max(0,(s.cd['job_'+j.id]||0)-s.day);return `<tr class="${miss.length&&!cur?'dim':''}"><td><b>${j.n}</b></td><td class="mut">${FIELD[j.fld]}</td><td>${jobReqText(j)}${miss.length&&!cur?`<div class="sub dn">Missing ${miss.join(', ')}</div>`:''}</td><td class="r num">${j.str}/5</td><td class="r num">${fmt(j.pay)}</td>
+   <td class="act">${cur?'<span class="mut">Current</span>':wait?`<span class="mut">Reapply in ${wait}d</span>`:`<button ${miss.length?'disabled':'class="pri"'} data-a="apply" data-x="${j.id}">Interview</button>`}</td></tr>`}).join('')}
+  </tbody></table></div>
+  <p class="note">Experience builds in whatever field you work in, and better jobs ask for it. Promotion reviews come every 120 days, and each step up asks for a higher performance, starting at 55. Below 20, you can be fired.${yrs.length?` You have ${yrs.map(([f,d])=>`${(d/365).toFixed(1)} years in ${FIELD[f]}`).join(', ')}.`:''}</p>`;
+},
+people(){
+  const pt=partner(),ord={spouse:0,date:0,child:1,parent:2,sibling:3,friend:4,ex:5},L=[...s.people].sort((a,b)=>ord[a.role]-ord[b.role]||b.rel-a.rel),fr=friendsN();
+  return `<section class="lede">
+    <div><h2 class="headline">People</h2><p class="dek">${pt?`You are ${pt.role==='spouse'?'married to':'seeing'} <b>${esc(pt.n)}</b>.`:'You are single.'} ${fr?`${fr} friend${fr>1?'s':''}.`:'No close friends yet.'} Close relationships lift your mood every day. Neglected ones fade, and a neglected partner may leave.</p></div>
+    <div class="side"><p class="mut">Meet people</p><div class="row">${['date','out','club'].map(id=>{const a=AM[id];if(a.show&&!a.show())return '';const w=cdLeft(id);return `<button data-a="act" data-x="${id}" ${w||s.cash<a.c?'disabled':''}>${a.n}${a.c?` · ${fmt(a.c)}`:''}${w?` · ${w}d`:''}</button>`}).join('')}</div></div>
+  </section>
+  <div class="plist">${L.map(personRow).join('')||'<p class="mut" style="padding:var(--space-sm) 0">Nobody yet.</p>'}</div>`;
 },
 biz(){
   const f=flows(),last=BIZ.reduce((m,b,i)=>s.biz[b.id]?.n?i:m,-1),bb=bestBuy();
@@ -1143,12 +1300,12 @@ coin:(z,can)=>{const F=z.flip;return `<div class="coin">${F?(F.r==='h'?'Heads':'
 const ic=d=>`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
 const ICON={home:ic('<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/>'),user:ic('<circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4.5-6 8-6s7 2 8 6"/>'),work:ic('<rect x="3" y="7" width="18" height="13" rx="1"/><path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M3 12h18"/>'),
  store:ic('<path d="M4 9l1.5-5h13L20 9M4 9v11h16V9M4 9h16M9 20v-6h6v6"/>'),chart:ic('<path d="M4 19h16M6 15l4-5 3 3 5-7"/>'),coin:ic('<circle cx="12" cy="12" r="8"/><path d="M10 8h3a2 2 0 0 1 0 4h-3m0 0h3.5a2 2 0 0 1 0 4H10m0-8v8"/>'),building:ic('<path d="M5 21V4h9v17M14 9h5v12M8 8h3M8 12h3M8 16h3M3 21h18"/>'),
- car:ic('<path d="M5 16l1.5-5.5A2 2 0 0 1 8.4 9h7.2a2 2 0 0 1 1.9 1.5L19 16M4 16h16v3H4zM7 19v1.5M17 19v1.5"/>'),bag:ic('<path d="M6 8h12l-1 12H7zM9 8a3 3 0 0 1 6 0"/>'),chat:ic('<path d="M4 5h16v11H9l-5 4z"/>'),
+ car:ic('<path d="M5 16l1.5-5.5A2 2 0 0 1 8.4 9h7.2a2 2 0 0 1 1.9 1.5L19 16M4 16h16v3H4zM7 19v1.5M17 19v1.5"/>'),bag:ic('<path d="M6 8h12l-1 12H7zM9 8a3 3 0 0 1 6 0"/>'),chat:ic('<path d="M4 5h16v11H9l-5 4z"/>'),heart:ic('<path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.5-7 10-7 10z"/>'),
  dice:ic('<rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="9" cy="9" r="1"/><circle cx="15" cy="15" r="1"/><circle cx="15" cy="9" r="1"/><circle cx="9" cy="15" r="1"/>'),pause:ic('<path d="M8 5v14M16 5v14"/>')};
-const TABS={dash:['Home','home'],life:['Life','user'],work:['Work','work'],biz:['Business','store'],stock:['Markets','chart'],crypto:['Crypto','coin'],home:['Property','building'],garage:['Garage','car'],shop:['Lifestyle','bag'],chirp:['Chirp','chat'],casino:['Casino','dice']};
-const GROUPS=[['',['dash']],['You',['life','work']],['Money',['biz','stock','crypto','home']],['Spend',['garage','shop']],['Fun',['chirp','casino']]];
-const BAR=[['Home',['dash'],'home'],['Life',['life','work'],'user'],['Money',['biz','stock','crypto','home'],'chart'],['Spend',['garage','shop'],'bag'],['Fun',['chirp','casino'],'dice']];
-const KEYTABS=['dash','life','work','biz','stock','crypto','home','garage','shop','chirp'];
+const TABS={dash:['Home','home'],life:['Life','user'],work:['Work','work'],people:['People','heart'],biz:['Business','store'],stock:['Markets','chart'],crypto:['Crypto','coin'],home:['Property','building'],garage:['Garage','car'],shop:['Lifestyle','bag'],chirp:['Chirp','chat'],casino:['Casino','dice']};
+const GROUPS=[['',['dash']],['You',['life','work','people']],['Money',['biz','stock','crypto','home']],['Spend',['garage','shop']],['Fun',['chirp','casino']]];
+const BAR=[['Home',['dash'],'home'],['Life',['life','work','people'],'user'],['Money',['biz','stock','crypto','home'],'chart'],['Spend',['garage','shop'],'bag'],['Fun',['chirp','casino'],'dice']];
+const KEYTABS=['dash','life','work','people','biz','stock','crypto','home','garage','shop'];
 function badge(k){
   if(k==='dash'){const n=needs().length;return n?`<span class="badge">${n}</span>`:''}
   if(k==='biz'){const p=pendAll();return p>=1?`<span class="tag gold">${fmt(p)}</span>`:''}
@@ -1156,6 +1313,8 @@ function badge(k){
   if(k==='crypto'){const c=coin('SATS'),d=c?c.p/c.o-1:0;return `<span class="tag ${d>=0?'up':'dn'}">${pct(d)}</span>`}
   if(k==='chirp')return cdLeft('post')?'':'<span class="tag mut">ready</span>';
   if(k==='life')return ['hea','hap'].some(x=>s.st[x]<25)?'<span class="tag dn">low</span>':'';
+  if(k==='work')return s.job&&s.perf<25?'<span class="tag dn">at risk</span>':'';
+  if(k==='people')return partner()?.rel<30?'<span class="tag dn">low</span>':'';
   if(k==='casino')return s.cz.bj&&!s.cz.bj.done?'<span class="tag gold">hand open</span>':'';
   return '';
 }
@@ -1266,7 +1425,15 @@ function selfTest(){ // open with ?test=1 — never touches your real save
   s.cash=1e5;ACT.xbuy('SATS','10000');const u0=s.wallet.SATS.u;ok(u0>0&&s.cash===9e4,'crypto buy');ACT.xsell('SATS','.5');ok(Math.abs(s.wallet.SATS.u-u0/2)<1e-12,'crypto sell half');
   s.cash=5e9;relist();ACT.pbuy(s.re.list[0].uid);ACT.pbuy(s.re.list[1].uid);s.props.at(-1).from=0;s.home=s.props[0].uid;ok(s.props.length===2,'two properties');s.cash=5e6;
   for(let i=0;i<1500;i++)cryptoDay();ok(s.cx.launched>0,'meme coins launch');ACT.xbuy(s.cx.coins[0].t,'1000');
-  const base=JSON.stringify({...s,job:'swe',rel:1,fol:20000,cash:2e6,biz:{truck:{n:12,mgr:0,pend:0,spent:1e5},cafe:{n:3,mgr:1,pend:0,spent:1e5}},port:{NOVA:{sh:50,cost:5000}}});
+  s.people=[];makeFamily();ok(s.people.filter(p=>p.role==='parent').length===2,'family made');
+  const dt=meet('date',100);dt.met=-1000;s.cash=1e7;for(let i=0;i<30&&dt.role==='date';i++)ACT.pp(dt.uid,'propose');ok(dt.role==='spouse','propose');
+  for(let i=0;i<30&&!kids().length;i++){dt.c.baby=0;ACT.pp(dt.uid,'baby')}ok(kids().length===1,'baby');
+  const r0=dt.rel;for(let i=0;i<100;i++)peopleDay();ok(dt.rel<r0,'relationships fade');
+  ACT.pp(dt.uid,'divorce');ok(dt.role==='spouse'&&!$('#modal').hidden,'divorce asks first');ACT.pp(dt.uid,'divorce!');ok(dt.role==='ex'&&$('#modal').hidden,'divorce');
+  ok(jobMiss(JM.surgeon).length&&canJob(JM.crew),'job requirements');s.job=null;ACT.apply('crew');ok(iv&&!$('#modal').hidden,'interview opens');ACT.answer('exp');ok(s.job==='crew'||s.cd.job_crew>s.day,'interview resolves');
+  s.job='crew';s.perf=40;ACT.work('hard');ok(s.perf===45,'work hard');
+  const sp=meet('spouse',60),ex=meet('ex',20),kd=addChild();kd.b=s.day-8*365;s.people.find(p=>p.role==='parent').b=s.day-66*365;for(const p of s.people)if(p.role==='friend')p.rel=60;
+  const base=JSON.stringify({...s,job:'swe',fol:20000,cash:2e6,biz:{truck:{n:12,mgr:0,pend:0,spent:1e5},cafe:{n:3,mgr:1,pend:0,spent:1e5}},port:{NOVA:{sh:50,cost:5000}}});
   for(const e of EV)for(const[,fx]of e.ch){s=JSON.parse(base);s.st.hap=10;const m=fx(s,e.a?e.a(s):0);ok(typeof m==='string','event '+e.id)}
   for(const k in POSTS){s=JSON.parse(base);ACT.post(k)}
   for(const k in VIEWS){tab=k;VIEWS[k]()}ok(railHtml().includes('Markets')&&barHtml().includes('Money')&&typeof subtabs()==='string','navigation');
@@ -1276,7 +1443,7 @@ function selfTest(){ // open with ?test=1 — never touches your real save
   s.cash=1e6;sel='NOVA';ot={side:'buy',qty:7};const n0=s.port.NOVA?.sh||0;ACT.order();ok(s.port.NOVA.sh===n0+7,'order ticket buys');ot.side='sell';ot.qty=3;ACT.order();ok(s.port.NOVA.sh===n0+4,'order ticket sells');ot={side:'buy',qty:10};
   s.cz.chip=100;for(let i=0;i<20000;i++){ACT.dice(['under','over','seven'][i%3]);ACT.flip(i%2?'h':'t')}const dg=s.cz.g.dice,cf=s.cz.g.coin;
   ok(dg.n===20000&&cf.n===20000&&dg.net/2e6>-.08&&dg.net/2e6<.02&&cf.net/2e6>-.05&&cf.net/2e6<.01,'dice and coin edges');
-  newGame('Old','street');delete s.re;delete s.cx;delete s.cz;s.own={apt:1,car:1,bike:1};s.port.MOON={sh:10,cost:12};upgrade();ok(s.props.length===1&&s.cars.length===1&&s.own.bike&&homeP()&&s.wallet.MOON.u===10&&!s.port.MOON&&s.cz,'old saves upgrade');
+  newGame('Old','street');delete s.re;delete s.cx;delete s.cz;delete s.people;s.rel=2;s.kids=2;s.own={apt:1,car:1,bike:1};s.port.MOON={sh:10,cost:12};upgrade();ok(partner()?.role==='spouse'&&kids().length===2&&!('rel' in s),'old relationships upgrade');ok(s.props.length===1&&s.cars.length===1&&s.own.bike&&homeP()&&s.wallet.MOON.u===10&&!s.port.MOON&&s.cz,'old saves upgrade');
   newGame('Sim','rich');let d=0;for(;d<40000&&!s.dead;d++){day();if(d%7===0){s.inbox=[];ACT.colAll()}}
   const vals=[s.cash,netWorth(),s.fol,...Object.values(s.st),...Object.values(s.px).map(q=>q.p),...s.cx.coins.map(c=>c.p),walletVal()];
   ok(vals.every(Number.isFinite),'finite after sim');ok(s.dead,'eventually dies');
