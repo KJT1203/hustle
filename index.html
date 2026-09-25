@@ -14,15 +14,15 @@
   --color-ink:oklch(93% .012 75);--color-ink-2:oklch(74% .014 70);--color-ink-3:oklch(55% .012 65);
   --color-rule:oklch(29% .01 60);--color-accent:oklch(80% .11 85);--color-accent-2:oklch(87% .09 88);
   --color-up:oklch(78% .14 155);--color-down:oklch(70% .16 25);--color-warn:oklch(76% .12 60);
-  --color-scrim:oklch(5% 0 0 / .72);--color-focus:oklch(80% .11 85);
+  --color-scrim:oklch(5% 0 0 / .72);--color-paper-4:oklch(26% .011 60);--color-hair:oklch(22.5% .008 60);--color-down-bg:oklch(70% .16 25 / .14);--color-focus:oklch(80% .11 85);
   --cat-1:oklch(93% .012 75);--cat-2:oklch(80% .11 85);--cat-3:oklch(78% .14 155);--cat-4:oklch(75% .09 250);--cat-5:oklch(72% .1 320);--cat-6:oklch(76% .12 60);--cat-7:oklch(55% .012 65);
   --font-display:"Times New Roman",Times,serif;
   --font-body:"Times New Roman",Times,serif;
   --font-mono:"Times New Roman",Times,serif;
   --space-3xs:.25rem;--space-2xs:.5rem;--space-xs:.75rem;--space-sm:1rem;--space-md:1.5rem;--space-lg:2rem;--space-xl:3rem;
-  --text-xs:.8125rem;--text-sm:.9375rem;--text-base:1.0625rem;--text-md:1.25rem;--text-lg:1.5rem;--text-xl:2.25rem;--text-2xl:3.25rem;
+  --text-xs:.875rem;--text-sm:1rem;--text-base:1.0625rem;--text-md:1.25rem;--text-lg:1.5rem;--text-xl:2.25rem;--text-2xl:3.25rem;
   --ease-out:cubic-bezier(.16,1,.3,1);--dur-short:140ms;
-  --rule:1px solid var(--color-rule);--rule-ink:1px solid var(--color-ink);--radius:6px;
+  --rule:1px solid var(--color-hair);--rule-ink:1px solid var(--color-rule);--radius:6px;
   color-scheme:dark;
 }
 *{box-sizing:border-box}
@@ -44,7 +44,7 @@ b{font-weight:600}
 .ticker b{font-size:1.375rem;font-variant-numeric:tabular-nums lining-nums}
 .ticker .date{font-size:var(--text-xs);color:var(--color-ink-3);margin-left:var(--space-2xs)}
 .speed{display:flex;gap:var(--space-3xs);padding:var(--space-3xs);border:var(--rule);border-radius:var(--radius);flex:none}
-.speed button{width:2.75rem;height:2.25rem;padding:0;border:0;color:var(--color-ink-2);display:grid;place-items:center}
+.speed button{background:transparent;width:2.75rem;height:2.25rem;padding:0;border:0;color:var(--color-ink-2);display:grid;place-items:center}
 .speed button.on{background:var(--color-ink);color:var(--color-paper);font-weight:700}
 #collectBtn{height:2.75rem;padding:0 1.1rem;font-size:var(--text-base);font-weight:700;flex:none}
 /* shell: rail, main, aside */
@@ -53,7 +53,7 @@ body.wide .shell{grid-template-columns:14.5rem minmax(0,1fr)}
 body.wide aside{display:none}
 .rail{display:flex;flex-direction:column;gap:2px;padding:var(--space-md) var(--space-xs);border-right:var(--rule);overflow-y:auto}
 .rail .grp{font-size:.75rem;letter-spacing:.08em;color:var(--color-ink-3);padding:var(--space-sm) var(--space-xs) var(--space-3xs)}
-.rail button{display:flex;align-items:center;gap:var(--space-xs);width:100%;height:2.75rem;padding:0 var(--space-xs);border:0;text-align:left;font-size:var(--text-base);color:var(--color-ink-2)}
+.rail button{background:transparent;display:flex;align-items:center;gap:var(--space-xs);width:100%;height:2.75rem;padding:0 var(--space-xs);border:0;text-align:left;font-size:var(--text-base);color:var(--color-ink-2)}
 .rail button:hover:not(:disabled){background:var(--color-paper-2);color:var(--color-ink)}
 .rail button.on{background:var(--color-paper-2);color:var(--color-ink);font-weight:700}
 .rail button.on svg{color:var(--color-accent)}
@@ -100,7 +100,7 @@ aside h2{font-size:var(--text-md);padding-bottom:var(--space-2xs);border-bottom:
 /* business */
 .bmode{display:flex;flex-direction:column;align-items:flex-end;gap:var(--space-3xs)}
 .seg2{display:flex;gap:var(--space-3xs);padding:var(--space-3xs);border:var(--rule);border-radius:var(--radius)}
-.seg2 button{min-width:3.5rem;height:2.25rem;border:0;color:var(--color-ink-2)}
+.seg2 button{background:transparent;min-width:3.5rem;height:2.25rem;border:0;color:var(--color-ink-2)}
 .seg2 button.on{background:var(--color-ink);color:var(--color-paper);font-weight:700}
 .bestbuy{display:flex;align-items:center;justify-content:space-between;gap:var(--space-md);padding:var(--space-sm) var(--space-md);margin-top:var(--space-md);background:var(--color-paper-3);border:var(--rule);border-radius:var(--radius)}
 .bestbuy button{height:2.75rem;font-size:var(--text-base)}
@@ -120,13 +120,26 @@ aside h2{font-size:var(--text-md);padding-bottom:var(--space-2xs);border-bottom:
 .till .full{color:var(--color-warn);font-weight:700}
 .brow .acts3{display:flex;justify-content:flex-end;gap:var(--space-2xs);flex-wrap:wrap}
 .brow .acts3 button{height:2.75rem;font-size:var(--text-base)}
+/* cleanup pass */
+.lg .auto{font-size:var(--text-xs);color:var(--color-ink-3);margin-left:.35rem}
+button.link2{background:none;border:0;padding:0;color:var(--color-accent);font-size:var(--text-sm)}
+button.link2:hover:not(:disabled){background:none;color:var(--color-accent-2);text-decoration:underline}
+.howto{margin-top:var(--space-sm)}.howto p{margin-top:var(--space-2xs);color:var(--color-ink-2);font-size:var(--text-sm);max-width:46em}
+.more-row{margin-top:var(--space-xs)}
+.acards{display:grid;grid-template-columns:repeat(auto-fill,minmax(13rem,1fr));gap:var(--space-2xs)}
+.acard{display:flex;flex-direction:column;align-items:flex-start;gap:.2rem;text-align:left;white-space:normal;padding:var(--space-sm);min-height:6.25rem}
+.acard b{font-size:var(--text-md)}.acard span{color:var(--color-ink-2);font-size:var(--text-sm)}.acard small{margin-top:auto;padding-top:var(--space-2xs);color:var(--color-accent);font-size:var(--text-xs)}
+.acard:disabled small{color:var(--color-ink-3)}
+.budget{max-width:34rem}
+.pmore{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:var(--space-2xs);justify-content:flex-end;align-items:center}
+@media (max-width:1100px){.pmore{justify-content:flex-start}}
 /* education + guide */
 #mbox.wide{max-width:50rem}
 .majors{gap:var(--space-3xs)}
 .majors button{padding:.4rem .7rem;border-color:var(--color-rule)}
 .majors button.on{background:var(--color-ink);border-color:var(--color-ink);color:var(--color-paper)}
 .need .meter{margin-top:var(--space-2xs)}
-#guideBtn{width:2.75rem;height:2.75rem;padding:0;flex:none;border-color:var(--color-rule);font-size:var(--text-md);font-weight:700}
+#guideBtn{width:2.75rem;height:2.75rem;padding:0;flex:none;font-size:var(--text-md);font-weight:700}
 #coach{position:fixed;right:1.5rem;bottom:1.5rem;z-index:15;width:min(24rem,calc(100vw - 2rem));background:var(--color-paper-3);border:1px solid var(--color-accent);border-radius:var(--radius);padding:var(--space-md);box-shadow:0 1rem 2.5rem var(--color-scrim)}
 #coach .kicker{font-size:var(--text-sm);color:var(--color-accent)}
 #coach h3{margin:var(--space-3xs) 0 var(--space-2xs);font-size:var(--text-lg)}
@@ -150,20 +163,20 @@ button.link:hover:not(:disabled){background:none;color:var(--color-ink)}
 @media (max-width:1100px){.prow{grid-template-columns:minmax(0,1fr) minmax(8rem,12rem)}.prow .acts3{grid-column:1/-1;justify-content:flex-start}}
 @media (max-width:1360px){.brow{grid-template-columns:minmax(0,1.4fr) 4.5rem 6.5rem minmax(0,1fr)}.brow .acts3{grid-column:1/-1;justify-content:flex-start}.brow.head span:last-child{display:none}}
 /* buttons */
-button{font:500 var(--text-sm)/1.2 var(--font-body);color:var(--color-ink);background:transparent;border:var(--rule-ink);border-radius:var(--radius);padding:.5rem .75rem;cursor:pointer;white-space:nowrap;transition:background-color var(--dur-short) var(--ease-out),color var(--dur-short) var(--ease-out)}
-button:hover:not(:disabled){background:var(--color-ink);color:var(--color-paper)}
+button{font:500 var(--text-sm)/1.2 var(--font-body);color:var(--color-ink);background:var(--color-paper-2);border:1px solid transparent;border-radius:var(--radius);padding:.5rem .75rem;cursor:pointer;white-space:nowrap;transition:background-color var(--dur-short) var(--ease-out),color var(--dur-short) var(--ease-out)}
+button:hover:not(:disabled){background:var(--color-paper-4);color:var(--color-ink)}
 button:active:not(:disabled){transform:translateY(1px)}
 button:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--color-focus);outline-offset:2px}
-button:disabled{border-color:var(--color-rule);color:var(--color-ink-3);cursor:not-allowed}
+button:disabled{background:transparent;border-color:var(--color-hair);color:var(--color-ink-3);cursor:not-allowed}
 button.pri{background:var(--color-accent);border-color:var(--color-accent);color:var(--color-paper)}
 button.pri:hover:not(:disabled){background:var(--color-accent-2);border-color:var(--color-accent-2)}
 button.pri:disabled{background:transparent;border-color:var(--color-rule);color:var(--color-ink-3)}
-button.bad{border-color:var(--color-down);color:var(--color-down)}
-button.bad:hover:not(:disabled){background:var(--color-down);color:var(--color-paper-3)}
+button.bad{background:transparent;color:var(--color-down)}
+button.bad:hover:not(:disabled){background:var(--color-down-bg);color:var(--color-down)}
 button.big{font-size:var(--text-base);padding:.8rem 1.25rem}
 
 /* page furniture */
-.lede{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:var(--space-xl);align-items:end;padding-bottom:var(--space-md);border-bottom:var(--rule-ink)}
+.lede{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:var(--space-xl);align-items:end;margin-bottom:var(--space-xs)}
 .headline{font-size:var(--text-xl);line-height:1.05;font-weight:600}
 .dek{font-size:var(--text-md);line-height:1.45;color:var(--color-ink-2);margin-top:var(--space-2xs);max-width:36em;text-wrap:pretty}
 .dek b{color:var(--color-ink)}
@@ -232,12 +245,11 @@ tr.low .meter i{background:var(--color-down)}
 .bgs button{text-align:left;padding:var(--space-sm);white-space:normal}
 .bgs b{display:block;font:600 var(--text-md) var(--font-display)}
 .bgs small{display:block;color:var(--color-ink-2);font-size:var(--text-sm);margin-top:var(--space-3xs)}
-.bgs button:hover:not(:disabled) small{color:var(--color-paper-2)}
 label{display:block;font-size:var(--text-sm);color:var(--color-ink-2);margin-top:var(--space-sm)}
 input{display:block;width:100%;margin-top:var(--space-3xs);background:var(--color-paper);border:var(--rule-ink);border-radius:var(--radius);padding:.7rem .8rem;color:var(--color-ink);font:400 var(--text-md) var(--font-body)}
 input:focus-visible{outline:2px solid var(--color-focus);outline-offset:1px}
 .row{display:flex;gap:var(--space-2xs);flex-wrap:wrap}
-#toasts{position:fixed;left:var(--space-md);bottom:var(--space-md);display:flex;flex-direction:column;gap:var(--space-2xs);z-index:30;pointer-events:none}
+#toasts{position:fixed;left:50%;top:4.75rem;transform:translateX(-50%);align-items:center;display:flex;flex-direction:column;gap:var(--space-2xs);z-index:30;pointer-events:none}
 .toast{background:var(--color-ink);color:var(--color-paper);padding:.55rem .9rem;font-size:var(--text-sm);max-width:22rem;animation:slip .2s var(--ease-out)}
 @keyframes slip{from{opacity:0;transform:translateY(.5rem)}}
 @media (prefers-reduced-motion:reduce){.toast{animation:none}button{transition:none}}
@@ -258,7 +270,7 @@ input:focus-visible{outline:2px solid var(--color-focus);outline-offset:1px}
 .tui{display:grid;grid-template-columns:15rem minmax(0,1fr) 16rem;gap:var(--space-md);align-items:start}
 .watch{border:var(--rule)}
 .wh{display:flex;justify-content:space-between;padding:var(--space-2xs) var(--space-xs);font-size:var(--text-xs);color:var(--color-ink-3);border-bottom:var(--rule)}
-.wrow{display:grid;grid-template-columns:minmax(0,1fr) auto 4.6rem;gap:var(--space-2xs);align-items:center;width:100%;border:0;border-bottom:var(--rule);border-radius:0;text-align:left;padding:var(--space-2xs) var(--space-xs)}
+.wrow{background:transparent;display:grid;grid-template-columns:minmax(0,1fr) auto 4.6rem;gap:var(--space-2xs);align-items:center;width:100%;border:0;border-bottom:var(--rule);border-radius:0;text-align:left;padding:var(--space-2xs) var(--space-xs)}
 .wrow:last-child{border-bottom:0}
 .wrow small{display:block;font-size:var(--text-xs);color:var(--color-ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .wrow.on,.wrow:hover:not(:disabled){background:var(--color-paper-2);color:var(--color-ink)}
@@ -271,7 +283,7 @@ input:focus-visible{outline:2px solid var(--color-focus);outline-offset:1px}
 .stats4 div{display:flex;justify-content:space-between;gap:var(--space-2xs);font-size:var(--text-sm)}
 .stats4 span{color:var(--color-ink-3)}
 .tfbar{display:flex;gap:var(--space-3xs);margin-top:var(--space-sm);flex-wrap:wrap}
-.tfbar button{padding:.3rem .6rem;font-size:var(--text-xs);border-color:var(--color-rule)}
+.tfbar button{background:transparent;padding:.3rem .6rem;font-size:var(--text-xs);border-color:var(--color-rule)}
 .tfbar button.on{background:var(--color-ink);border-color:var(--color-ink);color:var(--color-paper)}
 .tfbar .sp{flex:1}
 #tchart{width:100%;height:20rem;display:block;margin-top:var(--space-2xs);cursor:crosshair}
@@ -280,13 +292,13 @@ input:focus-visible{outline:2px solid var(--color-focus);outline-offset:1px}
 .news small{color:var(--color-ink-3);margin-right:var(--space-2xs)}
 .ticket{border:var(--rule);padding:var(--space-sm);display:flex;flex-direction:column;gap:var(--space-xs)}
 .seg{display:grid;grid-template-columns:1fr 1fr}
-.seg button{border-radius:0;border-color:var(--color-rule)}
+.seg button{background:transparent;border-radius:0;border-color:var(--color-rule)}
 .seg button.on.buy{background:var(--color-up);border-color:var(--color-up);color:var(--color-paper)}
 .seg button.on.sell{background:var(--color-down);border-color:var(--color-down);color:var(--color-paper)}
 .ticket dl{display:grid;grid-template-columns:1fr auto;gap:var(--space-2xs);margin:0;font-size:var(--text-sm)}
 .ticket dt{color:var(--color-ink-3)}.ticket dd{margin:0;text-align:right}
 .qty{display:grid;grid-template-columns:2.75rem minmax(0,1fr) 2.75rem;align-items:center;text-align:center;border:var(--rule)}
-.qty button{border:0;border-radius:0;font-size:var(--text-md)}
+.qty button{background:transparent;border:0;border-radius:0;font-size:var(--text-md)}
 .qty b{font-size:var(--text-lg)}
 .presets{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--space-3xs)}
 .presets button{padding:.35rem;border-color:var(--color-rule)}
@@ -302,7 +314,7 @@ input:focus-visible{outline:2px solid var(--color-focus);outline-offset:1px}
 .chips button.on{background:var(--color-ink);border-color:var(--color-ink);color:var(--color-paper)}
 .felt{border-top:var(--rule);border-bottom:var(--rule);padding:var(--space-xs) 0;min-height:10.5rem}
 .hand{display:grid;grid-template-columns:5.5rem minmax(0,1fr);align-items:center;gap:var(--space-sm);padding:var(--space-2xs) 0}
-.pc{vertical-align:top;display:inline-grid;place-items:center;width:2.6rem;height:3.6rem;margin:0 var(--space-2xs) var(--space-3xs) 0;border:var(--rule-ink);border-radius:var(--radius);background:var(--color-paper-2);font:600 var(--text-md) var(--font-display)}
+.pc{vertical-align:top;display:inline-grid;place-items:center;width:2.6rem;height:3.6rem;margin:0 var(--space-2xs) var(--space-3xs) 0;border:1px solid var(--color-ink-3);border-radius:var(--radius);background:var(--color-paper-2);font:600 var(--text-md) var(--font-display)}
 .pc.red{color:var(--color-down)}
 .pc.back{background:repeating-linear-gradient(45deg,var(--color-rule) 0 4px,var(--color-paper-2) 4px 8px)}
 .result{margin:var(--space-xs) 0;color:var(--color-ink-2);min-height:1.5em}
@@ -310,7 +322,7 @@ input:focus-visible{outline:2px solid var(--color-focus);outline-offset:1px}
 .reels{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:var(--rule);border-bottom:var(--rule)}
 .reels span{display:grid;place-items:center;height:5.5rem;font:700 var(--text-xl) var(--font-display);border-right:var(--rule)}
 .reels span:last-child{border-right:0}
-.rn{display:inline-grid;place-items:center;min-width:2.25rem;height:2.25rem;padding:0;font:600 var(--text-sm) var(--font-mono)}
+.rn{border:1px solid var(--color-rule);background:transparent;display:inline-grid;place-items:center;min-width:2.25rem;height:2.25rem;padding:0;font:600 var(--text-sm) var(--font-mono)}
 .rn.red{color:var(--color-down)}.rn.g{color:var(--color-up)}
 .wheel{display:flex;align-items:center;gap:var(--space-md);flex-wrap:wrap}
 .rn.big{width:4.5rem;height:4.5rem;font-size:var(--text-xl);border:var(--rule-ink)}
@@ -334,15 +346,15 @@ input:focus-visible{outline:2px solid var(--color-focus);outline-offset:1px}
   main{overflow:visible;padding:var(--space-md) var(--space-sm) var(--space-lg)}
   aside{border-left:0;border-top:var(--rule-ink);overflow:visible;padding:var(--space-md) var(--space-sm)}
   .tabbar{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));position:fixed;left:0;right:0;bottom:0;z-index:10;background:var(--color-paper-3);border-top:var(--rule);padding-bottom:env(safe-area-inset-bottom,0px)}
-  .tabbar button{position:relative;height:4.25rem;border:0;border-radius:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.25rem;font-size:var(--text-xs);color:var(--color-ink-2)}
+  .tabbar button{position:relative;background:transparent;height:4.25rem;border:0;border-radius:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.25rem;font-size:var(--text-xs);color:var(--color-ink-2)}
   .tabbar button svg{width:22px;height:22px}
   .tabbar button.on{color:var(--color-accent);font-weight:700}
   .tabbar button:hover:not(:disabled){background:transparent;color:var(--color-ink)}
   .tabbar .badge{position:absolute;top:.4rem;left:50%;margin-left:.35rem;min-width:1.125rem;height:1.125rem;font-size:.6875rem}
   .subtabs{display:flex;gap:var(--space-3xs);padding:var(--space-3xs);margin-bottom:var(--space-md);border:var(--rule);border-radius:var(--radius);overflow-x:auto;scrollbar-width:none}
-  .subtabs button{flex:1;height:2.5rem;border:0;color:var(--color-ink-2)}
+  .subtabs button{flex:1;background:transparent;height:2.5rem;border:0;color:var(--color-ink-2)}
   .subtabs button.on{background:var(--color-ink);color:var(--color-paper);font-weight:700}
-  #toasts{bottom:calc(5.25rem + env(safe-area-inset-bottom,0px))}
+  #toasts{top:auto;bottom:calc(5.25rem + env(safe-area-inset-bottom,0px))}
   #coach{left:1rem;right:1rem;width:auto;bottom:calc(5.25rem + env(safe-area-inset-bottom,0px))}
   .lede{grid-template-columns:minmax(0,1fr);gap:var(--space-md)}
   .headline{font-size:var(--text-lg)}
@@ -370,7 +382,7 @@ input:focus-visible{outline:2px solid var(--color-focus);outline-offset:1px}
     <div><small>Per day</small><b id="hInc">—</b></div>
     <div><small>Age</small><b id="hAge">—</b><span class="date" id="dateline"></span></div>
   </div>
-  <button id="guideBtn" data-a="guide" aria-label="How to play">?</button>
+  <button id="guideBtn" data-a="help" aria-label="Help and settings">?</button>
   <div class="speed" id="speed"></div>
   <button id="collectBtn" class="pri" data-a="colAll" hidden></button>
 </header>
@@ -392,7 +404,7 @@ const gauss=()=>{let u=0,v=0;while(!u)u=R();while(!v)v=R();return Math.sqrt(-2*M
 const U=['','K','M','B','T','Qa','Qi','Sx','Sp'];
 function big(n,cents){const a=Math.abs(n),sg=n<0?'-':'';if(a<1000)return sg+(cents&&a<100&&a%1?a.toFixed(2):Math.round(a));let i=0,x=a;while(x>=1000&&i<U.length-1){x/=1000;i++}return sg+x.toFixed(x<10?2:x<100?1:0)+U[i]}
 const fmt=n=>(n<0?'-$':'$')+big(Math.abs(n),1);
-const pct=x=>(x>=0?'+':'')+(x*100).toFixed(1)+'%';
+const pct=x=>{const v=Math.round(x*1000)/10||0;return (v>=0?'+':'')+v.toFixed(1)+'%'};
 const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const hue=h=>[...h].reduce((a,c)=>a*31+c.charCodeAt(0)>>>0,7)%360;
 
@@ -533,17 +545,17 @@ const CARS=[
  {id:'vintage',n:'Vintage racer',price:9e6,dep:-.06,vol:.15,up:2500,hap:.15,fame:60},
 ];
 const ACTS=[
- {id:'gym',n:'Hit the gym',cd:3,c:15,fx:()=>{add('hea',3);add('loo',1);add('hap',1);return 'Good pump.'}},
- {id:'read',n:'Read a book',cd:3,c:20,fx:()=>{add('sma',1.5);return 'You feel a little smarter.'}},
- {id:'med',n:'Meditate',cd:2,c:0,fx:()=>{add('hap',3);return 'Inner peace, briefly.'}},
- {id:'out',n:'Night out',cd:5,c:150,fx:()=>{add('hap',8);add('hea',-2);if(R()<.25&&friendsN()<10){const p=meet('friend',35);return `Great night. You made a new friend: ${p.n}.`}if(R()<.3){const f=rint(5,40)+Math.round(s.fol*.01);s.fol+=f;return `Legendary night. +${f} followers.`}return 'Great night, rough morning.'}},
- {id:'date',n:'Dating app',cd:10,c:40,show:()=>!partner(),fx:()=>{if(R()<.2+s.st.loo/250){const p=meet('date',40);add('hap',10);log(`You matched with ${esc(p.n)}. You're seeing each other.`,'good');return `It's a match with ${p.n}!`}add('hap',-2);return 'Swiped all night. Nothing.'}},
- {id:'fam',n:'Family time',cd:4,c:0,show:()=>s.people.some(p=>['parent','sibling','spouse','child'].includes(p.role))||s.pet,fx:()=>{for(const p of s.people)if(['parent','sibling','spouse','child'].includes(p.role))prel(p,3);add('hap',5);return 'Quality time with family.'}},
- {id:'club',n:'Join a club',cd:30,c:200,fx:()=>{if(friendsN()<10&&R()<.7){const p=meet('friend',40);return `You joined a ${pick(['running','book','chess','climbing','board game'])} club and met ${p.n}.`}return 'Nice people, no real connection yet.'}},
- {id:'doc',n:'Doctor check-up',cd:30,c:400,fx:()=>{add('hea',15);return 'Clean bill of health.'}},
- {id:'spa',n:'Spa day',cd:14,c:600,fx:()=>{add('hap',8);add('loo',2);return 'Glowing.'}},
- {id:'trip',n:'Vacation',cd:120,c:5000,fx:()=>{add('hap',30);add('hea',5);return 'Sun, sea, no emails.'}},
- {id:'surg',n:'Cosmetic surgery',cd:365,c:25000,fx:()=>{add('hea',-5);if(R()<.85){add('loo',15);return 'Looking fresh. +15 looks.'}add('loo',-10);return 'It went… badly. -10 looks.'}},
+ {id:'gym',n:'Hit the gym',d:'+3 health, +1 looks',cd:3,c:15,fx:()=>{add('hea',3);add('loo',1);add('hap',1);return 'Good pump.'}},
+ {id:'read',n:'Read a book',d:'+1.5 smarts',cd:3,c:20,fx:()=>{add('sma',1.5);return 'You feel a little smarter.'}},
+ {id:'med',n:'Meditate',d:'+3 happiness',cd:2,c:0,fx:()=>{add('hap',3);return 'Inner peace, briefly.'}},
+ {id:'out',n:'Night out',d:'+8 happiness, −2 health. You might make a friend.',cd:5,c:150,fx:()=>{add('hap',8);add('hea',-2);if(R()<.25&&friendsN()<10){const p=meet('friend',35);return `Great night. You made a new friend: ${p.n}.`}if(R()<.3){const f=rint(5,40)+Math.round(s.fol*.01);s.fol+=f;return `Legendary night. +${f} followers.`}return 'Great night, rough morning.'}},
+ {id:'date',n:'Dating app',d:'A chance to meet someone',cd:10,c:40,show:()=>!partner(),fx:()=>{if(R()<.2+s.st.loo/250){const p=meet('date',40);add('hap',10);log(`You matched with ${esc(p.n)}. You're seeing each other.`,'good');return `It's a match with ${p.n}!`}add('hap',-2);return 'Swiped all night. Nothing.'}},
+ {id:'fam',n:'Family time',d:'+5 happiness, and your family feels closer',cd:4,c:0,show:()=>s.people.some(p=>['parent','sibling','spouse','child'].includes(p.role))||s.pet,fx:()=>{for(const p of s.people)if(['parent','sibling','spouse','child'].includes(p.role))prel(p,3);add('hap',5);return 'Quality time with family.'}},
+ {id:'club',n:'Join a club',d:'A good chance to make a friend',cd:30,c:200,fx:()=>{if(friendsN()<10&&R()<.7){const p=meet('friend',40);return `You joined a ${pick(['running','book','chess','climbing','board game'])} club and met ${p.n}.`}return 'Nice people, no real connection yet.'}},
+ {id:'doc',n:'Doctor check-up',d:'+15 health',cd:30,c:400,fx:()=>{add('hea',15);return 'Clean bill of health.'}},
+ {id:'spa',n:'Spa day',d:'+8 happiness, +2 looks',cd:14,c:600,fx:()=>{add('hap',8);add('loo',2);return 'Glowing.'}},
+ {id:'trip',n:'Vacation',d:'+30 happiness, +5 health',cd:120,c:5000,fx:()=>{add('hap',30);add('hea',5);return 'Sun, sea, no emails.'}},
+ {id:'surg',n:'Cosmetic surgery',d:'Usually +15 looks. Sometimes it goes wrong.',cd:365,c:25000,fx:()=>{add('hea',-5);if(R()<.85){add('loo',15);return 'Looking fresh. +15 looks.'}add('loo',-10);return 'It went… badly. -10 looks.'}},
 ];
 const BG={
  rich:{n:'Trust-fund kid',d:'$20K head start, bad at books',cash:20000,st:{hea:80,hap:75,sma:22,loo:62}},
@@ -736,7 +748,7 @@ const EVM=EM(EV.map(e=>[e.id,e]));
 
 // ---------- state ----------
 const SAVE='hustle-v1',GROW=1.13,CAP=10,MILES=[10,25,50,100,150,200,300,400,500];
-let tour=-1,tourSpeed=1,tourJump=false,enr=null,iv=null,bmode='1',lastSpeed=1,lastIn=[],cg=null,tf='3M',cmode='candle',hov=null,ot={side:'buy',qty:10}; // screen state, not saved
+let helpOpen={},showAll={},openP=null,tour=-1,tourSpeed=1,tourJump=false,enr=null,iv=null,bmode='1',lastSpeed=1,lastIn=[],cg=null,tf='3M',cmode='candle',hov=null,ot={side:'buy',qty:10}; // screen state, not saved
 let s=null,tab='dash',sel='NOVA',csel='SATS',speed=1,holding=false,wiped=false,heir={},hiddenAt=0;
 const age=()=>s.startAge+s.day/365;
 const add=(k,v)=>s.st[k]=clamp(s.st[k]+v,0,100);
@@ -904,7 +916,7 @@ function day(){
   if(s.day%91===0)dividends();
   if(s.day%7===0){(s.nwh??=[]).push(Math.round(netWorth()));if(s.nwh.length>104)s.nwh.shift()}
   s.later=s.later.filter(p=>p.d>s.day||(runLater(p),false));
-  s.inbox=s.inbox.filter(it=>{if(s.day-it.d<30)return true;const e=EVM[it.id];if(!e.c||e.c(s))log(`<b>${e.t}</b> (you never decided): ${e.ch[e.def][1](s,it.a)}`);return false});
+  s.inbox=s.inbox.filter(it=>{if(s.day-it.d<30)return true;const e=EVM[it.id];if(!e.c||e.c(s))log(`<b>${e.t}</b> ${e.ch[e.def][1](s,it.a)}<span class="auto">decided for you</span>`);return false});
   if(s.inbox.length<3&&R()<1/28)newEvent();
   const pd=s.st.hea<=0?1:A>60?Math.min(.5,((A-60)/30)**3*3)/365:0;
   if(R()<pd)die();
@@ -949,7 +961,7 @@ const ACT={
   spd:x=>{if(speed)lastSpeed=speed;speed=+x},
   bmode:x=>{bmode=x},
   gobj:()=>{ACT.tab('casino');cg='bj'},
-  pick:(id,c)=>{const i=s.inbox.findIndex(x=>x.id===id);if(i<0)return;const it=s.inbox.splice(i,1)[0],e=EVM[id],msg=e.c&&!e.c(s)?'The moment has passed.':e.ch[+c][1](s,it.a);log(`<b>${e.t}</b>: ${msg}`);toast(msg)},
+  pick:(id,c)=>{const i=s.inbox.findIndex(x=>x.id===id);if(i<0)return;const it=s.inbox.splice(i,1)[0],e=EVM[id],msg=e.c&&!e.c(s)?'The moment has passed.':e.ch[+c][1](s,it.a);log(`<b>${e.t}</b> ${msg}`);toast(msg)},
   sel:x=>sel=x,
   close:()=>closeModal(),
   act:id=>{const a=AM[id];if(s.day<(s.cd[id]||0)||s.cash<a.c)return;s.cash-=a.c;s.cd[id]=s.day+a.cd;toast(a.fx())},
@@ -964,6 +976,12 @@ const ACT={
   study:k=>{const A=STUDY[k];if(!s.study||s.day<(s.cd['s_'+k]||0)||s.cash<(A.c||0))return;s.cash-=A.c||0;s.cd['s_'+k]=s.day+A.cd;toast(A.fx())},
   dropout:x=>{if(!s.study)return;if(x!=='yes')return modal(`<h2>Drop out of ${degName(s.study)}?</h2><p>You won't get your tuition back, and any student loan stays.</p><div class="row"><button class="bad" data-a="dropout" data-x="yes">Drop out</button><button data-a="close">Keep studying</button></div>`);log(`Dropped out of ${degName(s.study)}.`,'bad');s.study=null;closeModal()},
   payloan:()=>{if(!s.debt||s.cash<s.debt)return;s.cash-=s.debt;s.debt=0;log('Paid off your student loans.','good')},
+  help:()=>modal(`<p class="kicker">Help and settings</p><h2>The Hustle</h2><div class="choices"><button data-a="guide2">Replay the guide</button><button class="bad" data-a="reset">Start a new life</button><button class="pri" data-a="close">Back to the game</button></div>
+    <h3 style="margin-top:var(--space-lg)">Keyboard</h3><table class="ledger"><tbody><tr><td class="num">1 to 0</td><td>Switch screens</td></tr><tr><td>Space</td><td>Pause or resume</td></tr><tr><td>C</td><td>Collect every till</td></tr><tr><td>?</td><td>Replay the guide</td></tr><tr><td>Esc</td><td>Close the guide</td></tr></tbody></table>`),
+  guide2:()=>{closeModal();ACT.guide()},
+  howto:()=>{helpOpen[tab]=!helpOpen[tab]},
+  showall:()=>{showAll[tab]=!showAll[tab]},
+  pmore:x=>{openP=openP===+x?null:+x},
   guide:()=>{if(tour<0){tourSpeed=speed||lastSpeed||1;speed=0}tour=0;ACT.tab(TOUR[0].tab);tourJump=true},
   tnext:()=>{if(tour>=TOUR.length-1)return ACT.tend();tour++;ACT.tab(TOUR[tour].tab);tourJump=true},
   tback:()=>{if(tour>0){tour--;ACT.tab(TOUR[tour].tab);tourJump=true}},
@@ -1098,6 +1116,7 @@ function lifeLine(){
   if(s.pet)b.push('has a cat');
   return b.join(', ').replace(/, ([^,]*)$/,' and $1')+'.';
 }
+const howto=x=>`<div class="howto"><button class="link2" data-a="howto" aria-expanded="${!!helpOpen[tab]}">${helpOpen[tab]?'Hide the details':'How this works'}</button>${helpOpen[tab]?`<p>${x}</p>`:''}</div>`;
 const pendAll=()=>BIZ.reduce((t,b)=>t+(s.biz[b.id]?.pend||0),0);
 const idxDay=()=>STOCKS.reduce((t,k)=>t+s.px[k.t].p/s.px[k.t].o,0)/STOCKS.length-1;
 const plural=w=>/(sh|ch|s)$/.test(w)?w+'es':/[^aeiou]y$/.test(w)?w.slice(0,-1)+'ies':w+'s';
@@ -1143,13 +1162,13 @@ function bestBuy(){ // cheapest income per dollar, counting milestone doublings
   return best;
 }
 function personRow(p){
-  const acts=PACT_ORDER.filter(k=>PACTS[k].roles.includes(p.role)).map(k=>{const A=PACTS[k],w=Math.max(0,(p.c?.[k]||0)-s.day),cost=A.c?A.c(p):0,why=A.need?.(p);
-    if(why)return `<span class="hint">${why}</span>`;
-    return `<button class="${A.bad?'bad':k==='propose'||k==='baby'?'pri':''}" data-a="pp" data-x="${p.uid}" data-y="${k}" ${w||s.cash<cost?'disabled':''}>${A.n}${cost?` · ${fmt(cost)}`:''}${w?` · ${w}d`:''}</button>`}).join('');
-  const lo=p.rel<30;
+  const all=PACT_ORDER.filter(k=>PACTS[k].roles.includes(p.role)),main=['date','call','reconnect'].find(k=>all.includes(k)),open=openP===p.uid,lo=p.rel<30;
+  const btn=k=>{const A=PACTS[k],w=Math.max(0,(p.c?.[k]||0)-s.day),cost=A.c?A.c(p):0,why=A.need?.(p);if(why)return `<span class="hint">${why}</span>`;
+    return `<button class="${A.bad?'bad':k==='propose'||k==='baby'?'pri':''}" data-a="pp" data-x="${p.uid}" data-y="${k}" ${w||s.cash<cost?'disabled':''}>${A.n}${cost?` · ${fmt(cost)}`:''}${w?` · ${w}d`:''}</button>`};
   return `<div class="prow"><div class="who"><span class="av">${esc(p.n[0])}</span><div><div class="pn">${esc(p.n)}</div><div class="mut" style="font-size:var(--text-xs)">${ROLE[p.role]}${p.out?', moved out':''} · ${Math.max(0,Math.floor(ageOf(p)))}</div></div></div>
    <div class="close"><div class="top2"><span class="${lo?'dn':'mut'}">${closeWord(p.rel)}</span><span class="num">${Math.round(p.rel)}</span></div>${meter(p.rel,lo?'low':'')}</div>
-   <div class="acts3">${acts}</div></div>`;
+   <div class="acts3">${main?btn(main):''}${all.length>1?`<button data-a="pmore" data-x="${p.uid}" aria-expanded="${open}">${open?'Less':'More'}</button>`:''}</div>
+   ${open?`<div class="pmore">${all.filter(k=>k!==main).map(btn).join('')}</div>`:''}</div>`;
 }
 function bizRow(b,i,last){
   const o=s.biz[b.id]||{n:0,pend:0,mgr:0},n=o.n;if(i>last+1&&!n)return '';
@@ -1180,30 +1199,12 @@ dash(){
   </section>`;
 },
 life(){
-  const f=flows(),e=EDU[s.edu+1],home=homeP();
-  return `<section class="lede solo">
-    <div><h2 class="headline">${esc(s.name)}, ${Math.floor(age())}</h2>
-     <p class="dek">${esc(s.name)} ${lifeLine()} ${s.edu?`Holds ${art(EDU[s.edu].n)}.`:'Finished high school.'}</p></div>
-  </section>
-  <div class="cols">
-   <section><h3>Things to do</h3>
-    <table class="ledger"><thead><tr><th>Activity</th><th class="r">Cost</th><th>When</th><th></th></tr></thead><tbody>
-    ${ACTS.filter(a=>!a.show||a.show()).map(a=>{const w=cdLeft(a.id);return `<tr class="${w?'dim':''}"><td>${a.n}</td><td class="r num">${a.c?fmt(a.c):'free'}</td><td>${w?`in ${w}d`:'now'}</td><td class="act"><button data-a="act" data-x="${a.id}" ${w||s.cash<a.c?'disabled':''}>Do it</button></td></tr>`}).join('')}
-    </tbody></table></section>
-   <section><h3>Education</h3>
-    <p>${s.study?`Studying for ${art(degName(s.study))} at ${schoolOf(s.study).n}. ${s.study.left} days to go.`:`Highest level: ${EDU[s.edu].n}.`}</p>
-    <div class="row" style="margin-top:var(--space-xs)"><button data-a="tab" data-x="school">Go to Education</button></div>
-    <h3>Daily budget</h3>
-    <table class="ledger"><tbody>
-     <tr><td>Salary and pension</td><td class="r">${sign(f.job)}</td></tr>
-     <tr><td>Managed businesses</td><td class="r">${sign(f.biz)}</td></tr>
-     <tr><td>Tills to collect</td><td class="r num warn">+${fmt(f.pend)}</td></tr>
-     <tr><td>Sponsorships</td><td class="r">${sign(f.spon)}</td></tr>
-     <tr><td>Rent from tenants</td><td class="r">${sign(f.rent)}</td></tr>
-     <tr><td>Loan payments</td><td class="r">${sign(-f.mort)}</td></tr>
-     <tr><td>Living costs and upkeep${home?'':', rent included'}</td><td class="r">${sign(-f.exp)}</td></tr>
-    </tbody></table></section>
-  </div>`;
+  const f=flows(),rows=[['Salary and pension',f.job],['Managed businesses',f.biz],['Tills to collect',f.pend],['Sponsorships',f.spon],['Rent from tenants',f.rent],['Loan payments',-f.mort],[`Living costs${homeP()?'':', rent included'}`,-f.exp]].filter(r=>Math.abs(r[1])>=.01);
+  return `<section class="lede solo"><div><h2 class="headline">${esc(s.name)}, ${Math.floor(age())}</h2><p class="dek">${esc(s.name)} ${lifeLine()}</p></div></section>
+  <div class="sec-h"><h2>Activities</h2><span>each one has a cooldown</span></div>
+  <div class="acards">${ACTS.filter(a=>!a.show||a.show()).map(a=>{const w=cdLeft(a.id);return `<button class="acard" data-a="act" data-x="${a.id}" ${w||s.cash<a.c?'disabled':''}><b>${a.n}</b><span>${a.d}</span><small>${a.c?fmt(a.c):'Free'}${w?` · ready in ${w}d`:''}</small></button>`}).join('')}</div>
+  <div class="sec-h"><h2>Money in and out</h2><span>a day</span></div>
+  <table class="ledger budget"><tbody>${rows.map(([n,v])=>`<tr><td>${n}</td><td class="r">${sign(v)}</td></tr>`).join('')}<tr><td><b>Net</b></td><td class="r"><b>${sign(rows.reduce((a,r)=>a+r[1],0))}</b></td></tr></tbody></table>`;
 },
 work(){
   const J=job(),yrs=Object.entries(s.xp).filter(([,d])=>d>=30).sort((a,b)=>b[1]-a[1]),toPromo=120-s.jobDays%120;
@@ -1217,10 +1218,11 @@ work(){
      :`<div class="quick" style="margin-top:var(--space-md)"><button class="pri" data-a="gig">Take a gig · +${fmt(gig())}</button></div>`}
   <div class="sec-h"><h2>Job board</h2><span>${JOBS.filter(j=>canJob(j)&&s.job!==j.id).length} you qualify for</span></div>
   <div class="scroll"><table class="ledger"><thead><tr><th>Position</th><th>Field</th><th>Requires</th><th class="r">Stress</th><th class="r">Per day</th><th></th></tr></thead><tbody>
-  ${JOBS.map(j=>{const miss=jobMiss(j),cur=s.job===j.id,wait=Math.max(0,(s.cd['job_'+j.id]||0)-s.day);return `<tr class="${miss.length&&!cur?'dim':''}"><td><b>${j.n}</b></td><td class="mut">${FIELD[j.fld]}</td><td>${jobReqText(j)}${miss.length&&!cur?`<div class="sub dn">Missing ${miss.join(', ')}</div>`:''}</td><td class="r num">${j.str}/5</td><td class="r num">${fmt(j.pay)}</td>
+  ${JOBS.map(j=>{const miss=jobMiss(j),cur=s.job===j.id,wait=Math.max(0,(s.cd['job_'+j.id]||0)-s.day);if(miss.length&&!cur&&!showAll.work)return '';return `<tr class="${miss.length&&!cur?'dim':''}"><td><b>${j.n}</b></td><td class="mut">${FIELD[j.fld]}</td><td>${jobReqText(j)}${miss.length&&!cur?`<div class="sub dn">Missing ${miss.join(', ')}</div>`:''}</td><td class="r num">${j.str}/5</td><td class="r num">${fmt(j.pay)}</td>
    <td class="act">${cur?'<span class="mut">Current</span>':wait?`<span class="mut">Reapply in ${wait}d</span>`:`<button ${miss.length?'disabled':'class="pri"'} data-a="apply" data-x="${j.id}">Interview</button>`}</td></tr>`}).join('')}
   </tbody></table></div>
-  <p class="note">Experience builds in whatever field you work in, and better jobs ask for it. Promotion reviews come every 120 days, and each step up asks for a higher performance, starting at 55. Below 20, you can be fired.${yrs.length?` You have ${yrs.map(([f,d])=>`${(d/365).toFixed(1)} years in ${FIELD[f]}`).join(', ')}.`:''}</p>`;
+  ${(n=>n?`<div class="more-row"><button class="link2" data-a="showall">${showAll.work?'Hide the jobs you can\'t get yet':`Show ${n} more job${n>1?'s':''} you can't get yet`}</button></div>`:'')(JOBS.filter(j=>jobMiss(j).length&&s.job!==j.id).length)}
+  ${howto(`Experience builds in whatever field you work in, and better jobs ask for it. Promotion reviews come every 120 days, and each step up asks for a higher performance, starting at 55. Below 20, you can be fired.${yrs.length?` You have ${yrs.map(([f,d])=>`${(d/365).toFixed(1)} years in ${FIELD[f]}`).join(', ')}.`:''}`)}`;
 },
 school(){
   const st=s.study,P=st&&PG[st.p],sbtn=k=>{const A=STUDY[k],w=Math.max(0,(s.cd['s_'+k]||0)-s.day);return `<button data-a="study" data-x="${k}" ${w||s.cash<(A.c||0)?'disabled':''}>${A.n}${A.c?` · ${fmt(A.c)}`:''}${w?` · in ${w}d`:''}</button>`};
@@ -1234,21 +1236,23 @@ school(){
     <div class="acts2">${sbtn('hard')}${sbtn('party')}${sbtn('tutor')}<button class="bad" data-a="dropout">Drop out</button></div></div></div>`:''}
   <div class="sec-h"><h2>Programs</h2><span>${st?'finish your current program to start another':`${open} open to you`}</span></div>
   <div class="scroll"><table class="ledger"><thead><tr><th>Program</th><th>Where</th><th>Needs</th><th class="r">Days</th><th class="r">Tuition from</th><th></th></tr></thead><tbody>
-  ${PROGS.map(P=>{const miss=progMiss(P),done=!P.mj&&s.degs.some(d=>d.p===P.id),from=Math.min(...schoolsFor(P).map(sc=>tuition(P,sc)));
+  ${PROGS.map(P=>{const miss=progMiss(P),done=!P.mj&&s.degs.some(d=>d.p===P.id),from=Math.min(...schoolsFor(P).map(sc=>tuition(P,sc)));if((miss.length||done)&&!showAll.school)return '';
     return `<tr class="${miss.length||done?'dim':''}"><td><b>${P.n}</b><div class="sub">${leadsTo(P)}</div>${miss.length?`<div class="sub dn">Missing ${miss.join(', ')}</div>`:''}</td><td class="mut">${P.at||`${P.sch.length} schools`}</td>
      <td>${[P.need?EDU[P.need].n:'',P.min?`${P.min} smarts`:'',P.hea?`${P.hea} health`:''].filter(Boolean).join(', ')||'Nothing'}</td><td class="r num">${P.days}</td><td class="r num">${P.stipend?`paid ${fmt(P.stipend)}/d`:fmt(from)}</td>
      <td class="act">${done?'<span class="mut">Done</span>':`<button ${miss.length||st?'disabled':'class="pri"'} data-a="learn" data-x="${P.id}">Enroll</button>`}</td></tr>`}).join('')}
   </tbody></table></div>
+  ${(n=>n?`<div class="more-row"><button class="link2" data-a="showall">${showAll.school?'Hide the programs you can\'t start':`Show ${n} more program${n>1?'s':''}`}</button></div>`:'')(PROGS.filter(P=>progMiss(P).length||(!P.mj&&s.degs.some(d=>d.p===P.id))).length)}
   ${s.degs.length?`<div class="sec-h"><h2>Your qualifications</h2></div><div class="scroll"><table class="ledger"><tbody>${s.degs.map(d=>`<tr><td><b>${degName(d)}</b></td><td class="mut">${schoolOf(d).n}</td><td class="r">${d.hon?'<span class="up">Honors</span>':''}</td></tr>`).join('')}</tbody></table></div>`:''}
-  <p class="note">Better schools cost more and are harder to get into, but impress interviewers. Strong students can win a half scholarship. Online study doesn't hurt your mood and fits around a job, but takes longer.</p>`;
+  ${howto(`Better schools cost more and are harder to get into, but impress interviewers. Strong students can win a half scholarship. Online study doesn't hurt your mood and fits around a job, but takes longer.`)}`;
 },
 people(){
-  const pt=partner(),ord={spouse:0,date:0,child:1,parent:2,sibling:3,friend:4,ex:5},L=[...s.people].sort((a,b)=>ord[a.role]-ord[b.role]||b.rel-a.rel),fr=friendsN();
+  const pt=partner(),G=[['Partner',['date','spouse']],['Family',['child','parent','sibling']],['Friends',['friend']],['Exes',['ex']]];
   return `<section class="lede">
-    <div><h2 class="headline">People</h2><p class="dek">${pt?`You are ${pt.role==='spouse'?'married to':'seeing'} <b>${esc(pt.n)}</b>.`:'You are single.'} ${fr?`${fr} friend${fr>1?'s':''}.`:'No close friends yet.'} Close relationships lift your mood every day. Neglected ones fade, and a neglected partner may leave.</p></div>
+    <div><h2 class="headline">People</h2><p class="dek">${pt?`You are ${pt.role==='spouse'?'married to':'seeing'} <b>${esc(pt.n)}</b>.`:'You are single.'} Staying close to people keeps you happy.</p></div>
     <div class="side"><p class="mut">Meet people</p><div class="row">${['date','out','club'].map(id=>{const a=AM[id];if(a.show&&!a.show())return '';const w=cdLeft(id);return `<button data-a="act" data-x="${id}" ${w||s.cash<a.c?'disabled':''}>${a.n}${a.c?` · ${fmt(a.c)}`:''}${w?` · ${w}d`:''}</button>`}).join('')}</div></div>
   </section>
-  <div class="plist">${L.map(personRow).join('')||'<p class="mut" style="padding:var(--space-sm) 0">Nobody yet.</p>'}</div>`;
+  ${G.map(([g,rs])=>{const L=s.people.filter(p=>rs.includes(p.role)).sort((a,b)=>b.rel-a.rel);return L.length?`<div class="sec-h"><h2>${g}</h2><span>${L.length}</span></div><div class="plist">${L.map(personRow).join('')}</div>`:''}).join('')||'<p class="mut">Nobody yet. Go out and meet people.</p>'}
+  ${howto('Closeness fades a little every day. Call, hang out, give gifts and plan date nights to keep it up. Close relationships lift your mood every day, and neglected ones drag it down. A neglected partner may leave. Propose once you are close and have been together a while, and try for a baby once you are married.')}`;
 },
 biz(){
   const f=flows(),last=BIZ.reduce((m,b,i)=>s.biz[b.id]?.n?i:m,-1),bb=bestBuy();
@@ -1260,7 +1264,7 @@ biz(){
   ${bb?`<div class="bestbuy"><p><b>Best next buy:</b> ${bb.k} ${bb.k>1?plural(bb.b.n):bb.b.n} for ${fmt(bb.c)}${bb.m?`, reaching ${bb.m} and doubling its income`:''}. Pays for itself in about ${Math.max(1,Math.round(bb.pb))} days.</p><button class="pri" data-a="bbuy" data-x="${bb.b.id}" data-y="${bb.k}">Buy ${bb.k}</button></div>`:''}
   <div class="blist"><div class="brow head"><span>Business</span><span class="own">Owned</span><span class="inc">Per day</span><span>Till</span><span></span></div>
   ${BIZ.map((b,i)=>bizRow(b,i,last)).join('')}</div>
-  <p class="note">The buy button follows the switch above and shrinks to what you can afford. Milestones at ${MILES.slice(0,5).join(', ')} and on double a business's income. Managers keep earning while you're away.</p>`;
+  ${howto(`The buy button follows the switch above and shrinks to what you can afford. Milestones at ${MILES.slice(0,5).join(', ')} and on double a business's income. Managers keep earning while you're away.`)}`;
 },
 stock(){
   const k=SK[sel],q=s.px[sel],h=s.port[sel],M=s.mkt,d=q.p/q.o-1,H=q.h,buy=ot.side==='buy';
@@ -1310,8 +1314,9 @@ chirp(){
   return `<div class="chirp"><section class="lede" style="grid-template-columns:minmax(0,1fr)">
     <div><h2 class="headline">Chirp</h2>
      <p class="dek">${esc(s.name)} posts as ${s.handle} to <b class="num">${big(s.fol)}</b> followers. ${sp?`Sponsors pay <b class="num">${fmt(sp)}</b> a day.`:'Sponsors start paying at 1K followers.'}</p></div></section>
-   <div class="compose"><p class="mut">${w?`You can post again in ${w} day${w>1?'s':''}.`:'Selfies ride on looks. Hot takes ride on smarts and can backfire. Memes go viral more often. Flexes need $25K net worth. Promotions lift business income 25% for 10 days.'}</p>
+   <div class="compose"><p class="mut">${w?`You can post again in ${w} day${w>1?'s':''}.`:'What will you post?'}</p>
     ${Object.entries(POSTS).map(([k,P])=>`<button data-a="post" data-x="${k}" ${!w&&(!P.need||P.need())?'':'disabled'}>${P.n}</button>`).join('')}</div>
+   ${howto('Selfies ride on looks. Hot takes ride on smarts and can backfire. Memes go viral more often. Flexes need $25K net worth. Promoting a business lifts its income 25% for 10 days. At 1K followers, sponsors start paying you every day.')}
    <ol class="feed">${s.feed.map(p=>`<li class="post ${p.me?'mine':''}"><span class="av">${esc(p.n[0].toUpperCase())}</span><div>
      <div class="by"><b>${esc(p.n)}</b>${p.v?' <span class="ver" title="Verified">✓</span>':''} <span class="mut">${p.h} · ${s.day-p.d?`${s.day-p.d}d`:'now'}</span>${p.tag?`<span class="tag ${p.bad?'dn':''}">${p.tag}</span>`:''}</div>
      <p>${esc(p.x)}</p><div class="mut num" style="font-size:var(--text-xs)">${big(p.l)} likes</div></div></li>`).join('')}</ol></div>`;
@@ -1336,7 +1341,7 @@ crypto(){
      <button data-a="xsell" data-x="${c.t}" data-y=".25" ${w?'':'disabled'}>Sell 25%</button><button data-a="xsell" data-x="${c.t}" data-y=".5" ${w?'':'disabled'}>Sell 50%</button><button class="bad" data-a="xsell" data-x="${c.t}" data-y="all" ${w?'':'disabled'}>Sell all</button></div>
    </section>
   </div>
-  <p class="note">Every trade costs a 1% fee. New meme coins launch every few weeks. A few go up a hundredfold; most get rugged. Hustle Dollar holds at $1 and pays interest every day.</p>`;
+  ${howto(`Every trade costs a 1% fee. New meme coins launch every few weeks. A few go up a hundredfold; most get rugged. Hustle Dollar holds at $1 and pays interest every day.`)}`;
 },
 casino(){
   const z=s.cz,ban=s.day<z.ban,can=!ban&&s.cash>=z.chip;
@@ -1366,7 +1371,7 @@ home(){
   ${s.re.list.map(l=>{const k=PM[l.t],v=k.base*l.m*idx,ok=s.cash>=v*.2&&canBorrow(v*.8);return `<tr class="${s.cash>=v||ok?'':'dim'}"><td><b>${k.n}, ${l.loc}</b>${k.biz?' <span class="mut">· investment only</span>':''}</td><td class="r num">${fmt(v)}</td><td class="r num">${fmt(v*k.yld/365)}</td><td class="r num">${fmt(mpay(v*.8))}</td>
    <td class="act"><button data-a="pbuy" data-x="${l.uid}" ${s.cash<v?'disabled':''}>Buy outright</button><button class="pri" data-a="pbuy" data-x="${l.uid}" data-y="m" ${ok?'':'disabled'}>Mortgage, ${fmt(v*.2)} down</button></td></tr>`}).join('')}
   </tbody></table></div>
-  <p class="note">New listings in ${s.re.next-s.day} days. Mortgages take 20% down and run 30 years at 5.5%, and the bank only lends while repayments stay under 40% of your income. Selling costs 3% in fees. Anything you don't live in gets rented out once a tenant is found.</p>`;
+  ${howto(`New listings in ${s.re.next-s.day} days. Mortgages take 20% down and run 30 years at 5.5%, and the bank only lends while repayments stay under 40% of your income. Selling costs 3% in fees. Anything you don't live in gets rented out once a tenant is found.`)}`;
 },
 garage(){
   let val=0;for(const c of s.cars)val+=c.v;const b=bestCar();
@@ -1379,7 +1384,7 @@ garage(){
   <div class="scroll"><table class="ledger"><thead><tr><th>Model</th><th class="r">Price</th><th class="r">Value a year</th><th class="r">Upkeep a day</th><th class="r">Mood</th><th class="r">Followers a year</th><th></th></tr></thead><tbody>
   ${CARS.map(k=>`<tr class="${s.cash>=k.price?'':'dim'}"><td><b>${k.n}</b>${k.vol?' <span class="mut">· collectible</span>':''}</td><td class="r num">${fmt(k.price)}</td><td class="r num ${k.dep<0?'up':'dn'}">${k.dep<0?'+':'−'}${Math.abs(k.dep*100).toFixed(0)}%</td><td class="r num">${fmt(k.up)}</td><td class="r num">+${Math.round(k.hap/.004)}</td><td class="r num">${k.fame?big(k.fame*365):'—'}</td><td class="act"><button class="pri" data-a="cbuy" data-x="${k.id}" ${s.cash<k.price?'disabled':''}>Buy</button></td></tr>`).join('')}
   </tbody></table></div>
-  <p class="note">Only your best car lifts your mood, but every car adds followers. New cars lose 10% the day you drive them away. Collectibles swing in value and tend to climb.</p>`;
+  ${howto(`Only your best car lifts your mood, but every car adds followers. New cars lose 10% the day you drive them away. Collectibles swing in value and tend to climb.`)}`;
 },
 shop(){
   return `<section class="lede"><div><h2 class="headline">Lifestyle</h2>
@@ -1420,7 +1425,7 @@ const GROUPS=[['',['dash']],['You',['life','work','people','school']],['Money',[
 const BAR=[['Home',['dash'],'home'],['Life',['life','work','people','school'],'user'],['Money',['biz','stock','crypto','home'],'chart'],['Spend',['garage','shop'],'bag'],['Fun',['chirp','casino'],'dice']];
 const KEYTABS=['dash','life','work','people','school','biz','stock','crypto','home','garage'];
 const TOUR=[
- {tab:'dash',t:'Welcome to The Hustle',x:'One second of real time is one day of your life, and the clock keeps running while you play. The game is paused while this guide is open. Reopen it any time with the ? button.',hi:['#guideBtn']},
+ {tab:'dash',t:'Welcome to The Hustle',x:'One second of real time is one day of your life, and the clock keeps running while you play. The game is paused while this guide is open. The ? button replays it, and holds settings and keyboard shortcuts.',hi:['#guideBtn']},
  {tab:'dash',t:'Your numbers',x:'The top bar shows your cash, net worth, what you earn each day, and your age. Pause or speed up time with the buttons on the right.',hi:['.ticker','#speed']},
  {tab:'dash',t:'Needs you',x:'Home lists everything that needs your attention: decisions, money waiting to collect, and warnings. A decision left alone for 30 days decides itself.',hi:['.needs']},
  {tab:'dash',t:'Quick actions',x:'Gigs pay a little cash right away. Activities raise your health, happiness, smarts and looks, and each one has a cooldown.',hi:['.quick']},
@@ -1453,7 +1458,7 @@ function badge(k){
   return '';
 }
 const railHtml=()=>GROUPS.map(([g,ks])=>(g?`<div class="grp">${g.toUpperCase()}</div>`:'')+ks.map(k=>`<button class="${tab===k?'on':''}" data-a="tab" data-x="${k}" ${tab===k?'aria-current="page"':''}>${ICON[TABS[k][1]]}${TABS[k][0]}${badge(k)}</button>`).join('')).join('')
-  +'<div class="keys">Keys 1–0 switch screens. Space pauses. C collects. ? opens the guide.</div><button class="reset" data-a="reset">Start a new life</button>';
+  ;
 const barHtml=()=>BAR.map(([n,ks,ico],i)=>{const nb=i===0?needs().length:0;return `<button class="${ks.includes(tab)?'on':''}" data-a="grp" data-x="${i}">${ICON[ico]}${n}${nb?`<span class="badge">${nb}</span>`:''}</button>`}).join('');
 const subtabs=()=>{const b=BAR.find(b=>b[1].includes(tab));return b&&b[1].length>1?`<div class="subtabs">${b[1].map(k=>`<button class="${k===tab?'on':''}" data-a="tab" data-x="${k}">${TABS[k][0]}</button>`).join('')}</div>`:''};
 
