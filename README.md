@@ -3,6 +3,7 @@
 An idle life simulator in one HTML file. You turn 18, and from then on one second is one day.
 
 - **Life**: health, happiness, smarts and looks. Things to do, education, dating, marriage, kids, a cat.
+- **Education**: a diploma, bachelor's, master's, MBA, law school, medical school and a PhD (which pays a stipend), plus a trade certificate, police academy, coding bootcamp, flight school and teaching certificate. There are five schools, from an online university you can study at around a job to an elite university that is hard to get into and impresses interviewers. Majors count as a year of experience, and you can win a scholarship. While studying you have a grade, and can study hard, party or hire a tutor. Student loans repay themselves daily. Lawyers need a JD, surgeons an MD, pilots flight school.
 - **People**: a family with parents and siblings, plus friends, partners, exes and named kids who grow up and move out. Each person has a closeness score you raise by calling, hanging out, gifts and date nights. You can propose, try for a baby, break up or divorce. Closeness fades if you neglect people, a neglected partner can leave, parents grow old and leave an inheritance, and your mood follows how close you are to them.
 - **Choices**: random decisions show up in your inbox (lost wallets, crypto pitches, bosses, scandals, buyouts). If you ignore one for 30 days, it decides for you.
 - **Work**: 19 jobs across 13 fields, including chef, electrician, police, teacher, designer, pilot and CEO. Experience builds in the field you work in, and better jobs require it. Applying means an interview where your answer changes your odds. A performance score (work hard, slack off, network, ask for a raise) decides promotions, and each rank asks for more. Drop below 20 and you can be fired. Retire on a pension from 55.
@@ -16,7 +17,7 @@ An idle life simulator in one HTML file. You turn 18, and from then on one secon
 - **Lifestyle**: gadgets, art, yachts and jets for mood and followers, each with upkeep.
 - **Generations**: when you die, your heir inherits half your net worth plus a permanent business bonus.
 
-**Playing it:** the Home screen lists everything that needs you. Answer decisions right there, collect full tills, and hire managers when they pay off. Quick actions sit underneath, with your net worth chart and a breakdown of where your money is. The side menu groups the other screens and flags what needs attention; on a phone it becomes a bottom tab bar. Keys 1–0 switch screens, Space pauses, C collects everything.
+**Playing it:** a short guided tour starts with every new life (reopen it with the ? button or the ? key). the Home screen lists everything that needs you. Answer decisions right there, collect full tills, and hire managers when they pay off. Quick actions sit underneath, with your net worth chart and a breakdown of where your money is. The side menu groups the other screens and flags what needs attention; on a phone it becomes a bottom tab bar. Keys 1–0 switch screens, Space pauses, C collects everything.
 
 Play: open `index.html`. It saves to localStorage automatically.
 Self-check: open with `?test=1` (a query string, so serve the file with a server that keeps queries) and look for `self-test passed` in the console.

@@ -120,6 +120,21 @@ aside h2{font-size:var(--text-md);padding-bottom:var(--space-2xs);border-bottom:
 .till .full{color:var(--color-warn);font-weight:700}
 .brow .acts3{display:flex;justify-content:flex-end;gap:var(--space-2xs);flex-wrap:wrap}
 .brow .acts3 button{height:2.75rem;font-size:var(--text-base)}
+/* education + guide */
+#mbox.wide{max-width:50rem}
+.majors{gap:var(--space-3xs)}
+.majors button{padding:.4rem .7rem;border-color:var(--color-rule)}
+.majors button.on{background:var(--color-ink);border-color:var(--color-ink);color:var(--color-paper)}
+.need .meter{margin-top:var(--space-2xs)}
+#guideBtn{width:2.75rem;height:2.75rem;padding:0;flex:none;border-color:var(--color-rule);font-size:var(--text-md);font-weight:700}
+#coach{position:fixed;right:1.5rem;bottom:1.5rem;z-index:15;width:min(24rem,calc(100vw - 2rem));background:var(--color-paper-3);border:1px solid var(--color-accent);border-radius:var(--radius);padding:var(--space-md);box-shadow:0 1rem 2.5rem var(--color-scrim)}
+#coach .kicker{font-size:var(--text-sm);color:var(--color-accent)}
+#coach h3{margin:var(--space-3xs) 0 var(--space-2xs);font-size:var(--text-lg)}
+#coach p{color:var(--color-ink-2)}
+#coach .row{margin-top:var(--space-sm);align-items:center}
+button.link{border:0;background:none;color:var(--color-ink-3);text-decoration:underline;margin-left:auto}
+button.link:hover:not(:disabled){background:none;color:var(--color-ink)}
+.tour-hi{outline:2px solid var(--color-accent)!important;outline-offset:4px;border-radius:var(--radius)}
 /* work + people */
 .side .meter{align-self:stretch}
 .ledger .sub.dn{color:var(--color-down)}
@@ -306,11 +321,13 @@ input:focus-visible{outline:2px solid var(--color-focus);outline-offset:1px}
 @media (max-width:1100px){.mkt,.cols{grid-template-columns:minmax(0,1fr);gap:0}}
 @media (max-width:860px){
   body{height:auto;overflow:visible;padding-bottom:calc(4.5rem + env(safe-area-inset-bottom,0px))}
-  .top{position:sticky;top:0;z-index:5;flex-wrap:wrap;height:auto;padding:var(--space-sm);gap:var(--space-xs) var(--space-sm);background:var(--color-paper)}
-  .wordmark{flex:1;width:auto;font-size:1.5rem}
+  .top{position:sticky;top:0;z-index:5;flex-wrap:wrap;height:auto;padding:var(--space-sm);gap:var(--space-xs);background:var(--color-paper)}
+  .wordmark{flex:1;width:auto;font-size:1.25rem}
+  #guideBtn{width:2.5rem;height:2.5rem}
   .ticker{order:3;flex-basis:100%;flex-wrap:wrap;gap:var(--space-3xs) var(--space-md);overflow:visible}
   .ticker b{font-size:1.125rem}.ticker .date{display:none}
-  .speed button{width:2.5rem}
+  .speed button{width:2rem;height:2.25rem}
+  .speed{gap:2px}
   #collectBtn{order:4;flex-basis:100%}
   .shell,body.wide .shell{display:block}
   .rail{display:none}
@@ -326,6 +343,7 @@ input:focus-visible{outline:2px solid var(--color-focus);outline-offset:1px}
   .subtabs button{flex:1;height:2.5rem;border:0;color:var(--color-ink-2)}
   .subtabs button.on{background:var(--color-ink);color:var(--color-paper);font-weight:700}
   #toasts{bottom:calc(5.25rem + env(safe-area-inset-bottom,0px))}
+  #coach{left:1rem;right:1rem;width:auto;bottom:calc(5.25rem + env(safe-area-inset-bottom,0px))}
   .lede{grid-template-columns:minmax(0,1fr);gap:var(--space-md)}
   .headline{font-size:var(--text-lg)}
   .need{grid-template-columns:minmax(0,1fr)}.need .acts2{justify-content:flex-start}.need .acts2 button{flex:1}
@@ -352,6 +370,7 @@ input:focus-visible{outline:2px solid var(--color-focus);outline-offset:1px}
     <div><small>Per day</small><b id="hInc">—</b></div>
     <div><small>Age</small><b id="hAge">—</b><span class="date" id="dateline"></span></div>
   </div>
+  <button id="guideBtn" data-a="guide" aria-label="How to play">?</button>
   <div class="speed" id="speed"></div>
   <button id="collectBtn" class="pri" data-a="colAll" hidden></button>
 </header>
@@ -361,6 +380,7 @@ input:focus-visible{outline:2px solid var(--color-focus);outline-offset:1px}
   <aside><h2 id="statsH">How you are doing</h2><div class="sbars" id="sbars"></div><h2>The Record</h2><div id="log"></div></aside>
 </div>
 <nav id="tabbar" class="tabbar" aria-label="Sections"></nav>
+<div id="coach" role="dialog" aria-label="Guide" hidden></div>
 <div id="toasts" role="status" aria-live="polite"></div>
 <div id="modal" hidden><div id="mbox" role="dialog" aria-modal="true"></div></div>
 
@@ -386,21 +406,48 @@ const JOBS=[
  {id:'chef',n:'Line Chef',fld:'food',e:0,s:25,pay:118,str:4,x:{food:1}},
  {id:'smgr',n:'Store Manager',fld:'retail',e:0,s:35,pay:165,str:3,x:{retail:2}},
  {id:'admin',n:'Office Admin',fld:'office',e:1,s:35,pay:140,str:1},
- {id:'elec',n:'Electrician',fld:'trade',e:1,s:30,pay:190,str:2},
- {id:'police',n:'Police Officer',fld:'public',e:1,s:35,pay:205,str:4,h:60},
+ {id:'elec',n:'Electrician',fld:'trade',e:0,dg:'cert',s:30,pay:190,str:2},
+ {id:'police',n:'Police Officer',fld:'public',e:0,dg:'academy',s:35,pay:205,str:4,h:60},
  {id:'design',n:'Graphic Designer',fld:'creative',e:1,s:40,pay:175,str:2},
  {id:'dev',n:'Junior Developer',fld:'tech',e:1,s:50,pay:210,str:2},
- {id:'teacher',n:'Teacher',fld:'public',e:2,s:45,pay:230,str:3},
- {id:'nurse',n:'Nurse',fld:'health',e:2,s:45,pay:260,str:3},
+ {id:'teacher',n:'Teacher',fld:'public',e:2,dg:'teach',s:45,pay:230,str:3},
+ {id:'nurse',n:'Nurse',fld:'health',e:1,mj:'Nursing',s:45,pay:260,str:3},
  {id:'analyst',n:'Financial Analyst',fld:'finance',e:2,s:60,pay:380,str:3},
  {id:'swe',n:'Software Engineer',fld:'tech',e:2,s:65,pay:480,str:2,x:{tech:1}},
  {id:'cdir',n:'Creative Director',fld:'creative',e:2,s:55,pay:520,str:3,x:{creative:3}},
- {id:'lawyer',n:'Lawyer',fld:'law',e:3,s:72,pay:760,str:4},
- {id:'pilot',n:'Airline Pilot',fld:'aviation',e:2,s:70,pay:900,str:3,h:70},
- {id:'surgeon',n:'Surgeon',fld:'health',e:4,s:78,pay:1150,str:4,x:{health:2}},
- {id:'ceo',n:'Corporate CEO',fld:'exec',e:3,s:80,pay:2600,str:5,f:25000,xt:8},
+ {id:'lawyer',n:'Lawyer',fld:'law',e:0,dg:'jd',s:72,pay:760,str:4},
+ {id:'pilot',n:'Airline Pilot',fld:'aviation',e:0,dg:'flight',s:70,pay:900,str:3,h:70},
+ {id:'resident',n:'Resident Doctor',fld:'health',e:0,dg:'md',s:72,pay:420,str:5},
+ {id:'surgeon',n:'Surgeon',fld:'health',e:0,dg:'md',s:78,pay:1150,str:4,x:{health:2}},
+ {id:'prof',n:'Professor',fld:'academia',e:0,dg:'phd',s:75,pay:620,str:2},
+ {id:'ceo',n:'Corporate CEO',fld:'exec',e:0,dg:'mba',s:80,pay:2600,str:5,f:25000,xt:8},
 ];
-const FIELD={food:'food service',delivery:'delivery',retail:'retail',office:'office work',trade:'the trades',public:'public service',creative:'creative work',tech:'tech',health:'healthcare',finance:'finance',law:'law',aviation:'aviation',exec:'management'};
+// education: lvl = level it gives (jobs ask for a level or a specific program), need = level required to start
+const MAJORS={Business:'office','Computer science':'tech',Finance:'finance',Nursing:'health',Biology:'health',Design:'creative',Engineering:'trade',Psychology:'public',Education:'public',Hospitality:'food'};
+const PROGS=[
+ {id:'cert',n:'Trade certificate',at:'City Trade Institute',lvl:1,need:0,days:180,cost:5000,sma:4,min:20},
+ {id:'academy',n:'Police academy',at:'Metro Police Academy',lvl:1,need:0,days:120,cost:2000,sma:3,min:25,hea:55},
+ {id:'camp',n:'Coding bootcamp',at:'ByteForge Bootcamp',lvl:1,need:0,days:90,cost:12000,sma:6,min:35,xp:'tech'},
+ {id:'dip',n:'Diploma',lvl:1,need:0,days:180,cost:6000,sma:10,min:0,mj:1,sch:['online','cc']},
+ {id:'ba',n:"Bachelor's degree",lvl:2,need:0,days:360,cost:35000,sma:12,min:35,mj:1,sch:['online','state','priv','elite']},
+ {id:'flight',n:'Flight school',at:'Skyline Flight School',lvl:1,need:0,days:300,cost:90000,sma:5,min:50,hea:70},
+ {id:'teach',n:'Teaching certificate',at:'Midtown State University',lvl:2,need:2,days:120,cost:8000,sma:3,min:40},
+ {id:'ma',n:"Master's degree",lvl:3,need:2,days:240,cost:60000,sma:10,min:55,mj:1,sch:['online','state','priv','elite']},
+ {id:'mba',n:'MBA',lvl:3,need:2,days:240,cost:120000,sma:8,min:55,sch:['state','priv','elite']},
+ {id:'jd',n:'Law school (JD)',lvl:3,need:2,days:360,cost:150000,sma:12,min:65,sch:['state','priv','elite']},
+ {id:'md',n:'Medical school (MD)',lvl:4,need:2,days:720,cost:250000,sma:15,min:72,sch:['state','priv','elite']},
+ {id:'phd',n:'PhD',lvl:4,need:3,days:480,cost:0,sma:15,min:70,mj:1,stipend:60,sch:['state','priv','elite']},
+];
+const PG=Object.fromEntries(PROGS.map(x=>[x.id,x]));
+const SCHOOLS={online:{n:'Open Online University',cost:.5,adm:0,pres:0,slow:1.25,note:'Study alongside work with no mood hit. Takes 25% longer.'},cc:{n:'Riverside Community College',cost:.6,adm:0,pres:0},
+ state:{n:'Midtown State University',cost:1,adm:45,pres:1},priv:{n:'St. Aldric College',cost:2.2,adm:60,pres:2},elite:{n:'Kingsbridge University',cost:4,adm:78,pres:3}};
+const PRES=['Open to all','Solid','Respected','Elite'];
+const STUDY={
+ hard:{n:'Study hard',cd:4,fx:()=>{const st=s.study;st.g=clamp(st.g+6,0,100);st.left=Math.max(1,st.left-3);add('hap',-1);add('sma',.3);return 'Library until midnight.'}},
+ party:{n:'Go to a party',cd:6,fx:()=>{s.study.g=clamp(s.study.g-5,0,100);add('hap',6);if(R()<.4&&friendsN()<10){const q=meet('friend',45);return `Great party. You met ${q.n}.`}return 'Great party. Rough morning.'}},
+ tutor:{n:'Hire a tutor',cd:14,c:250,fx:()=>{s.study.g=clamp(s.study.g+10,0,100);return 'Your tutor explains it in five minutes.'}},
+};
+const FIELD={academia:'academia',food:'food service',delivery:'delivery',retail:'retail',office:'office work',trade:'the trades',public:'public service',creative:'creative work',tech:'tech',health:'healthcare',finance:'finance',law:'law',aviation:'aviation',exec:'management'};
 const IVQ=['Why should we hire you?','Tell us about a time you solved a hard problem.','Where do you see yourself in five years?','What is your biggest weakness?','How do you handle pressure?'];
 const WORK={
  hard:{n:'Work hard',cd:4,fx:()=>{s.perf=clamp(s.perf+5,0,100);add('hap',-1);return 'Long day. Your boss noticed.'}},
@@ -572,6 +619,12 @@ const EV=[
 {id:'breakup',w:()=>partner()?.rel<35?3:.4,c:()=>partner(),a:s=>Math.max(200,Math.round(s.cash*.05)),t:'Rough patch',d:(s,a)=>`You and ${partner()?.n||'your partner'} keep fighting. A getaway to reconnect costs <b>${fmt(a)}</b>.`,def:1,ch:[
  ['Book the getaway',(s,a)=>{s.cash-=a;const p=partner();if(p)prel(p,15);add('hap',8);return 'The trip works. You feel close again.'}],
  ['Let it be',()=>{const p=partner();if(p&&R()<.5)return endRel(p,1);return 'It blows over… for now.'}]]},
+{id:'cheat',w:2,c:s=>s.study,t:'The answers',d:()=>"A classmate is selling the answers to next week's exam for $200.",def:1,ch:[
+ ['Buy them',()=>{if(!s.study)return 'The moment has passed.';s.cash-=200;if(R()<.2){const n=schoolOf(s.study).n;s.study=null;add('hap',-15);log(`Expelled from ${n} for cheating.`,'bad');return 'You got caught. Expelled, and no refund.'}s.study.g=clamp(s.study.g+20,0,100);return 'Top marks on the exam. Nobody noticed. This time.'}],
+ ['Study for real',()=>{if(s.study)s.study.g=clamp(s.study.g+4,0,100);add('hap',-2);return 'You earned that grade.'}]]},
+{id:'abroad',w:1.2,c:s=>s.study&&!['online','inst'].includes(s.study.sc),a:()=>rint(4000,9000),t:'Semester abroad',d:(s,a)=>`Your school offers a semester abroad for <b>${fmt(a)}</b>.`,def:1,ch:[
+ ['Go',(s,a)=>{s.cash-=a;add('hap',15);add('sma',3);if(friendsN()<10){const q=meet('friend',55);return `A semester you won't forget. You're still in touch with ${q.n}.`}return "A semester you won't forget."}],
+ ['Stay home',()=>'Maybe next year.']]},
 {id:'loan',w:2,c:s=>s.cash>1000&&s.people.some(p=>p.role==='friend'&&p.rel>=30),a:s=>{const p=pick(s.people.filter(p=>p.role==='friend'&&p.rel>=30));return {u:p.uid,n:p.n,v:Math.round(Math.max(300,s.cash*.05))}},t:'Can you spot me?',d:(s,a)=>`${a.n} is short on rent and asks to borrow <b>${fmt(a.v)}</b>. They swear they'll pay you back.`,def:1,ch:[
  ['Lend it',(s,a)=>{s.cash-=a.v;const p=per(a.u);if(p)prel(p,12);s.later.push(R()<.65?{d:s.day+rint(30,120),k:'cash',v:Math.round(a.v*1.1),m:`${a.n} paid you back, with a thank-you on top:`}:{d:s.day+rint(60,150),k:'msg',m:`${a.n} never paid you back.`});return `${a.n} hugs you. The money is gone for now.`}],
  ['Say no',(s,a)=>{const p=per(a.u);if(p)prel(p,-20);return `${a.n} says they understand. They don't.`}]]},
@@ -683,7 +736,7 @@ const EVM=EM(EV.map(e=>[e.id,e]));
 
 // ---------- state ----------
 const SAVE='hustle-v1',GROW=1.13,CAP=10,MILES=[10,25,50,100,150,200,300,400,500];
-let iv=null,bmode='1',lastSpeed=1,lastIn=[],cg=null,tf='3M',cmode='candle',hov=null,ot={side:'buy',qty:10}; // screen state, not saved
+let tour=-1,tourSpeed=1,tourJump=false,enr=null,iv=null,bmode='1',lastSpeed=1,lastIn=[],cg=null,tf='3M',cmode='candle',hov=null,ot={side:'buy',qty:10}; // screen state, not saved
 let s=null,tab='dash',sel='NOVA',csel='SATS',speed=1,holding=false,wiped=false,heir={},hiddenAt=0;
 const age=()=>s.startAge+s.day/365;
 const add=(k,v)=>s.st[k]=clamp(s.st[k]+v,0,100);
@@ -692,11 +745,11 @@ const jobPay=()=>job().pay*(1+.15*s.rank)*(1+(s.raise||0));
 const jobTitle=()=>RANKS[Math.min(s.rank,5)]+job().n;
 const promoNeed=()=>55+s.rank*5,topRank=()=>s.rank>=5;
 const fire=()=>{s.job=null;s.rank=0;s.jobDays=0;s.raise=0};
-const xpY=f=>(s.xp[f]||0)/365,xpT=()=>Object.values(s.xp).reduce((a,d)=>a+d,0)/365;
+const xpY=f=>(s.xp[f]||0)/365+((s.degs||[]).some(d=>d.mj&&MAJORS[d.mj]===f)?1:0),xpT=()=>Object.values(s.xp).reduce((a,d)=>a+d,0)/365;
 const raiseOdds=()=>clamp((s.perf-30)/60,.05,.9);
-function jobMiss(j){const m=[];if(s.edu<j.e)m.push(EDU[j.e].n);if(s.st.sma<j.s)m.push(`${j.s} smarts`);if(j.h&&s.st.hea<j.h)m.push(`${j.h} health`);
+function jobMiss(j){const m=[];if(s.edu<j.e)m.push(EDU[j.e].n);if(j.dg&&!s.degs.some(d=>d.p===j.dg))m.push(PG[j.dg].n);if(j.mj&&!s.degs.some(d=>d.mj===j.mj))m.push(`a ${j.mj} major`);if(s.st.sma<j.s)m.push(`${j.s} smarts`);if(j.h&&s.st.hea<j.h)m.push(`${j.h} health`);
   for(const f in j.x||{})if(xpY(f)<j.x[f])m.push(`${j.x[f]} yr${j.x[f]>1?'s':''} in ${FIELD[f]}`);if(j.xt&&xpT()<j.xt)m.push(`${j.xt} yrs experience`);if(j.f&&s.fol<j.f)m.push(`${big(j.f)} followers`);return m}
-const jobReqText=j=>[EDU[j.e].n,j.s?`${j.s} smarts`:'',j.h?`${j.h} health`:'',...Object.entries(j.x||{}).map(([f,y])=>`${y} yr${y>1?'s':''} ${FIELD[f]}`),j.xt?`${j.xt} yrs experience`:'',j.f?`${big(j.f)} followers`:''].filter(Boolean).join(', ');
+const jobReqText=j=>[j.dg?PG[j.dg].n:EDU[j.e].n,j.mj?`${j.mj} major`:'',j.s?`${j.s} smarts`:'',j.h?`${j.h} health`:'',...Object.entries(j.x||{}).map(([f,y])=>`${y} yr${y>1?'s':''} ${FIELD[f]}`),j.xt?`${j.xt} yrs experience`:'',j.f?`${big(j.f)} followers`:''].filter(Boolean).join(', ');
 const ageOf=p=>(s.day-p.b)/365;
 const per=u=>s.people.find(p=>p.uid===u);
 const prel=(p,v)=>p.rel=clamp(p.rel+v,0,100);
@@ -755,10 +808,12 @@ function upgrade(){ // bring older saves up to date
     relist();
   }
   s.cz??={chip:100,net:0,played:0,rh:[],ban:0};
+  if(!s.degs){const lv=['dip','ba','ma','phd'];s.degs=[];for(let i=1;i<=Math.min(s.edu,4);i++)s.degs.push({p:lv[i-1],sc:i===1?'cc':'state',mj:'Business',hon:false});s.debt=0;
+    if(s.study&&s.study.lvl!=null){const q=lv[s.study.lvl-1];s.study={p:q,sc:q==='dip'?'cc':'state',mj:'Business',left:s.study.left,days:PG[q].days,g:60}}}
   if(!s.people){const r=s.rel,k=s.kids||0;delete s.rel;delete s.kids;s.people=[];makeFamily();if(r)meet(r===2?'spouse':'date',65);for(let i=0;i<k;i++)addChild().b=s.day-rint(1,12)*365;
     s.xp={};if(s.job)s.xp[JM[s.job].fld]=s.jobDays;s.perf=55;s.raise=0;s.pension=0}
 }
-function flows(){const f={job:(s.job?jobPay():0)+(s.pension||0),biz:0,pend:0,spon:sponsor(),exp:expenses(),rent:s.props.reduce((t,p)=>t+rentOf(p),0),mort:s.props.reduce((t,p)=>t+(p.loan>0?p.pay:0),0)};for(const b of BIZ){const o=s.biz[b.id];if(o?.n)f[o.mgr?'biz':'pend']+=bizInc(b,o)}return f}
+function flows(){const f={job:(s.job?jobPay():0)+(s.pension||0),biz:0,pend:0,spon:sponsor(),exp:expenses(),rent:s.props.reduce((t,p)=>t+rentOf(p),0),mort:s.props.reduce((t,p)=>t+(p.loan>0?p.pay:0),0)+loanPay()};for(const b of BIZ){const o=s.biz[b.id];if(o?.n)f[o.mgr?'biz':'pend']+=bizInc(b,o)}return f}
 const pfmt=n=>n>=1?fmt(n):'$'+(n<1e-6?n.toExponential(1):n.toPrecision(3));
 const units=u=>u>=1000?big(u):u>=1?u.toFixed(2):u.toPrecision(3);
 const coin=k=>s.cx.coins.find(c=>c.t===k);
@@ -801,7 +856,7 @@ function bjEnd(){const b=s.cz.bj,p=hv(b.p),nat=b.p.length===2&&p===21;
   const ret=p>21?0:nat&&!dnat?b.bet*2.5:dnat&&!nat?0:d>21||p>d?b.bet*2:p===d?b.bet:0;
   b.msg=p>21?'Bust.':nat&&!dnat?'Blackjack! Paid 3 to 2.':dnat&&!nat?'Dealer has blackjack.':ret>b.bet?(d>21?'Dealer busts. You win.':'You win.'):ret===b.bet?'Push. Your bet comes back.':'Dealer wins.';
   b.done=1;settle(b.bet,ret,'blackjack','bj')}
-function netWorth(){let w=s.cash;for(const t in s.port)w+=s.port[t].sh*s.px[t].p;for(const id in s.biz)w+=s.biz[id].spent*.5;for(const id in s.own)w+=SM[id].cost*.6;for(const p of s.props)w+=pval(p)-p.loan;for(const c of s.cars)w+=c.v;return w+walletVal()}
+function netWorth(){let w=s.cash;for(const t in s.port)w+=s.port[t].sh*s.px[t].p;for(const id in s.biz)w+=s.biz[id].spent*.5;for(const id in s.own)w+=SM[id].cost*.6;for(const p of s.props)w+=pval(p)-p.loan;for(const c of s.cars)w+=c.v;return w+walletVal()-(s.debt||0)}
 function log(t,k='info'){s.log.unshift({d:s.day,t,k});if(s.log.length>80)s.log.pop()}
 function chirp(h,n,x,v){s.feed.unshift({h,n,x,v,l:0,tl:rint(3,40)*(v?40:1),d:s.day});if(s.feed.length>60)s.feed.pop()}
 function toast(m){const t=document.createElement('div');t.className='toast';t.innerHTML=m;$('#toasts').append(t);setTimeout(()=>t.remove(),2800)}
@@ -809,7 +864,7 @@ function toast(m){const t=document.createElement('div');t.className='toast';t.in
 function newGame(name,bg,h={}){
   const b=BG[bg];
   s={v:1,name,handle:'@'+(name.toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,15)||'you'),day:0,startAge:18,cash:b.cash+(h.inherit||0),st:{...b.st},edu:b.edu||0,study:null,
-     job:b.job||null,jobDays:0,rank:0,biz:{},port:{},px:{},mkt:{bull:true},fol:b.fol||0,feed:[],own:{},people:[],xp:{},perf:50,raise:0,pension:0,wallet:{},cz:{chip:100,net:0,played:0,rh:[],ban:0},props:[],cars:[],home:null,re:{idx:1,list:[],next:0},cd:{},inbox:[],later:[],log:[],pet:0,
+     job:b.job||null,jobDays:0,rank:0,biz:{},port:{},px:{},mkt:{bull:true},fol:b.fol||0,feed:[],own:{},people:[],degs:b.edu?[{p:'dip',sc:'cc',mj:'Computer science',hon:false}]:[],debt:0,xp:{},perf:50,raise:0,pension:0,wallet:{},cz:{chip:100,net:0,played:0,rh:[],ban:0},props:[],cars:[],home:null,re:{idx:1,list:[],next:0},cd:{},inbox:[],later:[],log:[],pet:0,
      gen:h.gen||1,boost:0,lastPost:0,dead:0,lastSeen:Date.now()};
   s.legacy=1+.25*(s.gen-1);
   for(const k of STOCKS)s.px[k.t]={p:k.p,o:k.p,h:[k.p]};
@@ -823,6 +878,7 @@ function newGame(name,bg,h={}){
 function day(){
   s.day++;const A=age(),f=flows();
   s.cash+=f.job+f.biz+f.spon+f.rent-f.exp-f.mort;
+  if(s.debt>0){s.debt=Math.max(0,s.debt*(1+.06/365)-loanPay());if(s.debt<1){s.debt=0;log('Student loans paid off.','good')}}
   for(const p of s.props)if(p.loan>0){p.loan-=p.pay-p.loan*MR;if(p.loan<=1){p.loan=p.pay=0;log(`Paid off the mortgage on your ${pname(p)}.`,'good')}}
   s.re.idx*=Math.exp((s.mkt.bull?.00016:-.0001)+.0035*gauss());
   for(const c of s.cars){const k=CM[c.t];c.v=Math.max(k.price*.08,c.v*Math.exp(-k.dep/365+(k.vol?k.vol/19.1*gauss():0)))}
@@ -834,10 +890,11 @@ function day(){
     if(s.jobDays%120===0&&!topRank()){if(s.perf>=promoNeed()){s.rank++;s.perf-=10;log(`Promoted to <b>${jobTitle()}</b>! Now ${fmt(jobPay())} a day.`,'good');toast('Promotion!')}else log(`Passed over for promotion. You needed a performance of ${promoNeed()}.`,'bad')}
     if(s.perf<20&&R()<.01){const j=jobTitle();fire();add('hap',-15);log(`Fired from ${j} for poor performance.`,'bad');toast(`Fired from ${j}.`)}}
   peopleDay();
-  if(s.study&&--s.study.left<=0){const e=EDU[s.study.lvl];s.edu=s.study.lvl;add('sma',e.sma);s.study=null;log(`Graduated with a ${e.n}`,'good');toast('Graduated!')}
+  if(s.study){const st=s.study,P=PG[st.p];st.left--;st.g=clamp(st.g+((40+s.st.sma*.4+(s.st.hap-50)*.2)-st.g)*.02,0,100);if(P.stipend)s.cash+=P.stipend;
+    if(st.left<=0){if(st.g<30){st.left=60;st.g=45;log(`Failed the final exams for ${degName(st)}. One more term.`,'bad');toast('Failed the finals. One more term.')}else graduate()}}
   const J=job();
   // stats drift toward a baseline, so an idle life is dull but survivable; choices push you above or below it
-  add('hap',(50-s.st.hap)*.004-(J?J.str*.02:0)-(s.study?.03:0)+peopleHap()+s.pet*.015+shopSum('hap')+(PM[homeP()?.t]?.hap||0)+(bestCar()?CM[bestCar().t].hap:0));
+  add('hap',(50-s.st.hap)*.004-(J?J.str*.02:0)-(s.study&&s.study.sc!=='online'?.03:0)+peopleHap()+s.pet*.015+shopSum('hap')+(PM[homeP()?.t]?.hap||0)+(bestCar()?CM[bestCar().t].hap:0));
   add('hea',(85-Math.max(0,A-35)*1.2-s.st.hea)*.003+(s.st.hap>70?.01:0)-(s.st.hap<15?.04:0));
   if(A>30)add('loo',-.004);
   s.fol+=shopSum('fame')+carSum('fame')+s.props.reduce((t,p)=>t+(PM[p.t].fame||0),0);if(s.day-s.lastPost>30)s.fol*=.999;
@@ -896,7 +953,22 @@ const ACT={
   sel:x=>sel=x,
   close:()=>closeModal(),
   act:id=>{const a=AM[id];if(s.day<(s.cd[id]||0)||s.cash<a.c)return;s.cash-=a.c;s.cd[id]=s.day+a.cd;toast(a.fx())},
-  enroll:()=>{const e=EDU[s.edu+1];if(!e||s.study||s.cash<=0)return;s.cash-=e.cost;s.study={lvl:s.edu+1,left:e.days};log(`Enrolled in a ${e.n} (${e.days} days).`)},
+  learn:id=>{const P=PG[id];if(!P||s.study||progMiss(P).length)return;enr={p:id,mj:P.mj?'Business':null};modal(enrHtml(),1)},
+  mj:x=>{if(!enr)return;enr.mj=x;modal(enrHtml(),1)},
+  enroll:(sid,pay)=>{const P=PG[enr?.p];if(!P||s.study||progMiss(P).length)return;const sc=schoolsFor(P).find(x=>x.id===sid);if(!sc)return;let c=tuition(P,sc);if(pay==='cash'&&s.cash<c)return;
+    if(R()>admOdds(P,sc)){s.cd[`adm_${P.id}_${sid}`]=s.day+180;closeModal();log(`${sc.n} turned down your application.`,'bad');toast(`${sc.n} said no. You can reapply in 180 days.`);return}
+    let sch='';if(sc.adm&&c&&s.st.sma>=sc.adm+10&&R()<.4){c=Math.round(c/2);sch=' with a half scholarship'}
+    if(pay==='cash')s.cash-=c;else s.debt=(s.debt||0)+c;
+    const days=Math.round(P.days*(sc.slow||1));s.study={p:P.id,sc:sid,mj:P.mj?enr.mj:null,left:days,days,g:60};closeModal();
+    log(`Accepted at ${sc.n}${sch}. Studying for ${degName(s.study)}.`,'good');toast(`Accepted at ${sc.n}${sch}!`)},
+  study:k=>{const A=STUDY[k];if(!s.study||s.day<(s.cd['s_'+k]||0)||s.cash<(A.c||0))return;s.cash-=A.c||0;s.cd['s_'+k]=s.day+A.cd;toast(A.fx())},
+  dropout:x=>{if(!s.study)return;if(x!=='yes')return modal(`<h2>Drop out of ${degName(s.study)}?</h2><p>You won't get your tuition back, and any student loan stays.</p><div class="row"><button class="bad" data-a="dropout" data-x="yes">Drop out</button><button data-a="close">Keep studying</button></div>`);log(`Dropped out of ${degName(s.study)}.`,'bad');s.study=null;closeModal()},
+  payloan:()=>{if(!s.debt||s.cash<s.debt)return;s.cash-=s.debt;s.debt=0;log('Paid off your student loans.','good')},
+  guide:()=>{if(tour<0){tourSpeed=speed||lastSpeed||1;speed=0}tour=0;ACT.tab(TOUR[0].tab);tourJump=true},
+  tnext:()=>{if(tour>=TOUR.length-1)return ACT.tend();tour++;ACT.tab(TOUR[tour].tab);tourJump=true},
+  tback:()=>{if(tour>0){tour--;ACT.tab(TOUR[tour].tab);tourJump=true}},
+  tend:()=>{if(tour<0)return;tour=-1;s.tour=1;speed=tourSpeed;coach()},
+  tskip:()=>{s.tour=1},
   apply:id=>{const j=JM[id];if(!canJob(j)||s.day<(s.cd['job_'+id]||0))return;iv={id,q:pick(IVQ)};modal(ivHtml())},
   answer:k=>{const j=JM[iv.id],ch=ivOdds(j,k);closeModal();
     if(R()<ch){s.job=j.id;s.rank=0;s.jobDays=0;s.perf=50;s.raise=k==='pay'?.1:0;log(`Hired as <b>${j.n}</b>${k==='pay'?' at 10% over the posted pay':''}.`,'good');toast(`You got the job: ${j.n}`)}
@@ -965,11 +1037,29 @@ const ACT={
   reset:()=>modal(`<h2>Start over?</h2><p>This wipes your save for good.</p><div class="row"><button class="bad" data-a="wipe">Wipe my save</button><button data-a="close">Cancel</button></div>`),
   wipe:()=>{wiped=true;localStorage.removeItem(SAVE);location.reload()},
   heir:()=>startModal({inherit:Math.max(0,netWorth()*.5),gen:s.gen+1,last:s.name,kid:kids().sort((a,b)=>a.b-b.b)[0]?.n}),
-  begin:bg=>{newGame(($('#nm').value.trim()||pick(NAMES)).slice(0,20),bg,heir);closeModal();save()},
+  begin:bg=>{newGame(($('#nm').value.trim()||pick(NAMES)).slice(0,20),bg,heir);closeModal();save();if(heir.gen)s.tour=1;else ACT.guide()},
 };
 const gig=()=>4+s.st.sma*.15+(s.job?jobPay()*.02:0);
 const canJob=j=>!jobMiss(j).length;
-function ivOdds(j,k){const sc=k==='exp'?xpY(j.fld)*15+(s.st.sma-j.s)*.8:k==='charm'?(s.st.loo-50)*.8+(s.fol>1000?10:0):-10;return clamp(.55+sc/100,.1,.95)}
+function ivOdds(j,k){const sc=k==='exp'?xpY(j.fld)*15+(s.st.sma-j.s)*.8:k==='charm'?(s.st.loo-50)*.8+(s.fol>1000?10:0):-10;return clamp(.55+sc/100+eduBonus(j),.1,.95)}
+const eduBonus=j=>Math.max(0,...s.degs.map(d=>(SCHOOLS[d.sc]?.pres||0)*.04+(d.hon?.03:0)+(d.mj&&MAJORS[d.mj]===j.fld?.1:0)));
+const schoolOf=st=>st.sc==='inst'?{id:'inst',n:PG[st.p].at,pres:0}:{id:st.sc,...SCHOOLS[st.sc]};
+const schoolsFor=P=>P.at?[{id:'inst',n:P.at,cost:1,adm:0,pres:0}]:P.sch.map(id=>({id,...SCHOOLS[id]}));
+const admOdds=(P,sc)=>sc.adm?clamp(.35+(s.st.sma-Math.max(P.min,sc.adm))/30,.05,.97):1;
+const tuition=(P,sc)=>Math.round(P.cost*sc.cost);
+const degName=d=>`${PG[d.p].n}${d.mj?` in ${d.mj}`:''}`;
+const grade=g=>`${g>=80?'A':g>=65?'B':g>=50?'C':g>=35?'D':'F'} (${Math.round(g)})`;
+const loanPay=()=>s.debt>0?Math.min(s.debt*(1+.06/365),Math.max(5,s.debt*.0009)):0;
+function progMiss(P){const m=[];if(s.edu<P.need)m.push(EDU[P.need].n);if(s.st.sma<P.min)m.push(`${P.min} smarts`);if(P.hea&&s.st.hea<P.hea)m.push(`${P.hea} health`);return m}
+function leadsTo(P){const js=JOBS.filter(j=>j.dg===P.id).map(j=>j.n);return [js.length?`Leads to ${js.join(' and ')}.`:'',P.mj?'Your major counts as a year of experience in its field.':'',P.lvl>1&&!js.length?`Counts as ${art(EDU[P.lvl].n.toLowerCase())} for jobs.`:''].filter(Boolean).join(' ')}
+function enrHtml(){const P=PG[enr.p];
+  return `<p class="kicker">Enroll</p><h2>${P.n}</h2><p>${P.days} days of study, +${P.sma} smarts.${P.stipend?` It pays you ${fmt(P.stipend)} a day while you study.`:''} ${leadsTo(P)}</p>
+  ${P.mj?`<label>Major</label><div class="row majors">${Object.keys(MAJORS).map(m=>`<button class="${enr.mj===m?'on':''}" data-a="mj" data-x="${m}">${m}</button>`).join('')}</div>`:''}
+  <label>School</label><div class="scroll"><table class="ledger"><thead><tr><th>School</th><th>Standing</th><th class="r">Odds</th><th class="r">Tuition</th><th></th></tr></thead><tbody>
+  ${schoolsFor(P).map(sc=>{const c=tuition(P,sc),w=Math.max(0,(s.cd[`adm_${P.id}_${sc.id}`]||0)-s.day);return `<tr><td><b>${sc.n}</b>${sc.note?`<div class="sub">${sc.note}</div>`:''}</td><td>${PRES[sc.pres]}</td><td class="r num">${Math.round(admOdds(P,sc)*100)}%</td><td class="r num">${c?fmt(c):'Free'}</td>
+   <td class="act">${w?`<span class="mut">Reapply in ${w}d</span>`:`<button class="pri" data-a="enroll" data-x="${sc.id}" data-y="cash" ${s.cash<c?'disabled':''}>Pay</button>${c?`<button data-a="enroll" data-x="${sc.id}" data-y="loan">Loan</button>`:''}`}</td></tr>`}).join('')}
+  </tbody></table></div><div class="row" style="margin-top:var(--space-sm)"><button data-a="close">Cancel</button></div>`}
+function graduate(){const st=s.study,P=PG[st.p],d={p:st.p,sc:st.sc,mj:st.mj||null,hon:st.g>=80};s.degs.push(d);s.edu=Math.max(s.edu,P.lvl);add('sma',P.sma);if(P.xp)s.xp[P.xp]=(s.xp[P.xp]||0)+180;s.study=null;log(`Graduated: ${degName(d)}${d.hon?', with honors':''}.`,'good');toast('Graduated!')}
 function ivHtml(){const j=JM[iv.id],o=k=>`${Math.round(ivOdds(j,k)*100)}% chance`;
   return `<p class="kicker">Interview · ${j.n}</p><h2>“${iv.q}”</h2><p>How do you answer?</p><div class="choices">
   <button data-a="answer" data-x="exp">Walk them through your experience<br><small class="mut">${xpY(j.fld)>=.1?`${xpY(j.fld).toFixed(1)} years in ${FIELD[j.fld]}`:`No ${FIELD[j.fld]} experience yet`} · ${o('exp')}</small></button>
@@ -978,7 +1068,7 @@ function ivHtml(){const j=JM[iv.id],o=k=>`${Math.round(ivOdds(j,k)*100)}% chance
   <button data-a="close">Not today</button></div>`}
 
 // ---------- modals ----------
-function modal(h){$('#mbox').innerHTML=h;$('#modal').hidden=false}
+function modal(h,wide){$('#mbox').innerHTML=h;$('#mbox').classList.toggle('wide',!!wide);$('#modal').hidden=false}
 function closeModal(){$('#modal').hidden=true;render()}
 function startModal(h={}){
   heir=h;
@@ -1023,6 +1113,8 @@ function needs(){
   if(s.cz.bj&&!s.cz.bj.done)L.push({k:'bj'});
   const pt=partner();if(pt&&pt.rel<30)L.push({k:'rel',p:pt});
   if(s.job&&s.perf<25)L.push({k:'perf'});
+  if(s.study&&s.study.g<40)L.push({k:'grade'});
+  if(!s.tour)L.unshift({k:'guide'});
   return L;
 }
 function needHtml(n){
@@ -1034,6 +1126,8 @@ function needHtml(n){
   if(n.k==='home'){const k=PM[n.l.t],v=k.base*n.l.m*s.re.idx;return row('Save on rent','You pay $30 a day in rent',`${k.n}, ${n.l.loc} is for sale for ${fmt(v)}. On a mortgage it would cost ${fmt(mpay(v*.8))} a day.`,`<button data-a="tab" data-x="home">See listings</button>`)}
   if(n.k==='rel'){const A=PACTS.date,w=(n.p.c?.date||0)>s.day,c=A.c(n.p);return row('Relationship',`${esc(n.p.n)} feels neglected`,`Closeness is down to ${Math.round(n.p.rel)}. If it keeps falling, they may leave.`,`<button data-a="pp" data-x="${n.p.uid}" data-y="date" ${w||s.cash<c?'disabled':''}>Date night · ${fmt(c)}</button>`)}
   if(n.k==='perf'){const w=(s.cd.w_hard||0)>s.day;return row('Work','You could be fired',`Your performance is ${Math.round(s.perf)}. Below 20, your boss starts looking for a replacement.`,`<button data-a="work" data-x="hard" ${w?'disabled':''}>Work hard</button>`)}
+  if(n.k==='guide')return row('New here?','Take the one-minute tour','It shows where everything is and how to make your first money.','<button class="pri" data-a="guide">Start the tour</button><button data-a="tskip">No thanks</button>',1);
+  if(n.k==='grade'){const w=(s.cd.s_hard||0)>s.day;return row('School','Your grades are slipping',`Your grade is ${grade(s.study.g)}. Below 30 at the end, you repeat a term.`,`<button data-a="study" data-x="hard" ${w?'disabled':''}>Study hard</button>`)}
   if(n.k==='bj')return row('Casino','Your blackjack hand is still open','The dealer is waiting on you.',`<button data-a="gobj">Back to the table</button>`);
   return '';
 }
@@ -1097,9 +1191,8 @@ life(){
     ${ACTS.filter(a=>!a.show||a.show()).map(a=>{const w=cdLeft(a.id);return `<tr class="${w?'dim':''}"><td>${a.n}</td><td class="r num">${a.c?fmt(a.c):'free'}</td><td>${w?`in ${w}d`:'now'}</td><td class="act"><button data-a="act" data-x="${a.id}" ${w||s.cash<a.c?'disabled':''}>Do it</button></td></tr>`}).join('')}
     </tbody></table></section>
    <section><h3>Education</h3>
-    ${s.study?`<p>Studying for ${art(EDU[s.study.lvl].n)}. <span class="num">${s.study.left}</span> days to go.</p>${meter(100-s.study.left/EDU[s.study.lvl].days*100,'wide')}`
-     :e?`<p>Next up: ${art(e.n)}. Takes ${e.days} days, adds ${e.sma} smarts and unlocks better jobs. Tuition can put you in debt, at about 11% a year.</p><div class="row" style="margin-top:var(--space-xs)"><button class="pri" data-a="enroll" ${s.cash<=0?'disabled':''}>Enroll for ${fmt(e.cost)}</button></div>`
-     :'<p>Nothing left to study. You have the full set.</p>'}
+    <p>${s.study?`Studying for ${art(degName(s.study))} at ${schoolOf(s.study).n}. ${s.study.left} days to go.`:`Highest level: ${EDU[s.edu].n}.`}</p>
+    <div class="row" style="margin-top:var(--space-xs)"><button data-a="tab" data-x="school">Go to Education</button></div>
     <h3>Daily budget</h3>
     <table class="ledger"><tbody>
      <tr><td>Salary and pension</td><td class="r">${sign(f.job)}</td></tr>
@@ -1107,7 +1200,7 @@ life(){
      <tr><td>Tills to collect</td><td class="r num warn">+${fmt(f.pend)}</td></tr>
      <tr><td>Sponsorships</td><td class="r">${sign(f.spon)}</td></tr>
      <tr><td>Rent from tenants</td><td class="r">${sign(f.rent)}</td></tr>
-     <tr><td>Mortgage payments</td><td class="r">${sign(-f.mort)}</td></tr>
+     <tr><td>Loan payments</td><td class="r">${sign(-f.mort)}</td></tr>
      <tr><td>Living costs and upkeep${home?'':', rent included'}</td><td class="r">${sign(-f.exp)}</td></tr>
     </tbody></table></section>
   </div>`;
@@ -1128,6 +1221,26 @@ work(){
    <td class="act">${cur?'<span class="mut">Current</span>':wait?`<span class="mut">Reapply in ${wait}d</span>`:`<button ${miss.length?'disabled':'class="pri"'} data-a="apply" data-x="${j.id}">Interview</button>`}</td></tr>`}).join('')}
   </tbody></table></div>
   <p class="note">Experience builds in whatever field you work in, and better jobs ask for it. Promotion reviews come every 120 days, and each step up asks for a higher performance, starting at 55. Below 20, you can be fired.${yrs.length?` You have ${yrs.map(([f,d])=>`${(d/365).toFixed(1)} years in ${FIELD[f]}`).join(', ')}.`:''}</p>`;
+},
+school(){
+  const st=s.study,P=st&&PG[st.p],sbtn=k=>{const A=STUDY[k],w=Math.max(0,(s.cd['s_'+k]||0)-s.day);return `<button data-a="study" data-x="${k}" ${w||s.cash<(A.c||0)?'disabled':''}>${A.n}${A.c?` · ${fmt(A.c)}`:''}${w?` · in ${w}d`:''}</button>`};
+  const open=PROGS.filter(P=>!progMiss(P).length&&(P.mj||!s.degs.some(d=>d.p===P.id))).length;
+  return `<section class="lede"><div><h2 class="headline">Education</h2>
+    <p class="dek">Your highest level is ${EDU[s.edu].n.toLowerCase()}${s.degs.length?`, from ${s.degs.length} program${s.degs.length>1?'s':''}`:''}.${s.debt?` You owe <b class="num">${fmt(s.debt)}</b> in student loans, repaid a little every day.`:''}</p></div>
+    ${s.debt?`<div class="side"><p class="mut"><span class="figure">${fmt(s.debt)}</span><br>student loans</p><button data-a="payloan" ${s.cash<s.debt?'disabled':''}>Pay it all off</button></div>`:''}
+  </section>
+  ${st?`<div class="sec-h"><h2>Studying now</h2></div><div class="needs"><div class="need"><div><div class="k hot">${schoolOf(st).n}</div><div class="t">${degName(st)}</div>
+    <div class="d">${st.left} days left · grade ${grade(st.g)}${P.stipend?` · paid ${fmt(P.stipend)} a day`:''}</div>${meter((1-st.left/st.days)*100)}</div>
+    <div class="acts2">${sbtn('hard')}${sbtn('party')}${sbtn('tutor')}<button class="bad" data-a="dropout">Drop out</button></div></div></div>`:''}
+  <div class="sec-h"><h2>Programs</h2><span>${st?'finish your current program to start another':`${open} open to you`}</span></div>
+  <div class="scroll"><table class="ledger"><thead><tr><th>Program</th><th>Where</th><th>Needs</th><th class="r">Days</th><th class="r">Tuition from</th><th></th></tr></thead><tbody>
+  ${PROGS.map(P=>{const miss=progMiss(P),done=!P.mj&&s.degs.some(d=>d.p===P.id),from=Math.min(...schoolsFor(P).map(sc=>tuition(P,sc)));
+    return `<tr class="${miss.length||done?'dim':''}"><td><b>${P.n}</b><div class="sub">${leadsTo(P)}</div>${miss.length?`<div class="sub dn">Missing ${miss.join(', ')}</div>`:''}</td><td class="mut">${P.at||`${P.sch.length} schools`}</td>
+     <td>${[P.need?EDU[P.need].n:'',P.min?`${P.min} smarts`:'',P.hea?`${P.hea} health`:''].filter(Boolean).join(', ')||'Nothing'}</td><td class="r num">${P.days}</td><td class="r num">${P.stipend?`paid ${fmt(P.stipend)}/d`:fmt(from)}</td>
+     <td class="act">${done?'<span class="mut">Done</span>':`<button ${miss.length||st?'disabled':'class="pri"'} data-a="learn" data-x="${P.id}">Enroll</button>`}</td></tr>`}).join('')}
+  </tbody></table></div>
+  ${s.degs.length?`<div class="sec-h"><h2>Your qualifications</h2></div><div class="scroll"><table class="ledger"><tbody>${s.degs.map(d=>`<tr><td><b>${degName(d)}</b></td><td class="mut">${schoolOf(d).n}</td><td class="r">${d.hon?'<span class="up">Honors</span>':''}</td></tr>`).join('')}</tbody></table></div>`:''}
+  <p class="note">Better schools cost more and are harder to get into, but impress interviewers. Strong students can win a half scholarship. Online study doesn't hurt your mood and fits around a job, but takes longer.</p>`;
 },
 people(){
   const pt=partner(),ord={spouse:0,date:0,child:1,parent:2,sibling:3,friend:4,ex:5},L=[...s.people].sort((a,b)=>ord[a.role]-ord[b.role]||b.rel-a.rel),fr=friendsN();
@@ -1300,12 +1413,32 @@ coin:(z,can)=>{const F=z.flip;return `<div class="coin">${F?(F.r==='h'?'Heads':'
 const ic=d=>`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
 const ICON={home:ic('<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/>'),user:ic('<circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4.5-6 8-6s7 2 8 6"/>'),work:ic('<rect x="3" y="7" width="18" height="13" rx="1"/><path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M3 12h18"/>'),
  store:ic('<path d="M4 9l1.5-5h13L20 9M4 9v11h16V9M4 9h16M9 20v-6h6v6"/>'),chart:ic('<path d="M4 19h16M6 15l4-5 3 3 5-7"/>'),coin:ic('<circle cx="12" cy="12" r="8"/><path d="M10 8h3a2 2 0 0 1 0 4h-3m0 0h3.5a2 2 0 0 1 0 4H10m0-8v8"/>'),building:ic('<path d="M5 21V4h9v17M14 9h5v12M8 8h3M8 12h3M8 16h3M3 21h18"/>'),
- car:ic('<path d="M5 16l1.5-5.5A2 2 0 0 1 8.4 9h7.2a2 2 0 0 1 1.9 1.5L19 16M4 16h16v3H4zM7 19v1.5M17 19v1.5"/>'),bag:ic('<path d="M6 8h12l-1 12H7zM9 8a3 3 0 0 1 6 0"/>'),chat:ic('<path d="M4 5h16v11H9l-5 4z"/>'),heart:ic('<path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.5-7 10-7 10z"/>'),
+ car:ic('<path d="M5 16l1.5-5.5A2 2 0 0 1 8.4 9h7.2a2 2 0 0 1 1.9 1.5L19 16M4 16h16v3H4zM7 19v1.5M17 19v1.5"/>'),bag:ic('<path d="M6 8h12l-1 12H7zM9 8a3 3 0 0 1 6 0"/>'),chat:ic('<path d="M4 5h16v11H9l-5 4z"/>'),cap:ic('<path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"/>'),heart:ic('<path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.5-7 10-7 10z"/>'),
  dice:ic('<rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="9" cy="9" r="1"/><circle cx="15" cy="15" r="1"/><circle cx="15" cy="9" r="1"/><circle cx="9" cy="15" r="1"/>'),pause:ic('<path d="M8 5v14M16 5v14"/>')};
-const TABS={dash:['Home','home'],life:['Life','user'],work:['Work','work'],people:['People','heart'],biz:['Business','store'],stock:['Markets','chart'],crypto:['Crypto','coin'],home:['Property','building'],garage:['Garage','car'],shop:['Lifestyle','bag'],chirp:['Chirp','chat'],casino:['Casino','dice']};
-const GROUPS=[['',['dash']],['You',['life','work','people']],['Money',['biz','stock','crypto','home']],['Spend',['garage','shop']],['Fun',['chirp','casino']]];
-const BAR=[['Home',['dash'],'home'],['Life',['life','work','people'],'user'],['Money',['biz','stock','crypto','home'],'chart'],['Spend',['garage','shop'],'bag'],['Fun',['chirp','casino'],'dice']];
-const KEYTABS=['dash','life','work','people','biz','stock','crypto','home','garage','shop'];
+const TABS={dash:['Home','home'],life:['Life','user'],work:['Work','work'],people:['People','heart'],school:['Education','cap'],biz:['Business','store'],stock:['Markets','chart'],crypto:['Crypto','coin'],home:['Property','building'],garage:['Garage','car'],shop:['Lifestyle','bag'],chirp:['Chirp','chat'],casino:['Casino','dice']};
+const GROUPS=[['',['dash']],['You',['life','work','people','school']],['Money',['biz','stock','crypto','home']],['Spend',['garage','shop']],['Fun',['chirp','casino']]];
+const BAR=[['Home',['dash'],'home'],['Life',['life','work','people','school'],'user'],['Money',['biz','stock','crypto','home'],'chart'],['Spend',['garage','shop'],'bag'],['Fun',['chirp','casino'],'dice']];
+const KEYTABS=['dash','life','work','people','school','biz','stock','crypto','home','garage'];
+const TOUR=[
+ {tab:'dash',t:'Welcome to The Hustle',x:'One second of real time is one day of your life, and the clock keeps running while you play. The game is paused while this guide is open. Reopen it any time with the ? button.',hi:['#guideBtn']},
+ {tab:'dash',t:'Your numbers',x:'The top bar shows your cash, net worth, what you earn each day, and your age. Pause or speed up time with the buttons on the right.',hi:['.ticker','#speed']},
+ {tab:'dash',t:'Needs you',x:'Home lists everything that needs your attention: decisions, money waiting to collect, and warnings. A decision left alone for 30 days decides itself.',hi:['.needs']},
+ {tab:'dash',t:'Quick actions',x:'Gigs pay a little cash right away. Activities raise your health, happiness, smarts and looks, and each one has a cooldown.',hi:['.quick']},
+ {tab:'work',t:'Work',x:'Your job pays every day. Interview for better jobs on the board. Working hard raises your performance, and promotions come every 120 days.',hi:['#view .ledger']},
+ {tab:'school',t:'Education',x:'Degrees and certificates unlock better jobs. Better schools cost more and are harder to get into, but they impress employers. Student loans pay themselves off over time.',hi:['#view .ledger']},
+ {tab:'people',t:'People',x:'Call, hang out and give gifts to stay close. Close relationships make you happier every day. Neglected ones fade, and a neglected partner may leave.',hi:['.plist']},
+ {tab:'biz',t:'Businesses',x:'This is how you get rich. Buy a Lemonade Stand first. Tills fill up until you collect them. Hire a manager and the money comes in on its own, even when you are away.',hi:['.blist','#collectBtn']},
+ {tab:'stock',t:'Grow your money',x:'Markets, Crypto and Property are other places to put spare cash. Prices move every day, so they can fall as well as rise.',hi:['#nav [data-x="stock"]','#nav [data-x="crypto"]','#nav [data-x="home"]','#tabbar [data-x="2"]']},
+ {tab:'dash',t:'Getting around',x:'The menu groups every screen, and on a phone it sits at the bottom. Keys 1 to 0 switch screens, Space pauses, and C collects every till. That is everything. Enjoy your life.',hi:['#nav','#tabbar']},
+];
+function coach(){
+  document.querySelectorAll('.tour-hi').forEach(e=>e.classList.remove('tour-hi'));
+  const c=$('#coach');if(tour<0||!s){c.hidden=true;return}
+  const T=TOUR[tour],last=tour===TOUR.length-1;
+  c.innerHTML=`<p class="kicker">Guide · ${tour+1} of ${TOUR.length}</p><h3>${T.t}</h3><p>${T.x}</p><div class="row"><button data-a="tback" ${tour?'':'disabled'}>Back</button><button class="pri" data-a="tnext">${last?'Start playing':'Next'}</button><button class="link" data-a="tend">Skip the guide</button></div>`;c.hidden=false;
+  let first=null;for(const q of T.hi)for(const el of document.querySelectorAll(q)){el.classList.add('tour-hi');if(!first&&el.offsetParent)first=el}
+  if(tourJump&&first){first.scrollIntoView({block:'center'});tourJump=false}
+}
 function badge(k){
   if(k==='dash'){const n=needs().length;return n?`<span class="badge">${n}</span>`:''}
   if(k==='biz'){const p=pendAll();return p>=1?`<span class="tag gold">${fmt(p)}</span>`:''}
@@ -1314,12 +1447,13 @@ function badge(k){
   if(k==='chirp')return cdLeft('post')?'':'<span class="tag mut">ready</span>';
   if(k==='life')return ['hea','hap'].some(x=>s.st[x]<25)?'<span class="tag dn">low</span>':'';
   if(k==='work')return s.job&&s.perf<25?'<span class="tag dn">at risk</span>':'';
+  if(k==='school')return s.study?`<span class="tag gold">${Math.round((1-s.study.left/s.study.days)*100)}%</span>`:'';
   if(k==='people')return partner()?.rel<30?'<span class="tag dn">low</span>':'';
   if(k==='casino')return s.cz.bj&&!s.cz.bj.done?'<span class="tag gold">hand open</span>':'';
   return '';
 }
 const railHtml=()=>GROUPS.map(([g,ks])=>(g?`<div class="grp">${g.toUpperCase()}</div>`:'')+ks.map(k=>`<button class="${tab===k?'on':''}" data-a="tab" data-x="${k}" ${tab===k?'aria-current="page"':''}>${ICON[TABS[k][1]]}${TABS[k][0]}${badge(k)}</button>`).join('')).join('')
-  +'<div class="keys">Keys 1–0 switch screens. Space pauses. C collects.</div><button class="reset" data-a="reset">Start a new life</button>';
+  +'<div class="keys">Keys 1–0 switch screens. Space pauses. C collects. ? opens the guide.</div><button class="reset" data-a="reset">Start a new life</button>';
 const barHtml=()=>BAR.map(([n,ks,ico],i)=>{const nb=i===0?needs().length:0;return `<button class="${ks.includes(tab)?'on':''}" data-a="grp" data-x="${i}">${ICON[ico]}${n}${nb?`<span class="badge">${nb}</span>`:''}</button>`}).join('');
 const subtabs=()=>{const b=BAR.find(b=>b[1].includes(tab));return b&&b[1].length>1?`<div class="subtabs">${b[1].map(k=>`<button class="${k===tab?'on':''}" data-a="tab" data-x="${k}">${TABS[k][0]}</button>`).join('')}</div>`:''};
 
@@ -1343,6 +1477,7 @@ function render(){
   $('#view').innerHTML=subtabs()+VIEWS[tab]();
   if(tab==='stock')drawStock();
   if(tab==='crypto'){const c=coin(csel),w=s.wallet[csel];if(c)drawChart(c.h,w&&w.c/w.u,pfmt)}
+  coach();
 }
 function drawStock(){
   const c=$('#tchart');if(!c)return;const dpr=devicePixelRatio||1,W=c.clientWidth,H=c.clientHeight;c.width=W*dpr;c.height=H*dpr;
@@ -1388,7 +1523,9 @@ document.addEventListener('mouseout',e=>{if(e.target.id==='tchart'){hov=null;dra
 document.addEventListener('keydown',e=>{ // 1–0 screens, Space pause, C collect
   if(!s||s.dead||!$('#modal').hidden||e.ctrlKey||e.metaKey||e.altKey||e.target.closest?.('input,textarea,select'))return;
   const k='1234567890'.indexOf(e.key);
-  if(k>=0){ACT.tab(KEYTABS[k]);render()}
+  if(e.key==='?'){ACT.guide();render()}
+  else if(e.key==='Escape'&&tour>=0){ACT.tend();render()}
+  else if(k>=0){ACT.tab(KEYTABS[k]);render()}
   else if(e.key===' '&&!e.target.closest?.('button,tr,a')){e.preventDefault();ACT.spd(speed?0:lastSpeed||1);render()}
   else if(e.key==='c'||e.key==='C'){ACT.colAll();render()}
 });
@@ -1426,13 +1563,18 @@ function selfTest(){ // open with ?test=1 — never touches your real save
   s.cash=5e9;relist();ACT.pbuy(s.re.list[0].uid);ACT.pbuy(s.re.list[1].uid);s.props.at(-1).from=0;s.home=s.props[0].uid;ok(s.props.length===2,'two properties');s.cash=5e6;
   for(let i=0;i<1500;i++)cryptoDay();ok(s.cx.launched>0,'meme coins launch');ACT.xbuy(s.cx.coins[0].t,'1000');
   s.people=[];makeFamily();ok(s.people.filter(p=>p.role==='parent').length===2,'family made');
-  const dt=meet('date',100);dt.met=-1000;s.cash=1e7;for(let i=0;i<30&&dt.role==='date';i++)ACT.pp(dt.uid,'propose');ok(dt.role==='spouse','propose');
-  for(let i=0;i<30&&!kids().length;i++){dt.c.baby=0;ACT.pp(dt.uid,'baby')}ok(kids().length===1,'baby');
+  const dt=meet('date',100);dt.met=-1000;s.cash=1e11;for(let i=0;i<30&&dt.role==='date';i++){dt.rel=100;ACT.pp(dt.uid,'propose')}ok(dt.role==='spouse','propose');
+  for(let i=0;i<30&&!kids().length;i++){dt.c.baby=0;dt.rel=100;ACT.pp(dt.uid,'baby')}ok(kids().length===1,'baby');
   const r0=dt.rel;for(let i=0;i<100;i++)peopleDay();ok(dt.rel<r0,'relationships fade');
   ACT.pp(dt.uid,'divorce');ok(dt.role==='spouse'&&!$('#modal').hidden,'divorce asks first');ACT.pp(dt.uid,'divorce!');ok(dt.role==='ex'&&$('#modal').hidden,'divorce');
   ok(jobMiss(JM.surgeon).length&&canJob(JM.crew),'job requirements');s.job=null;ACT.apply('crew');ok(iv&&!$('#modal').hidden,'interview opens');ACT.answer('exp');ok(s.job==='crew'||s.cd.job_crew>s.day,'interview resolves');
   s.job='crew';s.perf=40;ACT.work('hard');ok(s.perf===45,'work hard');
-  const sp=meet('spouse',60),ex=meet('ex',20),kd=addChild();kd.b=s.day-8*365;s.people.find(p=>p.role==='parent').b=s.day-66*365;for(const p of s.people)if(p.role==='friend')p.rel=60;
+  s.study=null;s.st.sma=90;s.cash=1e7;ACT.learn('ba');ok(enr&&!$('#modal').hidden,'enroll opens');ACT.mj('Nursing');ACT.enroll('online','cash');ok(s.study?.mj==='Nursing','enrolled');
+  s.study.g=90;for(let i=0;i<500&&s.study;i++)day();ok(s.degs.some(d=>d.p==='ba'&&d.mj==='Nursing')&&s.edu>=2&&canJob(JM.nurse),'graduated as nurse');
+  s.cash=0;s.debt=0;ACT.learn('ma');ACT.enroll('online','loan');ok(s.study&&s.debt>0,'student loan');const d0=s.debt;for(let i=0;i<30;i++)day();ok(s.debt<d0,'loan repays');
+  ok(xpY('health')>=1,'major counts as experience');tab='school';VIEWS.school();
+  s.tour=0;ACT.guide();ok(tour===0&&speed===0,'guide starts paused');for(let i=0;i<TOUR.length;i++)ACT.tnext();ok(tour===-1&&s.tour===1&&speed>0,'guide finishes');
+  const sp=meet('spouse',60),ex=meet('ex',20),kd=addChild();kd.b=s.day-8*365;meet('friend',60);(s.people.find(p=>p.role==='parent')||meet('parent',60)).b=s.day-66*365;s.inbox=[];for(const q of s.props)if(q.uid!==s.home)q.from=0;for(const p of s.people)if(p.role==='friend')p.rel=60;
   const base=JSON.stringify({...s,job:'swe',fol:20000,cash:2e6,biz:{truck:{n:12,mgr:0,pend:0,spent:1e5},cafe:{n:3,mgr:1,pend:0,spent:1e5}},port:{NOVA:{sh:50,cost:5000}}});
   for(const e of EV)for(const[,fx]of e.ch){s=JSON.parse(base);s.st.hap=10;const m=fx(s,e.a?e.a(s):0);ok(typeof m==='string','event '+e.id)}
   for(const k in POSTS){s=JSON.parse(base);ACT.post(k)}
@@ -1443,7 +1585,7 @@ function selfTest(){ // open with ?test=1 — never touches your real save
   s.cash=1e6;sel='NOVA';ot={side:'buy',qty:7};const n0=s.port.NOVA?.sh||0;ACT.order();ok(s.port.NOVA.sh===n0+7,'order ticket buys');ot.side='sell';ot.qty=3;ACT.order();ok(s.port.NOVA.sh===n0+4,'order ticket sells');ot={side:'buy',qty:10};
   s.cz.chip=100;for(let i=0;i<20000;i++){ACT.dice(['under','over','seven'][i%3]);ACT.flip(i%2?'h':'t')}const dg=s.cz.g.dice,cf=s.cz.g.coin;
   ok(dg.n===20000&&cf.n===20000&&dg.net/2e6>-.08&&dg.net/2e6<.02&&cf.net/2e6>-.05&&cf.net/2e6<.01,'dice and coin edges');
-  newGame('Old','street');delete s.re;delete s.cx;delete s.cz;delete s.people;s.rel=2;s.kids=2;s.own={apt:1,car:1,bike:1};s.port.MOON={sh:10,cost:12};upgrade();ok(partner()?.role==='spouse'&&kids().length===2&&!('rel' in s),'old relationships upgrade');ok(s.props.length===1&&s.cars.length===1&&s.own.bike&&homeP()&&s.wallet.MOON.u===10&&!s.port.MOON&&s.cz,'old saves upgrade');
+  newGame('Old','street');delete s.re;delete s.cx;delete s.cz;delete s.people;delete s.degs;s.edu=2;s.study={lvl:3,left:50};s.rel=2;s.kids=2;s.own={apt:1,car:1,bike:1};s.port.MOON={sh:10,cost:12};upgrade();ok(partner()?.role==='spouse'&&kids().length===2&&!('rel' in s),'old relationships upgrade');ok(s.degs.length===2&&s.study.p==='ma','old education upgrade');ok(s.props.length===1&&s.cars.length===1&&s.own.bike&&homeP()&&s.wallet.MOON.u===10&&!s.port.MOON&&s.cz,'old saves upgrade');
   newGame('Sim','rich');let d=0;for(;d<40000&&!s.dead;d++){day();if(d%7===0){s.inbox=[];ACT.colAll()}}
   const vals=[s.cash,netWorth(),s.fol,...Object.values(s.st),...Object.values(s.px).map(q=>q.p),...s.cx.coins.map(c=>c.p),walletVal()];
   ok(vals.every(Number.isFinite),'finite after sim');ok(s.dead,'eventually dies');
