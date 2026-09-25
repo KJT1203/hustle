@@ -1,6 +1,16 @@
 [
   {
     "date": "2026-09-25",
+    "macrostructure": "Workbench (app shell: rail + Needs-you home)",
+    "theme": "custom",
+    "theme_axes": "dark / roman-serif / warm",
+    "enrichment": "none",
+    "nav": "N3 side-rail (phone: bottom tab bar)",
+    "footer": "none (app)",
+    "brief": "The Hustle · ease-of-play redesign from Claude Design mockups"
+  },
+  {
+    "date": "2026-09-25",
     "macrostructure": "Workbench (app, broadsheet ledger)",
     "theme": "custom",
     "theme_axes": "dark / roman-serif / warm",

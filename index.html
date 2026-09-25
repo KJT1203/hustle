@@ -15,13 +15,14 @@
   --color-rule:oklch(29% .01 60);--color-accent:oklch(80% .11 85);--color-accent-2:oklch(87% .09 88);
   --color-up:oklch(78% .14 155);--color-down:oklch(70% .16 25);--color-warn:oklch(76% .12 60);
   --color-scrim:oklch(5% 0 0 / .72);--color-focus:oklch(80% .11 85);
+  --cat-1:oklch(93% .012 75);--cat-2:oklch(80% .11 85);--cat-3:oklch(78% .14 155);--cat-4:oklch(75% .09 250);--cat-5:oklch(72% .1 320);--cat-6:oklch(76% .12 60);--cat-7:oklch(55% .012 65);
   --font-display:"Times New Roman",Times,serif;
   --font-body:"Times New Roman",Times,serif;
   --font-mono:"Times New Roman",Times,serif;
   --space-3xs:.25rem;--space-2xs:.5rem;--space-xs:.75rem;--space-sm:1rem;--space-md:1.5rem;--space-lg:2rem;--space-xl:3rem;
   --text-xs:.8125rem;--text-sm:.9375rem;--text-base:1.0625rem;--text-md:1.25rem;--text-lg:1.5rem;--text-xl:2.25rem;--text-2xl:3.25rem;
   --ease-out:cubic-bezier(.16,1,.3,1);--dur-short:140ms;
-  --rule:1px solid var(--color-rule);--rule-ink:1px solid var(--color-ink);--radius:2px;
+  --rule:1px solid var(--color-rule);--rule-ink:1px solid var(--color-ink);--radius:6px;
   color-scheme:dark;
 }
 *{box-sizing:border-box}
@@ -35,34 +36,91 @@ b{font-weight:600}
 .up{color:var(--color-up)}.dn{color:var(--color-down)}.warn{color:var(--color-warn)}.mut{color:var(--color-ink-2)}
 .r{text-align:right}
 
-/* masthead */
-.mast{padding:var(--space-sm) var(--space-lg) 0;flex:none}
-.mast-top{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:var(--space-sm)}
-.dateline{font-size:var(--text-sm);color:var(--color-ink-2)}
-.wordmark{font-size:var(--text-2xl);font-weight:700;line-height:.95;letter-spacing:-.035em;text-align:center}
-.speed{justify-self:end;display:flex;gap:var(--space-3xs)}
-.speed button{padding:.3rem .5rem;font-size:var(--text-xs);border-color:var(--color-rule)}
-.speed button.on{background:var(--color-ink);border-color:var(--color-ink);color:var(--color-paper)}
-.ticker{display:flex;flex-wrap:wrap;align-items:center;border-top:3px double var(--color-ink);border-bottom:var(--rule-ink);margin-top:var(--space-xs)}
-.ticker>div{padding:var(--space-2xs) var(--space-md) var(--space-2xs) 0;margin-right:var(--space-md);border-right:var(--rule)}
-.ticker small{font-size:var(--text-xs);color:var(--color-ink-2);margin-right:var(--space-2xs)}
-.ticker b{font:600 var(--text-md) var(--font-mono);font-variant-numeric:tabular-nums lining-nums}
-#inboxBtn{margin-left:auto}
-nav{display:flex;gap:var(--space-md);overflow-x:auto;border-bottom:var(--rule);scrollbar-width:none}
-nav button{border:0;border-radius:0;background:none;padding:var(--space-2xs) 0;font:500 var(--text-sm) var(--font-body);color:var(--color-ink-2);border-bottom:2px solid transparent}
-nav button:hover:not(:disabled){background:none;color:var(--color-ink)}
-nav button.on{color:var(--color-ink);border-bottom-color:var(--color-ink)}
-nav .reset{margin-left:auto;color:var(--color-ink-3)}
-
-.page{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 19rem}
-main{overflow:auto;padding:var(--space-lg) var(--space-lg) var(--space-xl)}
-aside{overflow:auto;border-left:var(--rule);padding:var(--space-md) var(--space-md) var(--space-lg)}
-aside h2{font-size:var(--text-lg);padding-bottom:var(--space-2xs);border-bottom:var(--rule-ink);margin-bottom:var(--space-2xs)}
+/* top bar */
+.top{display:flex;align-items:center;gap:var(--space-lg);height:4rem;padding:0 var(--space-md);border-bottom:var(--rule);flex:none}
+.wordmark{font-size:1.625rem;font-weight:700;letter-spacing:-.02em;width:11.5rem;flex:none;white-space:nowrap}
+.ticker{display:flex;align-items:baseline;gap:var(--space-lg);flex:1;min-width:0;overflow:hidden;white-space:nowrap}
+.ticker small{font-size:var(--text-xs);color:var(--color-ink-3);margin-right:var(--space-2xs)}
+.ticker b{font-size:1.375rem;font-variant-numeric:tabular-nums lining-nums}
+.ticker .date{font-size:var(--text-xs);color:var(--color-ink-3);margin-left:var(--space-2xs)}
+.speed{display:flex;gap:var(--space-3xs);padding:var(--space-3xs);border:var(--rule);border-radius:var(--radius);flex:none}
+.speed button{width:2.75rem;height:2.25rem;padding:0;border:0;color:var(--color-ink-2);display:grid;place-items:center}
+.speed button.on{background:var(--color-ink);color:var(--color-paper);font-weight:700}
+#collectBtn{height:2.75rem;padding:0 1.1rem;font-size:var(--text-base);font-weight:700;flex:none}
+/* shell: rail, main, aside */
+.shell{flex:1;min-height:0;display:grid;grid-template-columns:14.5rem minmax(0,1fr) 20rem}
+body.wide .shell{grid-template-columns:14.5rem minmax(0,1fr)}
+body.wide aside{display:none}
+.rail{display:flex;flex-direction:column;gap:2px;padding:var(--space-md) var(--space-xs);border-right:var(--rule);overflow-y:auto}
+.rail .grp{font-size:.75rem;letter-spacing:.08em;color:var(--color-ink-3);padding:var(--space-sm) var(--space-xs) var(--space-3xs)}
+.rail button{display:flex;align-items:center;gap:var(--space-xs);width:100%;height:2.75rem;padding:0 var(--space-xs);border:0;text-align:left;font-size:var(--text-base);color:var(--color-ink-2)}
+.rail button:hover:not(:disabled){background:var(--color-paper-2);color:var(--color-ink)}
+.rail button.on{background:var(--color-paper-2);color:var(--color-ink);font-weight:700}
+.rail button.on svg{color:var(--color-accent)}
+.rail .tag{margin-left:auto;font-size:var(--text-xs);font-weight:400;font-variant-numeric:tabular-nums}
+.rail .tag.gold{color:var(--color-accent)}
+.badge{margin-left:auto;min-width:1.5rem;height:1.375rem;padding:0 .375rem;border-radius:.7rem;background:var(--color-accent);color:var(--color-paper);font-size:var(--text-xs);font-weight:700;display:grid;place-items:center}
+.rail .keys{margin-top:auto;padding:var(--space-xs);font-size:var(--text-xs);line-height:1.5;color:var(--color-ink-3);border-top:var(--rule)}
+.rail .reset{height:2.25rem;font-size:var(--text-sm);color:var(--color-ink-3)}
+main{overflow:auto;padding:var(--space-lg) 2.25rem var(--space-xl)}
+aside{overflow:auto;border-left:var(--rule);padding:var(--space-lg) var(--space-md)}
+aside h2{font-size:var(--text-md);padding-bottom:var(--space-2xs);border-bottom:var(--rule-ink);margin-bottom:var(--space-xs)}
+.sbars{display:grid;grid-template-columns:5.5rem minmax(0,1fr) 2rem;gap:var(--space-xs) var(--space-sm);align-items:center;font-size:var(--text-sm);margin-bottom:var(--space-lg)}
+.sbars .n{text-align:right;font-variant-numeric:tabular-nums}
+.sbars .low{color:var(--color-down)}
+.tabbar,.subtabs{display:none}
 .lg{display:grid;grid-template-columns:2.25rem minmax(0,1fr);gap:var(--space-2xs);padding:var(--space-2xs) 0;border-bottom:var(--rule);font-size:var(--text-sm)}
 .lg small{font:var(--text-xs) var(--font-mono);color:var(--color-ink-3);padding-top:.15em}
 .lg.good{color:var(--color-ink)}.lg.bad span{color:var(--color-down)}
 .lg.info{color:var(--color-ink-2)}
-
+/* home */
+.lede.solo{grid-template-columns:minmax(0,1fr)}
+.sec-h{display:flex;align-items:baseline;gap:var(--space-2xs);margin:var(--space-lg) 0 var(--space-xs)}
+.sec-h h2{font-size:1.375rem}.sec-h span{color:var(--color-ink-3)}
+.sec-row{display:flex;justify-content:space-between;align-items:baseline;gap:var(--space-sm)}
+.needs{border-top:var(--rule-ink)}
+.need{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:var(--space-sm);align-items:center;padding:var(--space-sm) 0;border-bottom:var(--rule)}
+.need .k{font-size:var(--text-xs);color:var(--color-ink-3)}.need .k.hot{color:var(--color-accent)}
+.need .t{font-size:1.1875rem;font-weight:700;margin-top:2px}
+.need .d{color:var(--color-ink-2);margin-top:2px}
+.need .acts2{display:flex;gap:var(--space-2xs);align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.need button{height:2.75rem;padding:0 1rem;font-size:var(--text-base)}
+.amt{font-size:1.25rem;font-weight:700;color:var(--color-accent);font-variant-numeric:tabular-nums}
+.quick{display:flex;flex-wrap:wrap;gap:var(--space-2xs)}
+.quick button{height:2.75rem;padding:0 1rem;border-radius:1.375rem;border-color:var(--color-rule);background:var(--color-paper-3);font-size:var(--text-base)}
+.quick button.pri{background:var(--color-accent);border-color:var(--color-accent);color:var(--color-paper);font-weight:700}
+.quick button:disabled{border-style:dashed;background:transparent}
+.snap{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:var(--space-xl);padding-top:var(--space-sm);margin-top:var(--space-lg);border-top:var(--rule-ink)}
+.snap h2{font-size:1.375rem}
+.nwc{width:100%;height:8rem;display:block;margin-top:var(--space-xs)}
+.stack{display:flex;height:14px;border-radius:3px;overflow:hidden;margin-top:var(--space-sm)}
+.stack span{display:block;height:100%}
+.legend{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-2xs) var(--space-md);margin-top:var(--space-sm);font-size:var(--text-sm)}
+.legend div{display:flex;align-items:center;gap:var(--space-2xs)}.legend i{width:10px;height:10px;border-radius:2px;flex:none}.legend b{margin-left:auto;font-weight:400;font-variant-numeric:tabular-nums}
+/* business */
+.bmode{display:flex;flex-direction:column;align-items:flex-end;gap:var(--space-3xs)}
+.seg2{display:flex;gap:var(--space-3xs);padding:var(--space-3xs);border:var(--rule);border-radius:var(--radius)}
+.seg2 button{min-width:3.5rem;height:2.25rem;border:0;color:var(--color-ink-2)}
+.seg2 button.on{background:var(--color-ink);color:var(--color-paper);font-weight:700}
+.bestbuy{display:flex;align-items:center;justify-content:space-between;gap:var(--space-md);padding:var(--space-sm) var(--space-md);margin-top:var(--space-md);background:var(--color-paper-3);border:var(--rule);border-radius:var(--radius)}
+.bestbuy button{height:2.75rem;font-size:var(--text-base)}
+.blist{margin-top:var(--space-md);border-top:var(--rule-ink)}
+.brow{display:grid;grid-template-columns:minmax(12rem,1.4fr) 4.5rem 6.5rem minmax(9rem,1fr) auto;gap:var(--space-md);align-items:center;padding:var(--space-sm) 0;border-bottom:var(--rule)}
+.brow.head{padding:var(--space-2xs) 0;font-size:var(--text-xs);color:var(--color-ink-3)}
+.brow.head .own,.brow.head .inc{font-size:var(--text-xs)}
+.brow.locked{color:var(--color-ink-3)}
+.brow .nm{font-size:1.1875rem;font-weight:700}
+.brow .ms{display:flex;align-items:center;gap:var(--space-2xs);margin-top:.375rem;font-size:var(--text-xs);color:var(--color-ink-3);white-space:nowrap}
+.brow .ms .meter{flex:1}
+.brow .own{text-align:right;font-size:1.25rem}
+.brow .inc{text-align:right;font-size:1.125rem}
+.brow .m{display:none}
+.till .top2{display:flex;justify-content:space-between;font-size:var(--text-sm)}
+.till .meter{height:6px;border-radius:3px;margin-top:.375rem}
+.till .full{color:var(--color-warn);font-weight:700}
+.brow .acts3{display:flex;justify-content:flex-end;gap:var(--space-2xs);flex-wrap:wrap}
+.brow .acts3 button{height:2.75rem;font-size:var(--text-base)}
+@media (max-width:1360px){.brow{grid-template-columns:minmax(0,1.4fr) 4.5rem 6.5rem minmax(0,1fr)}.brow .acts3{grid-column:1/-1;justify-content:flex-start}.brow.head span:last-child{display:none}}
 /* buttons */
 button{font:500 var(--text-sm)/1.2 var(--font-body);color:var(--color-ink);background:transparent;border:var(--rule-ink);border-radius:var(--radius);padding:.5rem .75rem;cursor:pointer;white-space:nowrap;transition:background-color var(--dur-short) var(--ease-out),color var(--dur-short) var(--ease-out)}
 button:hover:not(:disabled){background:var(--color-ink);color:var(--color-paper)}
@@ -108,6 +166,8 @@ h3{font-size:var(--text-md);margin:var(--space-lg) 0 var(--space-2xs)}
 .meter i{display:block;height:100%;background:var(--color-ink)}
 tr.low .meter i{background:var(--color-down)}
 .meter.warn i{background:var(--color-warn)}
+.meter.low i{background:var(--color-down)}
+.meter i{border-radius:inherit}
 .meter.wide{margin:var(--space-xs) 0}
 
 /* markets */
@@ -232,44 +292,62 @@ input:focus-visible{outline:2px solid var(--color-focus);outline-offset:1px}
 .board .g{grid-row:1/4;height:auto}
 @media (max-width:1100px){.mkt,.cols{grid-template-columns:minmax(0,1fr);gap:0}}
 @media (max-width:860px){
-  body{height:auto;overflow:visible}
-  .mast{padding:var(--space-sm) var(--space-sm) 0}
-  .mast-top{grid-template-columns:minmax(0,1fr) auto}
-  .wordmark{grid-column:1/-1;grid-row:1;text-align:left;font-size:var(--text-xl)}
-  .dateline{grid-row:2}
-  .ticker>div{margin-right:var(--space-sm);padding-right:var(--space-sm)}
-  .ticker b{font-size:var(--text-base)}
-  #inboxBtn{margin:var(--space-2xs) 0;width:100%}
-  .page{display:block}
-  main{padding:var(--space-md) var(--space-sm) var(--space-lg);overflow:visible}
+  body{height:auto;overflow:visible;padding-bottom:calc(4.5rem + env(safe-area-inset-bottom,0px))}
+  .top{position:sticky;top:0;z-index:5;flex-wrap:wrap;height:auto;padding:var(--space-sm);gap:var(--space-xs) var(--space-sm);background:var(--color-paper)}
+  .wordmark{flex:1;width:auto;font-size:1.5rem}
+  .ticker{order:3;flex-basis:100%;flex-wrap:wrap;gap:var(--space-3xs) var(--space-md);overflow:visible}
+  .ticker b{font-size:1.125rem}.ticker .date{display:none}
+  .speed button{width:2.5rem}
+  #collectBtn{order:4;flex-basis:100%}
+  .shell,body.wide .shell{display:block}
+  .rail{display:none}
+  main{overflow:visible;padding:var(--space-md) var(--space-sm) var(--space-lg)}
   aside{border-left:0;border-top:var(--rule-ink);overflow:visible;padding:var(--space-md) var(--space-sm)}
+  .tabbar{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));position:fixed;left:0;right:0;bottom:0;z-index:10;background:var(--color-paper-3);border-top:var(--rule);padding-bottom:env(safe-area-inset-bottom,0px)}
+  .tabbar button{position:relative;height:4.25rem;border:0;border-radius:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.25rem;font-size:var(--text-xs);color:var(--color-ink-2)}
+  .tabbar button svg{width:22px;height:22px}
+  .tabbar button.on{color:var(--color-accent);font-weight:700}
+  .tabbar button:hover:not(:disabled){background:transparent;color:var(--color-ink)}
+  .tabbar .badge{position:absolute;top:.4rem;left:50%;margin-left:.35rem;min-width:1.125rem;height:1.125rem;font-size:.6875rem}
+  .subtabs{display:flex;gap:var(--space-3xs);padding:var(--space-3xs);margin-bottom:var(--space-md);border:var(--rule);border-radius:var(--radius);overflow-x:auto;scrollbar-width:none}
+  .subtabs button{flex:1;height:2.5rem;border:0;color:var(--color-ink-2)}
+  .subtabs button.on{background:var(--color-ink);color:var(--color-paper);font-weight:700}
+  #toasts{bottom:calc(5.25rem + env(safe-area-inset-bottom,0px))}
   .lede{grid-template-columns:minmax(0,1fr);gap:var(--space-md)}
   .headline{font-size:var(--text-lg)}
+  .need{grid-template-columns:minmax(0,1fr)}.need .acts2{justify-content:flex-start}.need .acts2 button{flex:1}
+  .snap{grid-template-columns:minmax(0,1fr);gap:var(--space-lg)}
+  .bmode{align-items:flex-start}
+  .bestbuy{flex-direction:column;align-items:stretch}
+  .brow{grid-template-columns:minmax(0,1fr) auto;gap:var(--space-2xs) var(--space-sm)}
+  .brow.head{display:none}
+  .brow .own,.brow .inc{text-align:left;font-size:var(--text-sm)}
+  .brow .m{display:inline}
+  .brow .till,.brow .acts3{grid-column:1/-1}
+  .brow .acts3 button{flex:1}
   .bgs{grid-template-columns:minmax(0,1fr)}
   #mbox{padding:var(--space-md)}
 }
 </style>
 </head>
 <body>
-<header class="mast">
-  <div class="mast-top">
-    <span class="dateline" id="dateline"></span>
-    <h1 class="wordmark">The Hustle</h1>
-    <div class="speed" id="speed"></div>
-  </div>
+<header class="top">
+  <div class="wordmark">The Hustle</div>
   <div class="ticker">
     <div><small>Cash</small><b id="hCash">—</b></div>
     <div><small>Net worth</small><b id="hNw">—</b></div>
     <div><small>Per day</small><b id="hInc">—</b></div>
-    <div><small>Age</small><b id="hAge">—</b></div>
-    <button id="inboxBtn" class="pri" data-a="inbox" hidden></button>
+    <div><small>Age</small><b id="hAge">—</b><span class="date" id="dateline"></span></div>
   </div>
-  <nav id="nav"></nav>
+  <div class="speed" id="speed"></div>
+  <button id="collectBtn" class="pri" data-a="colAll" hidden></button>
 </header>
-<div class="page">
+<div class="shell">
+  <nav id="nav" class="rail" aria-label="Screens"></nav>
   <main id="view"></main>
-  <aside><h2>The Record</h2><div id="log"></div></aside>
+  <aside><h2 id="statsH">How you are doing</h2><div class="sbars" id="sbars"></div><h2>The Record</h2><div id="log"></div></aside>
 </div>
+<nav id="tabbar" class="tabbar" aria-label="Sections"></nav>
 <div id="toasts" role="status" aria-live="polite"></div>
 <div id="modal" hidden><div id="mbox" role="dialog" aria-modal="true"></div></div>
 
@@ -526,8 +604,8 @@ const EVM=EM(EV.map(e=>[e.id,e]));
 
 // ---------- state ----------
 const SAVE='hustle-v1',GROW=1.13,CAP=10,MILES=[10,25,50,100,150,200,300,400,500];
-let cg=null,tf='3M',cmode='candle',hov=null,ot={side:'buy',qty:10}; // screen state, not saved
-let s=null,tab='life',sel='NOVA',csel='SATS',speed=1,holding=false,wiped=false,heir={},hiddenAt=0;
+let bmode='1',lastSpeed=1,lastIn=[],cg=null,tf='3M',cmode='candle',hov=null,ot={side:'buy',qty:10}; // screen state, not saved
+let s=null,tab='dash',sel='NOVA',csel='SATS',speed=1,holding=false,wiped=false,heir={},hiddenAt=0;
 const age=()=>s.startAge+s.day/365;
 const add=(k,v)=>s.st[k]=clamp(s.st[k]+v,0,100);
 const job=()=>s.job&&JM[s.job];
@@ -650,6 +728,7 @@ function day(){
   if(R()<.3)npcChatter();
   marketDay();cryptoDay();
   if(s.day%91===0)dividends();
+  if(s.day%7===0){(s.nwh??=[]).push(Math.round(netWorth()));if(s.nwh.length>104)s.nwh.shift()}
   s.later=s.later.filter(p=>p.d>s.day||(runLater(p),false));
   s.inbox=s.inbox.filter(it=>{if(s.day-it.d<30)return true;const e=EVM[it.id];if(!e.c||e.c(s))log(`<b>${e.t}</b> (you never decided): ${e.ch[e.def][1](s,it.a)}`);return false});
   if(s.inbox.length<3&&R()<1/28)newEvent();
@@ -691,8 +770,12 @@ const dur=sec=>sec<3600?`${Math.round(sec/60)}m`:`${Math.floor(sec/3600)}h ${Mat
 
 // ---------- actions ----------
 const ACT={
-  tab:x=>{tab=x;$('#view').scrollTop=0},
-  spd:x=>speed=+x,
+  tab:x=>{tab=x;const g=BAR.findIndex(b=>b[1].includes(x));if(g>=0)lastIn[g]=x;$('#view').scrollTop=0;if(innerWidth<=860)scrollTo(0,0)},
+  grp:x=>{const ks=BAR[+x][1];ACT.tab(ks.includes(tab)?tab:lastIn[+x]||ks[0])},
+  spd:x=>{if(speed)lastSpeed=speed;speed=+x},
+  bmode:x=>{bmode=x},
+  gobj:()=>{ACT.tab('casino');cg='bj'},
+  pick:(id,c)=>{const i=s.inbox.findIndex(x=>x.id===id);if(i<0)return;const it=s.inbox.splice(i,1)[0],e=EVM[id],msg=e.c&&!e.c(s)?'The moment has passed.':e.ch[+c][1](s,it.a);log(`<b>${e.t}</b>: ${msg}`);toast(msg)},
   sel:x=>sel=x,
   close:()=>closeModal(),
   act:id=>{const a=AM[id];if(s.day<(s.cd[id]||0)||s.cash<a.c)return;s.cash-=a.c;s.cd[id]=s.day+a.cd;toast(a.fx())},
@@ -753,10 +836,6 @@ const ACT={
   rl:k=>{const b=stake();if(!b)return;const z=s.cz,n=rint(0,36),m=rlMult(k,n);z.rh.unshift(n);z.rh.length=Math.min(z.rh.length,14);z.rlast={n,k,w:b*m};settle(b,b*m,'roulette','rl')},
   own:id=>{const i=SM[id];if(s.own[id]||s.cash<i.cost)return;s.cash-=i.cost;s.own[id]=1;add('hap',5);log(`Bought ${art(i.n)}`,'good')},
   unown:id=>{if(!s.own[id])return;s.cash+=SM[id].cost*.6;delete s.own[id];log(`Sold your ${SM[id].n}.`)},
-  inbox:()=>{const it=s.inbox[0];if(!it)return;const e=EVM[it.id];
-    modal(`<p class="kicker">${30-(s.day-it.d)} days left to decide</p><h2>${e.t}</h2><p>${e.d(s,it.a)}</p><div class="choices">${e.ch.map((c,i)=>`<button data-a="choose" data-x="${i}">${c[0]}</button>`).join('')}</div>`)},
-  choose:i=>{const it=s.inbox.shift(),e=EVM[it.id],msg=e.c&&!e.c(s)?'The moment has passed.':e.ch[+i][1](s,it.a);log(`<b>${e.t}</b>: ${msg}`);
-    modal(`<h2>${e.t}</h2><p>${msg}</p><button class="pri" data-a="${s.inbox.length?'inbox':'close'}">${s.inbox.length?'Next decision →':'OK'}</button>`)},
   reset:()=>modal(`<h2>Start over?</h2><p>This wipes your save for good.</p><div class="row"><button class="bad" data-a="wipe">Wipe my save</button><button data-a="close">Cancel</button></div>`),
   wipe:()=>{wiped=true;localStorage.removeItem(SAVE);location.reload()},
   heir:()=>startModal({inherit:Math.max(0,netWorth()*.5),gen:s.gen+1,last:s.name}),
@@ -796,13 +875,75 @@ function lifeLine(){
   if(s.pet)b.push('has a cat');
   return b.join(', ').replace(/, ([^,]*)$/,' and $1')+'.';
 }
+const pendAll=()=>BIZ.reduce((t,b)=>t+(s.biz[b.id]?.pend||0),0);
+const idxDay=()=>STOCKS.reduce((t,k)=>t+s.px[k.t].p/s.px[k.t].o,0)/STOCKS.length-1;
+const plural=w=>/(sh|ch|s)$/.test(w)?w+'es':/[^aeiou]y$/.test(w)?w.slice(0,-1)+'ies':w+'s';
+const LOWFIX={hea:['doc','gym'],hap:['trip','spa','med','fam','out']};
+function needs(){
+  const L=[];
+  for(const it of s.inbox){const e=EVM[it.id];if(!e.c||e.c(s))L.push({k:'dec',it,e})}
+  let pend=0;const full=[];for(const b of BIZ){const o=s.biz[b.id];if(o?.n&&!o.mgr&&o.pend>0){pend+=o.pend;if(o.pend>=bizInc(b,o)*CAP*.999)full.push(b.n)}}
+  if(pend>=1&&(full.length||pend>=Math.max(50,s.cash*.02)))L.push({k:'till',pend,full});
+  const m=BIZ.find(b=>{const o=s.biz[b.id];return o?.n&&!o.mgr&&s.cash>=b.cost*12});if(m)L.push({k:'mgr',b:m});
+  for(const k of ['hea','hap'])if(s.st[k]<25)L.push({k:'low',st:k,a:LOWFIX[k].map(id=>AM[id]).find(a=>(!a.show||a.show())&&!cdLeft(a.id)&&s.cash>=a.c)});
+  if(!homeP()){const l=[...s.re.list].sort((a,b)=>PM[a.t].base*a.m-PM[b.t].base*b.m).find(l=>{const v=PM[l.t].base*l.m*s.re.idx;return !PM[l.t].biz&&(s.cash>=v||(s.cash>=v*.2&&canBorrow(v*.8)))});if(l)L.push({k:'home',l})}
+  if(s.cz.bj&&!s.cz.bj.done)L.push({k:'bj'});
+  return L;
+}
+function needHtml(n){
+  const row=(k,ti,d,acts,hot)=>`<div class="need"><div><div class="k ${hot?'hot':''}">${k}</div><div class="t">${ti}</div><div class="d">${d}</div></div><div class="acts2">${acts}</div></div>`;
+  if(n.k==='dec'){const left=30-(s.day-n.it.d);return row(`Decision · ${left} day${left===1?'':'s'} left`,n.e.t,n.e.d(s,n.it.a),n.e.ch.map((c,j)=>`<button data-a="pick" data-x="${n.it.id}" data-y="${j}">${c[0]}</button>`).join(''),1)}
+  if(n.k==='till'){const f=n.full;return row('Business',f.length?(f.length===1?`${f[0]}'s till is full`:`${f.length} tills are full`):'Tills are filling up',f.length?`${f.join(' and ')} ${f.length===1?'has':'have'} stopped earning until you collect.`:'Collect before they stop earning.',`<span class="amt">${fmt(n.pend)}</span><button class="pri" data-a="colAll">Collect</button>`)}
+  if(n.k==='mgr')return row('Worth it now',`Hire a manager for ${n.b.n}`,`It earns ${fmt(bizInc(n.b,s.biz[n.b.id]))} a day, but only while you keep collecting.`,`<button data-a="mgr" data-x="${n.b.id}">Hire for ${fmt(n.b.cost*12)}</button>`);
+  if(n.k==='low')return row(n.st==='hea'?'Health':'Mood',`${n.st==='hea'?'Health':'Happiness'} is low`,n.st==='hea'?'If it hits zero, your life ends.':'Unhappy people stop getting promoted, and their health slips.',n.a?`<button data-a="act" data-x="${n.a.id}">${n.a.n}${n.a.c?` · ${fmt(n.a.c)}`:''}</button>`:'');
+  if(n.k==='home'){const k=PM[n.l.t],v=k.base*n.l.m*s.re.idx;return row('Save on rent','You pay $30 a day in rent',`${k.n}, ${n.l.loc} is for sale for ${fmt(v)}. On a mortgage it would cost ${fmt(mpay(v*.8))} a day.`,`<button data-a="tab" data-x="home">See listings</button>`)}
+  if(n.k==='bj')return row('Casino','Your blackjack hand is still open','The dealer is waiting on you.',`<button data-a="gobj">Back to the table</button>`);
+  return '';
+}
+function nwChart(h){
+  const W=480,H=120,lo=Math.min(...h),hi=Math.max(...h),r=hi-lo||1,pts=h.map((v,i)=>`${(i/(h.length-1)*W).toFixed(1)},${(H-6-(v-lo)/r*(H-12)).toFixed(1)}`).join(' '),col=h.at(-1)>=h[0]?'var(--color-up)':'var(--color-down)';
+  return `<svg class="nwc" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Net worth over the last ${h.length-1} weeks"><polygon points="0,${H} ${pts} ${W},${H}" style="fill:${col};fill-opacity:.1"></polygon><polyline points="${pts}" style="fill:none;stroke:${col};stroke-width:2" vector-effect="non-scaling-stroke"></polyline></svg>`;
+}
+function bestBuy(){ // cheapest income per dollar, counting milestone doublings
+  let best=null;
+  for(const b of BIZ){const o=s.biz[b.id]||{n:0};if(!o.n&&s.cash<b.cost)continue;const nm=MILES.find(m=>m>o.n);
+    for(const k of [1,nm?nm-o.n:1]){if(k<1||k>100)continue;const c=bcost(b,o.n,k);if(c>s.cash)continue;
+      const gain=b.inc*((o.n+k)*bmul(o.n+k)-o.n*bmul(o.n))*s.legacy,pb=c/gain;if(!best||pb<best.pb)best={b,k,c,pb,m:bmul(o.n+k)>bmul(o.n)?o.n+k:0}}}
+  return best;
+}
+function bizRow(b,i,last){
+  const o=s.biz[b.id]||{n:0,pend:0,mgr:0},n=o.n;if(i>last+1&&!n)return '';
+  if(!n&&s.cash<b.cost)return `<div class="brow locked"><div><div class="nm">${b.n}</div><div class="ms">Earns ${fmt(b.inc*s.legacy)} a day each</div></div><span class="own num">0</span><span class="inc num">—</span><span>Opens at ${fmt(b.cost)}</span><div class="acts3"><button disabled>${fmt(b.cost-s.cash)} to go</button></div></div>`;
+  const g=n?bizInc(b,o):0,nm=MILES.find(m=>m>n),mx=bmax(b,n),q=Math.min(bmode==='max'?mx:+bmode,mx),mc=b.cost*12,full=n&&!o.mgr&&o.pend>=g*CAP*.999;
+  const buy=q>=1?`<button class="pri" data-a="bbuy" data-x="${b.id}" data-y="${q}">Buy ${q} · ${fmt(bcost(b,n,q))}</button>`:`<button disabled>Buy 1 · ${fmt(bcost(b,n,1))}</button>`;
+  return `<div class="brow"><div><div class="nm">${b.n}</div><div class="ms">${nm?`${meter(n/nm*100)}<span>${n} / ${nm} to ×2</span>`:'<span>Every milestone reached</span>'}</div></div>
+   <span class="own num">${n}<small class="m"> owned</small></span><span class="inc num ${g?'up':''}">${fmt(g)}<small class="m"> a day</small></span>
+   <div class="till">${!n?'<span class="mut">Not open yet</span>':o.mgr?'<span class="mut">Managed, pays itself</span>':`<div class="top2"><span class="${full?'full':'mut'}">${full?'Full':'Filling'}</span><span class="num">${fmt(o.pend)}</span></div>${meter(o.pend/(g*CAP)*100,'warn')}`}</div>
+   <div class="acts3">${n&&!o.mgr?`<button data-a="col" data-x="${b.id}" ${o.pend<.01?'disabled':''}>Collect</button><button data-a="mgr" data-x="${b.id}" ${s.cash<mc?'disabled':''}>Manager ${fmt(mc)}</button>`:''}${buy}</div></div>`;
+}
 const VIEWS={
+dash(){
+  const f=flows(),N=needs(),net=f.job+f.biz+f.pend+f.spon+f.rent-f.exp-f.mort,h=s.nwh||[];
+  const parts=[['Cash',Math.max(0,s.cash)],['Businesses',Object.values(s.biz).reduce((a,o)=>a+o.spent*.5,0)],['Stocks',Object.entries(s.port).reduce((a,[k,o])=>a+o.sh*s.px[k].p,0)],['Crypto',walletVal()],['Property',s.props.reduce((a,p)=>a+Math.max(0,pval(p)-p.loan),0)],['Cars',s.cars.reduce((a,c)=>a+c.v,0)],['Lifestyle',Object.keys(s.own).reduce((a,k)=>a+SM[k].cost*.6,0)]].map((x,i)=>[...x,`var(--cat-${i+1})`]).filter(x=>x[1]>=1);
+  const tot=parts.reduce((a,x)=>a+x[1],0)||1;
+  return `<section class="lede solo"><div><h2 class="headline">${esc(s.name)}, ${Math.floor(age())}</h2><p class="dek">${esc(s.name)} ${lifeLine()}</p></div></section>
+  <div class="sec-h"><h2>Needs you</h2><span>${N.length?`${N.length} thing${N.length>1?'s':''}`:'all clear'}</span></div>
+  <div class="needs">${N.length?N.map(needHtml).join(''):'<p class="mut" style="padding:var(--space-sm) 0">Nothing needs you right now. Your money is working.</p>'}</div>
+  <div class="sec-h"><h2>Quick actions</h2></div>
+  <div class="quick"><button class="pri" data-a="gig">Take a gig · +${fmt(gig())}</button>${ACTS.filter(a=>!a.show||a.show()).map(a=>{const w=cdLeft(a.id);return `<button data-a="act" data-x="${a.id}" ${w||s.cash<a.c?'disabled':''}>${a.n}${a.c?` · ${fmt(a.c)}`:''}${w?` · in ${w}d`:''}</button>`}).join('')}${cdLeft('post')?'':'<button data-a="post" data-x="meme">Post a meme</button>'}</div>
+  <section class="snap">
+   <div><div class="sec-row"><h2>Net worth</h2>${h.length>1?`<span class="${h.at(-1)>=h[0]?'up':'dn'}">${h.at(-1)>=h[0]?'+':''}${fmt(h.at(-1)-h[0])} over ${h.length-1} weeks</span>`:''}</div>
+    ${h.length>1?nwChart(h):'<p class="mut" style="margin-top:var(--space-xs)">The chart fills in after a couple of weeks.</p>'}
+    <p class="mut" style="margin-top:var(--space-2xs)">Earning ${sign(net)} a day: salary ${fmt(f.job)}, businesses ${fmt(f.biz+f.pend)}${f.rent?`, rent ${fmt(f.rent)}`:''}${f.spon?`, sponsors ${fmt(f.spon)}`:''}, costs −${fmt(f.exp+f.mort)}.</p></div>
+   <div><h2>Where it sits</h2><div class="stack">${parts.map(x=>`<span style="width:${x[1]/tot*100}%;background:${x[2]}"></span>`).join('')}</div>
+    <div class="legend">${parts.map(x=>`<div><i style="background:${x[2]}"></i>${x[0]}<b>${fmt(x[1])}</b></div>`).join('')}</div></div>
+  </section>`;
+},
 life(){
   const f=flows(),e=EDU[s.edu+1],home=homeP();
-  return `<section class="lede">
+  return `<section class="lede solo">
     <div><h2 class="headline">${esc(s.name)}, ${Math.floor(age())}</h2>
      <p class="dek">${esc(s.name)} ${lifeLine()} ${s.edu?`Holds ${art(EDU[s.edu].n)}.`:'Finished high school.'}</p></div>
-    <table class="stats">${[['hea','Health'],['hap','Happiness'],['sma','Smarts'],['loo','Looks']].map(([k,n])=>`<tr class="${s.st[k]<25?'low':''}"><th>${n}</th><td>${meter(s.st[k])}</td><td class="num">${Math.round(s.st[k])}</td></tr>`).join('')}</table>
   </section>
   <div class="cols">
    <section><h3>Things to do</h3>
@@ -840,20 +981,16 @@ work(){
   </tbody></table></div>`;
 },
 biz(){
-  const f=flows(),pend=BIZ.reduce((t,b)=>t+(s.biz[b.id]?.pend||0),0),last=BIZ.reduce((m,b,i)=>s.biz[b.id]?.n?i:m,-1);
+  const f=flows(),last=BIZ.reduce((m,b,i)=>s.biz[b.id]?.n?i:m,-1),bb=bestBuy();
   return `<section class="lede">
     <div><h2 class="headline">Businesses</h2>
-     <p class="dek">Managed shops pay <b class="num">${fmt(f.biz)}</b> a day straight into your account. The rest earn <b class="num">${fmt(f.pend)}</b> a day into tills that stop filling after ${CAP} days.${s.day<s.boost?` Your promotion adds 25% for ${s.boost-s.day} more days.`:''}</p></div>
-    <div class="side"><p class="mut"><span class="figure">${fmt(pend)}</span><br>waiting in tills</p><button class="pri" data-a="colAll" ${pend<.01?'disabled':''}>Collect all</button></div>
+     <p class="dek">Managers pay <b class="num">${fmt(f.biz)}</b> a day on their own. Your tills take in <b class="num">${fmt(f.pend)}</b> a day until you collect, and stop filling after ${CAP} days.${s.day<s.boost?` Your promotion adds 25% for ${s.boost-s.day} more days.`:''}</p></div>
+    <div class="bmode"><span class="mut" style="font-size:var(--text-xs)">Buy at a time</span><div class="seg2">${['1','10','100','max'].map(m=>`<button class="${bmode===m?'on':''}" data-a="bmode" data-x="${m}">${m==='max'?'Max':'×'+m}</button>`).join('')}</div></div>
   </section>
-  <div class="scroll"><table class="ledger"><thead><tr><th>Business</th><th class="r">Owned</th><th class="r">Per day</th><th>Till</th><th class="r">Next unit</th><th></th></tr></thead><tbody>
-  ${BIZ.map((b,i)=>{const o=s.biz[b.id]||{n:0,pend:0,mgr:0};if(i>last+1&&!o.n)return '';const n=o.n,g=n?bizInc(b,o):0,nm=MILES.find(m=>m>n),mc=b.cost*12,mx=bmax(b,n),c1=bcost(b,n,1),c10=bcost(b,n,10);
-    return `<tr class="${n?'':'dim'}"><td><b>${b.n}</b><div class="sub">${nm?`doubles at ${nm}`:'fully doubled'}</div></td><td class="r num">${n}</td><td class="r num ${g?'up':''}">${fmt(g)}</td>
-     <td>${!n?'':o.mgr?'<span class="mut">managed</span>':`<span class="num warn">${fmt(o.pend)}</span>${meter(o.pend/(g*CAP)*100,'warn')}`}</td>
-     <td class="r num">${fmt(c1)}</td>
-     <td class="act"><button data-a="bbuy" data-x="${b.id}" data-y="1" ${s.cash<c1?'disabled':''}>Buy</button><button data-a="bbuy" data-x="${b.id}" data-y="10" title="${fmt(c10)}" ${s.cash<c10?'disabled':''}>×10</button><button data-a="bbuy" data-x="${b.id}" data-y="max" ${mx<1?'disabled':''}>Max${mx>0?` ${mx}`:''}</button>${n&&!o.mgr?`<button data-a="col" data-x="${b.id}" ${o.pend<.01?'disabled':''}>Collect</button><button class="pri" data-a="mgr" data-x="${b.id}" ${s.cash<mc?'disabled':''}>Hire manager ${fmt(mc)}</button>`:''}</td></tr>`}).join('')}
-  </tbody></table></div>
-  <p class="note">Every milestone (${MILES.slice(0,5).join(', ')} and on) doubles a business's income. Managers keep earning while you're away.</p>`;
+  ${bb?`<div class="bestbuy"><p><b>Best next buy:</b> ${bb.k} ${bb.k>1?plural(bb.b.n):bb.b.n} for ${fmt(bb.c)}${bb.m?`, reaching ${bb.m} and doubling its income`:''}. Pays for itself in about ${Math.max(1,Math.round(bb.pb))} days.</p><button class="pri" data-a="bbuy" data-x="${bb.b.id}" data-y="${bb.k}">Buy ${bb.k}</button></div>`:''}
+  <div class="blist"><div class="brow head"><span>Business</span><span class="own">Owned</span><span class="inc">Per day</span><span>Till</span><span></span></div>
+  ${BIZ.map((b,i)=>bizRow(b,i,last)).join('')}</div>
+  <p class="note">The buy button follows the switch above and shrinks to what you can afford. Milestones at ${MILES.slice(0,5).join(', ')} and on double a business's income. Managers keep earning while you're away.</p>`;
 },
 stock(){
   const k=SK[sel],q=s.px[sel],h=s.port[sel],M=s.mkt,d=q.p/q.o-1,H=q.h,buy=ot.side==='buy';
@@ -1003,23 +1140,48 @@ coin:(z,can)=>{const F=z.flip;return `<div class="coin">${F?(F.r==='h'?'Heads':'
   <p class="result">${F?(F.w?`Right call. Paid <b class="num">${fmt(F.w)}</b>.`:'Wrong call.'):'Call it. A right call pays 1.96×.'}</p>
   <div class="row"><button class="pri" data-a="flip" data-x="h" ${can?'':'disabled'}>Heads</button><button class="pri" data-a="flip" data-x="t" ${can?'':'disabled'}>Tails</button></div>`},
 };
-const TABS=[['life','Life'],['work','Work'],['biz','Business'],['stock','Markets'],['crypto','Crypto'],['chirp','Chirp'],['home','Property'],['garage','Garage'],['shop','Lifestyle'],['casino','Casino']];
+const ic=d=>`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+const ICON={home:ic('<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/>'),user:ic('<circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4.5-6 8-6s7 2 8 6"/>'),work:ic('<rect x="3" y="7" width="18" height="13" rx="1"/><path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M3 12h18"/>'),
+ store:ic('<path d="M4 9l1.5-5h13L20 9M4 9v11h16V9M4 9h16M9 20v-6h6v6"/>'),chart:ic('<path d="M4 19h16M6 15l4-5 3 3 5-7"/>'),coin:ic('<circle cx="12" cy="12" r="8"/><path d="M10 8h3a2 2 0 0 1 0 4h-3m0 0h3.5a2 2 0 0 1 0 4H10m0-8v8"/>'),building:ic('<path d="M5 21V4h9v17M14 9h5v12M8 8h3M8 12h3M8 16h3M3 21h18"/>'),
+ car:ic('<path d="M5 16l1.5-5.5A2 2 0 0 1 8.4 9h7.2a2 2 0 0 1 1.9 1.5L19 16M4 16h16v3H4zM7 19v1.5M17 19v1.5"/>'),bag:ic('<path d="M6 8h12l-1 12H7zM9 8a3 3 0 0 1 6 0"/>'),chat:ic('<path d="M4 5h16v11H9l-5 4z"/>'),
+ dice:ic('<rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="9" cy="9" r="1"/><circle cx="15" cy="15" r="1"/><circle cx="15" cy="9" r="1"/><circle cx="9" cy="15" r="1"/>'),pause:ic('<path d="M8 5v14M16 5v14"/>')};
+const TABS={dash:['Home','home'],life:['Life','user'],work:['Work','work'],biz:['Business','store'],stock:['Markets','chart'],crypto:['Crypto','coin'],home:['Property','building'],garage:['Garage','car'],shop:['Lifestyle','bag'],chirp:['Chirp','chat'],casino:['Casino','dice']};
+const GROUPS=[['',['dash']],['You',['life','work']],['Money',['biz','stock','crypto','home']],['Spend',['garage','shop']],['Fun',['chirp','casino']]];
+const BAR=[['Home',['dash'],'home'],['Life',['life','work'],'user'],['Money',['biz','stock','crypto','home'],'chart'],['Spend',['garage','shop'],'bag'],['Fun',['chirp','casino'],'dice']];
+const KEYTABS=['dash','life','work','biz','stock','crypto','home','garage','shop','chirp'];
+function badge(k){
+  if(k==='dash'){const n=needs().length;return n?`<span class="badge">${n}</span>`:''}
+  if(k==='biz'){const p=pendAll();return p>=1?`<span class="tag gold">${fmt(p)}</span>`:''}
+  if(k==='stock'){const d=idxDay();return `<span class="tag ${d>=0?'up':'dn'}">${pct(d)}</span>`}
+  if(k==='crypto'){const c=coin('SATS'),d=c?c.p/c.o-1:0;return `<span class="tag ${d>=0?'up':'dn'}">${pct(d)}</span>`}
+  if(k==='chirp')return cdLeft('post')?'':'<span class="tag mut">ready</span>';
+  if(k==='life')return ['hea','hap'].some(x=>s.st[x]<25)?'<span class="tag dn">low</span>':'';
+  if(k==='casino')return s.cz.bj&&!s.cz.bj.done?'<span class="tag gold">hand open</span>':'';
+  return '';
+}
+const railHtml=()=>GROUPS.map(([g,ks])=>(g?`<div class="grp">${g.toUpperCase()}</div>`:'')+ks.map(k=>`<button class="${tab===k?'on':''}" data-a="tab" data-x="${k}" ${tab===k?'aria-current="page"':''}>${ICON[TABS[k][1]]}${TABS[k][0]}${badge(k)}</button>`).join('')).join('')
+  +'<div class="keys">Keys 1–0 switch screens. Space pauses. C collects.</div><button class="reset" data-a="reset">Start a new life</button>';
+const barHtml=()=>BAR.map(([n,ks,ico],i)=>{const nb=i===0?needs().length:0;return `<button class="${ks.includes(tab)?'on':''}" data-a="grp" data-x="${i}">${ICON[ico]}${n}${nb?`<span class="badge">${nb}</span>`:''}</button>`}).join('');
+const subtabs=()=>{const b=BAR.find(b=>b[1].includes(tab));return b&&b[1].length>1?`<div class="subtabs">${b[1].map(k=>`<button class="${k===tab?'on':''}" data-a="tab" data-x="${k}">${TABS[k][0]}</button>`).join('')}</div>`:''};
 
 function hdr(){
-  if(!s)return;const f=flows(),net=f.job+f.biz+f.pend+f.spon+f.rent-f.exp-f.mort;
-  $('#dateline').textContent=`Year ${Math.floor(s.day/365)+1}, day ${s.day%365+1} · generation ${s.gen}`;
+  if(!s)return;const f=flows(),net=f.job+f.biz+f.pend+f.spon+f.rent-f.exp-f.mort,p=pendAll();
+  $('#dateline').textContent=`year ${Math.floor(s.day/365)+1}, day ${s.day%365+1}`;
   $('#hCash').textContent=fmt(s.cash);$('#hCash').className=s.cash<0?'dn':'';
   $('#hNw').textContent=fmt(netWorth());
   $('#hInc').textContent=(net>=0?'+':'')+fmt(net);$('#hInc').className=net>=0?'up':'dn';
   $('#hAge').textContent=Math.floor(age());
-  const n=s.inbox.length,ib=$('#inboxBtn');ib.hidden=!n;ib.textContent=`${n} decision${n>1?'s':''} waiting`;
-  $('#speed').innerHTML=[[0,'Pause'],[1,'1×'],[2,'2×'],[5,'5×'],[10,'10×']].map(([v,l])=>`<button class="${speed===v?'on':''}" data-a="spd" data-x="${v}">${l}</button>`).join('');
+  const cb=$('#collectBtn');cb.hidden=p<1;cb.textContent=`Collect all · ${fmt(p)}`;
+  $('#statsH').textContent=`How ${s.name} is doing`;
+  $('#sbars').innerHTML=[['hea','Health'],['hap','Happiness'],['sma','Smarts'],['loo','Looks']].map(([k,n])=>{const v=s.st[k],lo=v<25?'low':'';return `<span class="${lo}">${n}</span>${meter(v,lo)}<span class="n ${lo}">${Math.round(v)}</span>`}).join('');
   $('#log').innerHTML=s.log.map(l=>`<div class="lg ${l.k}"><small>${Math.floor(s.startAge+l.d/365)}</small><span>${l.t}</span></div>`).join('');
 }
 function render(){
   if(!s)return;hdr();
-  $('#nav').innerHTML=TABS.map(([k,l])=>`<button class="${tab===k?'on':''}" data-a="tab" data-x="${k}">${l}</button>`).join('')+'<button class="reset" data-a="reset">Start a new life</button>';
-  $('#view').innerHTML=VIEWS[tab]();
+  document.body.classList.toggle('wide',!['dash','life'].includes(tab));
+  $('#speed').innerHTML=[[0,'Pause'],[1,'1×'],[2,'2×'],[5,'5×'],[10,'10×']].map(([v,l])=>`<button class="${speed===v?'on':''}" data-a="spd" data-x="${v}" ${v?'':'aria-label="Pause"'}>${v?l:ICON.pause}</button>`).join('');
+  $('#nav').innerHTML=railHtml();$('#tabbar').innerHTML=barHtml();
+  $('#view').innerHTML=subtabs()+VIEWS[tab]();
   if(tab==='stock')drawStock();
   if(tab==='crypto'){const c=coin(csel),w=s.wallet[csel];if(c)drawChart(c.h,w&&w.c/w.u,pfmt)}
 }
@@ -1064,6 +1226,13 @@ function drawChart(h,avg,f=fmt){
 document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b||b.disabled)return;ACT[b.dataset.a](b.dataset.x,b.dataset.y);if(s&&$('#modal').hidden)render();else hdr()});
 document.addEventListener('mousemove',e=>{if(e.target.id==='tchart'){hov=e.offsetX;drawStock()}});
 document.addEventListener('mouseout',e=>{if(e.target.id==='tchart'){hov=null;drawStock()}});
+document.addEventListener('keydown',e=>{ // 1–0 screens, Space pause, C collect
+  if(!s||s.dead||!$('#modal').hidden||e.ctrlKey||e.metaKey||e.altKey||e.target.closest?.('input,textarea,select'))return;
+  const k='1234567890'.indexOf(e.key);
+  if(k>=0){ACT.tab(KEYTABS[k]);render()}
+  else if(e.key===' '&&!e.target.closest?.('button,tr,a')){e.preventDefault();ACT.spd(speed?0:lastSpeed||1);render()}
+  else if(e.key==='c'||e.key==='C'){ACT.colAll();render()}
+});
 document.addEventListener('keydown',e=>{const r=e.target.closest?.('tr[data-a]');if(r&&(e.key==='Enter'||e.key===' ')){e.preventDefault();r.click()}});
 addEventListener('pointerdown',()=>holding=true);
 addEventListener('pointerup',()=>holding=false);addEventListener('pointercancel',()=>holding=false);
@@ -1100,7 +1269,10 @@ function selfTest(){ // open with ?test=1 — never touches your real save
   const base=JSON.stringify({...s,job:'swe',rel:1,fol:20000,cash:2e6,biz:{truck:{n:12,mgr:0,pend:0,spent:1e5},cafe:{n:3,mgr:1,pend:0,spent:1e5}},port:{NOVA:{sh:50,cost:5000}}});
   for(const e of EV)for(const[,fx]of e.ch){s=JSON.parse(base);s.st.hap=10;const m=fx(s,e.a?e.a(s):0);ok(typeof m==='string','event '+e.id)}
   for(const k in POSTS){s=JSON.parse(base);ACT.post(k)}
-  for(const k in VIEWS){tab=k;VIEWS[k]()}for(const g of GAMES){cg=g.id;VIEWS.casino()}cg=null;
+  for(const k in VIEWS){tab=k;VIEWS[k]()}ok(railHtml().includes('Markets')&&barHtml().includes('Money')&&typeof subtabs()==='string','navigation');
+  s.inbox=[{id:'lotto',d:s.day,a:0}];ok(needs().some(n=>n.k==='dec'),'decision shows in needs');ACT.pick('lotto','1');ok(!s.inbox.length,'inline decision');
+  ok(plural('Car Wash')==='Car Washes'&&plural('Rocket Company')==='Rocket Companies'&&plural('Food Truck')==='Food Trucks','plurals');
+  bmode='10';tab='biz';VIEWS.biz();bmode='1';for(const g of GAMES){cg=g.id;VIEWS.casino()}cg=null;
   s.cash=1e6;sel='NOVA';ot={side:'buy',qty:7};const n0=s.port.NOVA?.sh||0;ACT.order();ok(s.port.NOVA.sh===n0+7,'order ticket buys');ot.side='sell';ot.qty=3;ACT.order();ok(s.port.NOVA.sh===n0+4,'order ticket sells');ot={side:'buy',qty:10};
   s.cz.chip=100;for(let i=0;i<20000;i++){ACT.dice(['under','over','seven'][i%3]);ACT.flip(i%2?'h':'t')}const dg=s.cz.g.dice,cf=s.cz.g.coin;
   ok(dg.n===20000&&cf.n===20000&&dg.net/2e6>-.08&&dg.net/2e6<.02&&cf.net/2e6>-.05&&cf.net/2e6<.01,'dice and coin edges');
@@ -1112,7 +1284,7 @@ function selfTest(){ // open with ?test=1 — never touches your real save
 }
 
 (function boot(){
-  if(location.search.includes('test')){try{selfTest()}catch(e){console.error('self-test FAILED:',e.message)}s=null;tab='life';}
+  if(location.search.includes('test')){try{selfTest()}catch(e){console.error('self-test FAILED:',e.message)}s=null;tab='dash';}
   let d=null;if(!wiped)try{d=JSON.parse(localStorage.getItem(SAVE))}catch{}
   if(d?.v===1){s=d;upgrade();render();if(s.dead)deathModal();else offline(Date.now()-s.lastSeen)}
   else startModal();

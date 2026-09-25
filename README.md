@@ -15,5 +15,7 @@ An idle life simulator in one HTML file. You turn 18, and from then on one secon
 - **Lifestyle**: gadgets, art, yachts and jets for mood and followers, each with upkeep.
 - **Generations**: when you die, your heir inherits half your net worth plus a permanent business bonus.
 
+**Playing it:** the Home screen lists everything that needs you. Answer decisions right there, collect full tills, and hire managers when they pay off. Quick actions sit underneath, with your net worth chart and a breakdown of where your money is. The side menu groups the other screens and flags what needs attention; on a phone it becomes a bottom tab bar. Keys 1–0 switch screens, Space pauses, C collects everything.
+
 Play: open `index.html`. It saves to localStorage automatically.
 Self-check: open with `?test=1` (a query string, so serve the file with a server that keeps queries) and look for `self-test passed` in the console.
