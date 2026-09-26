@@ -363,3 +363,9 @@ input:focus-visible{outline:2px solid var(--color-focus);outline-offset:1px}
   .bgs{grid-template-columns:minmax(0,1fr)}
   #mbox{padding:var(--space-md)}
 }
+/* goals */
+.sec-h .link2{margin-left:auto}
+.glist{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--space-md);padding-bottom:var(--space-lg)}
+.glist>div{display:flex;flex-direction:column;gap:2px;min-width:0}.glist>div>span{font-size:var(--text-sm)}.glist small{display:flex;flex-direction:column;gap:.375rem;margin-top:var(--space-2xs);font-size:var(--text-xs);color:var(--color-ink-3)}
+.goals .gp{width:38%;text-align:right;font-size:var(--text-sm);color:var(--color-ink-3)}.goals .gp .meter{margin-bottom:.375rem}
+@media (max-width:860px){.glist{grid-template-columns:1fr;gap:var(--space-sm)}.goals .gp{width:45%}}

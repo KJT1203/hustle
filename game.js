@@ -425,6 +425,7 @@ function upgrade(){ // bring older saves up to date
     if(s.study&&s.study.lvl!=null){const q=lv[s.study.lvl-1];s.study={p:q,sc:q==='dip'?'cc':'state',mj:'Business',left:s.study.left,days:PG[q].days,g:60}}}
   if(!s.people){const r=s.rel,k=s.kids||0;delete s.rel;delete s.kids;s.people=[];makeFamily();if(r)meet(r===2?'spouse':'date',65);for(let i=0;i<k;i++)addChild().b=s.day-rint(1,12)*365;
     s.xp={};if(s.job)s.xp[JM[s.job].fld]=s.jobDays;s.perf=55;s.raise=0;s.pension=0}
+  if(!s.goals){s.goals={};checkGoals(1)}
 }
 function flows(){const f={job:(s.job?jobPay():0)+(s.pension||0),biz:0,pend:0,spon:sponsor(),exp:expenses(),rent:s.props.reduce((t,p)=>t+rentOf(p),0),mort:s.props.reduce((t,p)=>t+(p.loan>0?p.pay:0),0)+loanPay()};for(const b of BIZ){const o=s.biz[b.id];if(o?.n)f[o.mgr?'biz':'pend']+=bizInc(b,o)}return f}
 const pfmt=n=>n>=1?fmt(n):'$'+(n<1e-6?n.toExponential(1):n.toPrecision(3));
@@ -478,12 +479,15 @@ function newGame(name,bg,h={}){
   const b=BG[bg];
   s={v:1,name,handle:'@'+(name.toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,15)||'you'),day:0,startAge:18,cash:b.cash+(h.inherit||0),st:{...b.st},edu:b.edu||0,study:null,
      job:b.job||null,jobDays:0,rank:0,biz:{},port:{},px:{},mkt:{bull:true},fol:b.fol||0,feed:[],own:{},people:[],degs:b.edu?[{p:'dip',sc:'cc',mj:'Computer science',hon:false}]:[],debt:0,xp:{},perf:50,raise:0,pension:0,wallet:{},cz:{chip:100,net:0,played:0,rh:[],ban:0},props:[],cars:[],home:null,re:{idx:1,list:[],next:0},cd:{},inbox:[],later:[],log:[],pet:0,
-     gen:h.gen||1,boost:0,lastPost:0,dead:0,lastSeen:Date.now()};
+     gen:h.gen||1,boost:0,lastPost:0,dead:0,lastSeen:Date.now(),goals:{...h.goals}};
   s.legacy=1+.25*(s.gen-1);
+  if(h.gen){s.st.sma=Math.round(s.st.sma*.7+h.sma*.3);s.st.loo=Math.round(s.st.loo*.7+h.loo*.3)} // a little of the family runs in the blood
+  if(h.kid){s.startAge=h.age;add('hap',(h.rel-50)*.3)}
   for(const k of STOCKS)s.px[k.t]={p:k.p,o:k.p,h:[k.p]};
   for(let i=0;i<239;i++)marketDay(1);
-  initCrypto();relist();makeFamily();
-  log(h.gen?`${esc(name)} begins generation ${s.gen} with a ${fmt(h.inherit)} inheritance.`:`${esc(name)} turns 18 and moves out. Time to hustle.`,'good');
+  initCrypto();relist();
+  if(h.fam){for(const p of h.fam)s.people.push({...p,uid:uid(),met:0,c:{}});for(let i=rint(1,2);i>0;i--)meet('friend',rint(45,70),-s.startAge*365+rint(-2,2)*365)}else makeFamily();
+  log(h.kid?`${esc(name)}, ${Math.floor(s.startAge)}, takes over from ${esc(h.last)} with a ${fmt(h.inherit)} inheritance. Generation ${s.gen} begins.`:h.gen?`${esc(name)} begins generation ${s.gen} with a ${fmt(h.inherit)} inheritance.`:`${esc(name)} turns 18 and moves out. Time to hustle.`,'good');
   chirp('@hustleculture','Hustle Culture','new week, new grind. what are you building? 👇',1);
 }
 
@@ -520,7 +524,7 @@ function day(){
   s.inbox=s.inbox.filter(it=>{if(s.day-it.d<30)return true;const e=EVM[it.id];if(!e.c||e.c(s))log(`<b>${e.t}</b> ${e.ch[e.def][1](s,it.a)}<span class="auto">decided for you</span>`);return false});
   if(s.inbox.length<3&&R()<1/28)newEvent();
   const pd=s.st.hea<=0?1:A>60?Math.min(.5,((A-60)/30)**3*3)/365:0;
-  if(R()<pd)die();
+  if(R()<pd)die();else checkGoals();
 }
 function marketDay(quiet){
   const M=s.mkt;
@@ -546,6 +550,57 @@ function newEvent(){
   for(const e of ok)if((r-=W(e))<=0){s.inbox.push({id:e.id,d:s.day,a:e.a?e.a(s):0});toast('A new decision is waiting');return}
 }
 function die(){s.dead=1;log(`${esc(s.name)} passed away at ${Math.floor(age())}.`,'bad');save();deathModal()}
+
+// ---------- goals: a family trophy case, kept across generations ----------
+const nOwned=()=>BIZ.filter(b=>s.biz[b.id]?.n).length,maxBiz=()=>Math.max(0,...Object.values(s.biz).map(o=>o.n)),has=c=>[c?1:0,1];
+const GOALS=[
+ {id:'biz1',n:'Open for business',d:'Open your first business',p:()=>[nOwned(),1]},
+ {id:'nw1',n:'Six figures',d:'Reach a net worth of $100K',p:()=>[netWorth(),1e5],m:1},
+ {id:'grad',n:'Graduate',d:"Earn a bachelor's degree",p:()=>has(s.edu>=2)},
+ {id:'wed',n:'Tie the knot',d:'Get married',p:()=>has(s.people.some(p=>p.role==='spouse'))},
+ {id:'home',n:'Homeowner',d:'Live in a home with no mortgage on it',p:()=>has(homeP()&&homeP().loan<=0)},
+ {id:'mgr3',n:'Delegate',d:'Have managers running 3 businesses',p:()=>[Object.values(s.biz).filter(o=>o.mgr).length,3]},
+ {id:'pay',n:'Four figures a day',d:'Earn a $1K a day salary',p:()=>[s.job?jobPay():0,1000],m:1},
+ {id:'nw2',n:'Millionaire',d:'Reach a net worth of $1M',p:()=>[netWorth(),1e6],m:1},
+ {id:'honors',n:'With honors',d:'Graduate with a grade of A',p:()=>has(s.degs.some(d=>d.hon))},
+ {id:'stocks',n:'Diversified',d:`Hold all ${STOCKS.length} stocks at once`,p:()=>[STOCKS.filter(k=>s.port[k.t]?.sh>0).length,STOCKS.length]},
+ {id:'kids3',n:'Full house',d:'Have 3 kids',p:()=>[kids().length,3]},
+ {id:'close5',n:'Inner circle',d:'Be very close (80+) to 5 people',p:()=>[s.people.filter(p=>p.rel>=80).length,5]},
+ {id:'fol1',n:'Influencer',d:'Reach 100K followers',p:()=>[s.fol,1e5]},
+ {id:'top',n:'Top of the ladder',d:'Reach the highest rank in any job',p:()=>has(s.job&&topRank())},
+ {id:'landlord',n:'Landlord',d:'Own 5 properties',p:()=>[s.props.length,5]},
+ {id:'cars',n:'Car collector',d:'Own 3 cars at once',p:()=>[s.cars.length,3]},
+ {id:'casino',n:'Beat the house',d:'Be $100K up at the casino overall',p:()=>[Math.max(0,s.cz.net),1e5],m:1},
+ {id:'peak',n:'Peak form',d:'Get all four stats to 80 at once',p:()=>[Math.min(...Object.values(s.st)),80]},
+ {id:'doctor',n:'Doctor',d:'Finish a PhD or medical school',p:()=>has(s.degs.some(d=>d.p==='phd'||d.p==='md'))},
+ {id:'crypto',n:'Crypto whale',d:'Hold $1M in crypto',p:()=>[walletVal(),1e6],m:1},
+ {id:'biz100',n:'Chain',d:'Own 100 of one business',p:()=>[maxBiz(),100]},
+ {id:'pension',n:'Well earned',d:'Retire on a pension',p:()=>has(s.pension>0)},
+ {id:'fol2',n:'Household name',d:'Reach 1M followers',p:()=>[s.fol,1e6]},
+ {id:'nw3',n:'Nine figures',d:'Reach a net worth of $100M',p:()=>[netWorth(),1e8],m:1},
+ {id:'rocket',n:'To the moon',d:'Open a Rocket Company',p:()=>has(s.biz.rocket?.n)},
+ {id:'old',n:'Long life',d:'Live to 85',p:()=>[age(),85]},
+ {id:'gen3',n:'Dynasty',d:'Reach the third generation',p:()=>[s.gen,3]},
+ {id:'nw4',n:'Billionaire',d:'Reach a net worth of $1B',p:()=>[netWorth(),1e9],m:1},
+];
+function checkGoals(quiet){
+  const got=GOALS.filter(g=>{if(s.goals[g.id])return false;const[c,t]=g.p();return c>=t});
+  for(const g of got){s.goals[g.id]={who:s.name,a:Math.floor(age()),gen:s.gen};if(!quiet)log(`Goal reached: <b>${g.n}</b>. ${g.d}.`,'good')}
+  if(quiet){if(got.length)log(`${got.length} goal${got.length>1?'s':''} already reached. See them on Home.`,'good')}
+  else if(got.length)toast(got.length>1?`${got.length} goals reached`:`Goal reached: ${got[0].n}`);
+}
+const goalsLeft=()=>GOALS.filter(g=>!s.goals[g.id]).map(g=>{const[c,t]=g.p();return {g,c,t}});
+const goalProg=(g,c,t)=>t===1&&!g.m?'<span class="mut">Not yet</span>':`${meter(clamp(c/t,0,1)*100)}<span class="num">${goalAmt(g,c)} / ${goalAmt(g,t)}</span>`;
+const goalAmt=(g,v)=>g.m?fmt(v):g.id==='old'||g.id==='peak'||g.id==='gen3'?Math.floor(v):big(Math.floor(v));
+
+// ---------- the heir: one of your kids, or a relative if you had none ----------
+function heirOf(k){
+  const h={inherit:Math.max(0,netWorth()*.5),gen:s.gen+1,last:s.name,goals:s.goals,sma:s.st.sma,loo:s.st.loo};
+  if(!k)return h;
+  const skip=Math.max(0,18*365-(s.day-k.b)),carry=p=>({n:p.n,b:p.b-s.day-skip,rel:(p.rel+k.rel)/2});
+  return {...h,kid:k.n,age:(s.day-k.b+skip)/365,rel:k.rel,
+    fam:[...s.people.filter(p=>p.role==='spouse').map(p=>({...carry(p),role:'parent'})),...kids().filter(p=>p!==k).map(p=>({...carry(p),role:'sibling'}))]};
+}
 function offline(ms){
   const sec=Math.min(ms,8*36e5)/1000;if(sec<60)return;
   let g=0;for(const b of BIZ){const o=s.biz[b.id];if(!o?.n)continue;const i=bizInc(b,o);if(o.mgr)g+=i;else o.pend=Math.min(i*CAP,o.pend+i*sec*.1)}
@@ -655,7 +710,8 @@ const ACT={
   unown:id=>{if(!s.own[id])return;s.cash+=SM[id].cost*.6;delete s.own[id];log(`Sold your ${SM[id].n}.`)},
   reset:()=>modal(`<h2>Start over?</h2><p>This wipes your save for good.</p><div class="row"><button class="bad" data-a="wipe">Wipe my save</button><button data-a="close">Cancel</button></div>`),
   wipe:()=>{wiped=true;localStorage.removeItem(SAVE);location.reload()},
-  heir:()=>startModal({inherit:Math.max(0,netWorth()*.5),gen:s.gen+1,last:s.name,kid:kids().sort((a,b)=>a.b-b.b)[0]?.n}),
+  heir:u=>startModal(heirOf(u&&per(+u))),
+  goals:()=>goalsModal(),
   begin:bg=>{newGame(($('#nm').value.trim()||pick(NAMES)).slice(0,20),bg,heir);closeModal();save();if(heir.gen)s.tour=1;else ACT.guide()},
 };
 const gig=()=>4+s.st.sma*.15+(s.job?jobPay()*.02:0);
@@ -691,17 +747,26 @@ function modal(h,wide){$('#mbox').innerHTML=h;$('#mbox').classList.toggle('wide'
 function closeModal(){$('#modal').hidden=true;render()}
 function startModal(h={}){
   heir=h;
-  modal(`<p class="kicker">${h.gen?`Generation ${h.gen}`:'The Hustle'}</p><h2>${h.gen?'The family business continues':'You just turned eighteen'}</h2>
-  <p>${h.gen?`You inherit <b class="num">${fmt(h.inherit)}</b> and a permanent <b>+${(h.gen-1)*25}%</b> business income bonus.`:'Work, study, open businesses, trade stocks and build a following. Decisions will land on your desk along the way. One second is one day, and the clock keeps running.'}</p>
+  const fam=h.fam?.length?` ${h.fam.map(p=>`${esc(p.n)} (${p.role==='parent'?'your parent':'your sibling'})`).join(', ').replace(/, ([^,]*)$/,' and $1')} ${h.fam.length>1?'are':'is'} still around.`:'';
+  modal(`<p class="kicker">${h.gen?`Generation ${h.gen}`:'The Hustle'}</p><h2>${h.kid?`${esc(h.kid)} takes over`:h.gen?'The family business continues':'You just turned eighteen'}</h2>
+  <p>${h.kid?`You are ${esc(h.last)}'s kid, starting at ${Math.floor(h.age)}. You inherit <b class="num">${fmt(h.inherit)}</b> and a permanent <b>+${(h.gen-1)*25}%</b> business income bonus.${fam}`:h.gen?`With no children, a relative inherits <b class="num">${fmt(h.inherit)}</b> and a permanent <b>+${(h.gen-1)*25}%</b> business income bonus.`:'Work, study, open businesses, trade stocks and build a following. Decisions will land on your desk along the way. One second is one day, and the clock keeps running.'}</p>
   <label>Your name<input id="nm" maxlength="20" value="${h.kid?esc(h.kid):h.last?esc(h.last.split(' ')[0])+' Jr.':pick(NAMES)}"></label>
   <label>Pick your start</label>
   <div class="bgs">${Object.entries(BG).map(([k,b])=>`<button data-a="begin" data-x="${k}"><b>${b.n}</b><small>${b.d}</small></button>`).join('')}</div>`);
 }
 function deathModal(){
-  const w=netWorth(),nb=BIZ.reduce((t,b)=>t+(s.biz[b.id]?.n||0),0);
+  const w=netWorth(),nb=BIZ.reduce((t,b)=>t+(s.biz[b.id]?.n||0),0),ks=kids().sort((a,b)=>a.b-b.b),ng=Object.values(s.goals).filter(g=>g.gen===s.gen).length;
   modal(`<p class="kicker">Obituary</p><h2>${esc(s.name)}, ${Math.floor(age())}</h2>
-  <table class="ledger"><tr><td>Net worth</td><td class="r num">${fmt(w)}</td></tr><tr><td>Businesses</td><td>${nb}</td></tr><tr><td>Followers</td><td>${big(s.fol)}</td></tr><tr><td>Career</td><td>${s.job?jobTitle():'—'}</td></tr><tr><td>Family</td><td>${partner()?(partner().role==='spouse'?'Married to ':'Seeing ')+esc(partner().n):'Single'}${kids().length?`, ${kids().length} kid${kids().length>1?'s':''}`:''}</td></tr></table>
-  <p style="margin-top:var(--space-sm)">Your heir inherits half your net worth: <b class="num">${fmt(Math.max(0,w*.5))}</b>.</p><button class="pri big" data-a="heir">Continue as your heir</button>`);
+  <table class="ledger"><tr><td>Net worth</td><td class="r num">${fmt(w)}</td></tr><tr><td>Businesses</td><td>${nb}</td></tr><tr><td>Followers</td><td>${big(s.fol)}</td></tr><tr><td>Career</td><td>${s.job?jobTitle():'—'}</td></tr><tr><td>Family</td><td>${partner()?(partner().role==='spouse'?'Married to ':'Seeing ')+esc(partner().n):'Single'}${kids().length?`, ${kids().length} kid${kids().length>1?'s':''}`:''}</td></tr><tr><td>Goals reached</td><td>${ng}</td></tr></table>
+  <p style="margin-top:var(--space-sm)">Your heir inherits half your net worth: <b class="num">${fmt(Math.max(0,w*.5))}</b>.${ks.length>1?' Pick which of your kids takes over. Younger ones have more years ahead of them, and closer ones start happier.':''}</p>
+  ${ks.length?`<div class="choices">${ks.map(k=>{const a=ageOf(k);return `<button data-a="heir" data-x="${k.uid}"><b>Continue as ${esc(k.n)}</b><br><small class="mut">${a<18?`${Math.floor(a)} now, takes over at 18`:`Age ${Math.floor(a)}`} · ${closeWord(k.rel)} to you</small></button>`}).join('')}</div>`:'<button class="pri big" data-a="heir">Continue as your heir</button>'}`);
+}
+function goalsModal(){
+  const done=GOALS.filter(g=>s.goals[g.id]),left=goalsLeft();
+  modal(`<p class="kicker">The family trophy case</p><h2>Goals · ${done.length} of ${GOALS.length}</h2><p>Goals stay with the family when you pass them on, so each generation can chase the ones still open.</p>
+  <table class="ledger goals"><tbody>${left.map(({g,c,t})=>`<tr><td><b>${g.n}</b><div class="sub">${g.d}</div></td><td class="gp">${goalProg(g,c,t)}</td></tr>`).join('')}
+  ${done.map(g=>{const w=s.goals[g.id];return `<tr class="dim"><td><b>${g.n}</b><div class="sub">${g.d}</div></td><td class="gp"><span>${esc(w.who)}, at ${w.a}${w.gen!==s.gen?` · gen ${w.gen}`:''}</span></td></tr>`}).join('')}</tbody></table>
+  <div class="row" style="margin-top:var(--space-sm)"><button class="pri" data-a="close">Back to the game</button></div>`,1);
 }
 
 // ---------- views ----------
@@ -785,7 +850,7 @@ const VIEWS={
 dash(){
   const f=flows(),N=needs(),net=f.job+f.biz+f.pend+f.spon+f.rent-f.exp-f.mort,h=s.nwh||[];
   const parts=[['Cash',Math.max(0,s.cash)],['Businesses',Object.values(s.biz).reduce((a,o)=>a+o.spent*.5,0)],['Stocks',Object.entries(s.port).reduce((a,[k,o])=>a+o.sh*s.px[k].p,0)],['Crypto',walletVal()],['Property',s.props.reduce((a,p)=>a+Math.max(0,pval(p)-p.loan),0)],['Cars',s.cars.reduce((a,c)=>a+c.v,0)],['Lifestyle',Object.keys(s.own).reduce((a,k)=>a+SM[k].cost*.6,0)]].map((x,i)=>[...x,`var(--cat-${i+1})`]).filter(x=>x[1]>=1);
-  const tot=parts.reduce((a,x)=>a+x[1],0)||1;
+  const tot=parts.reduce((a,x)=>a+x[1],0)||1,gl=goalsLeft().slice(0,3);
   return `<section class="lede solo"><div><h2 class="headline">${esc(s.name)}, ${Math.floor(age())}</h2><p class="dek">${esc(s.name)} ${lifeLine()}</p></div></section>
   <div class="sec-h"><h2>Needs you</h2><span>${N.length?`${N.length} thing${N.length>1?'s':''}`:'all clear'}</span></div>
   <div class="needs">${N.length?N.map(needHtml).join(''):'<p class="mut" style="padding:var(--space-sm) 0">Nothing needs you right now. Your money is working.</p>'}</div>
@@ -797,7 +862,9 @@ dash(){
     <p class="mut" style="margin-top:var(--space-2xs)">Earning ${sign(net)} a day: salary ${fmt(f.job)}, businesses ${fmt(f.biz+f.pend)}${f.rent?`, rent ${fmt(f.rent)}`:''}${f.spon?`, sponsors ${fmt(f.spon)}`:''}, costs −${fmt(f.exp+f.mort)}.</p></div>
    <div><h2>Where it sits</h2><div class="stack">${parts.map(x=>`<span style="width:${x[1]/tot*100}%;background:${x[2]}"></span>`).join('')}</div>
     <div class="legend">${parts.map(x=>`<div><i style="background:${x[2]}"></i>${x[0]}<b>${fmt(x[1])}</b></div>`).join('')}</div></div>
-  </section>`;
+  </section>
+  <div class="sec-h"><h2>Goals</h2><span>${Object.keys(s.goals).length} of ${GOALS.length} reached</span><button class="link2" data-a="goals">See all</button></div>
+  <div class="glist">${gl.map(({g,c,t})=>`<div><b>${g.n}</b><span class="mut">${g.d}</span><small>${goalProg(g,c,t)}</small></div>`).join('')||'<p class="mut">Every goal is done. The family legend is complete.</p>'}</div>`;
 },
 life(){
   const f=flows(),rows=[['Salary and pension',f.job],['Managed businesses',f.biz],['Tills to collect',f.pend],['Sponsorships',f.spon],['Rent from tenants',f.rent],['Loan payments',-f.mort],[`Living costs${homeP()?'':', rent included'}`,-f.exp]].filter(r=>Math.abs(r[1])>=.01);
@@ -1123,7 +1190,7 @@ function drawChart(h,avg,f=fmt){
 }
 
 // ---------- loop, input, save ----------
-document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b||b.disabled)return;ACT[b.dataset.a](b.dataset.x,b.dataset.y);if(s&&$('#modal').hidden)render();else hdr()});
+document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b||b.disabled)return;ACT[b.dataset.a](b.dataset.x,b.dataset.y);if(s&&!s.dead)checkGoals();if(s&&$('#modal').hidden)render();else hdr()});
 document.addEventListener('mousemove',e=>{if(e.target.id==='tchart'){hov=e.offsetX;drawStock()}});
 document.addEventListener('mouseout',e=>{if(e.target.id==='tchart'){hov=null;drawStock()}});
 document.addEventListener('keydown',e=>{ // 1–0 screens, Space pause, C collect
@@ -1192,6 +1259,14 @@ function selfTest(){ // open with ?test=1 — never touches your real save
   s.cz.chip=100;for(let i=0;i<20000;i++){ACT.dice(['under','over','seven'][i%3]);ACT.flip(i%2?'h':'t')}const dg=s.cz.g.dice,cf=s.cz.g.coin;
   ok(dg.n===20000&&cf.n===20000&&dg.net/2e6>-.08&&dg.net/2e6<.02&&cf.net/2e6>-.05&&cf.net/2e6<.01,'dice and coin edges');
   newGame('Old','street');delete s.re;delete s.cx;delete s.cz;delete s.people;delete s.degs;s.edu=2;s.study={lvl:3,left:50};s.rel=2;s.kids=2;s.own={apt:1,car:1,bike:1};s.port.MOON={sh:10,cost:12};upgrade();ok(partner()?.role==='spouse'&&kids().length===2&&!('rel' in s),'old relationships upgrade');ok(s.degs.length===2&&s.study.p==='ma','old education upgrade');ok(s.props.length===1&&s.cars.length===1&&s.own.bike&&homeP()&&s.wallet.MOON.u===10&&!s.port.MOON&&s.cz,'old saves upgrade');
+  newGame('Goal','street');s.cash=2e6;checkGoals();ok(s.goals.nw1&&s.goals.nw2&&!s.goals.nw3,'goals unlock');const gn=Object.keys(s.goals).length;checkGoals();ok(Object.keys(s.goals).length===gn,'goals unlock once');delete s.goals;upgrade();ok(s.goals.nw2&&s.log[0].t.includes('already reached'),'old saves backfill goals quietly');
+  tab='dash';ok(VIEWS.dash().includes('Goals'),'goals on home');goalsModal();
+  const sp2=meet('spouse',70),k1=addChild(),k2=addChild(),k3=addChild();k1.b=s.day-40*365;k2.b=s.day-30*365;k3.b=s.day-5*365;k1.rel=90;
+  deathModal();ok($('#mbox').innerHTML.includes('Continue as '+k1.n),'death lists the kids');ACT.heir(String(k1.uid));
+  ok(heir.kid===k1.n&&Math.floor(heir.age)===40&&heir.fam.length===3,'heir from a kid');newGame(k1.n,'street',heir);
+  ok(s.gen===2&&Math.floor(age())===40&&s.goals.nw2&&s.people.some(p=>p.role==='parent'&&p.n===sp2.n)&&s.people.filter(p=>p.role==='sibling').map(p=>Math.floor(ageOf(p))).sort((a,b)=>a-b).join()==='5,30','heir keeps family and goals');
+  newGame('Young','street');const y1=addChild(),y2=addChild();y1.b=-5*365;y2.b=-2*365;const hy=heirOf(y1);ok(Math.round(hy.age)===18&&Math.round(-hy.fam[0].b/365)===15,'a young heir comes of age');
+  newGame('Solo','street');ACT.heir();ok(!heir.kid&&!heir.fam&&heir.gen===2,'no kids, a relative inherits');$('#modal').hidden=true;
   newGame('Sim','rich');let d=0;for(;d<40000&&!s.dead;d++){day();if(d%7===0){s.inbox=[];ACT.colAll()}}
   const vals=[s.cash,netWorth(),s.fol,...Object.values(s.st),...Object.values(s.px).map(q=>q.p),...s.cx.coins.map(c=>c.p),walletVal()];
   ok(vals.every(Number.isFinite),'finite after sim');ok(s.dead,'eventually dies');

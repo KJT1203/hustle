@@ -15,7 +15,8 @@ An idle life simulator: `index.html`, `style.css` and `game.js`, no build step. 
 - **Property**: a housing market that rises and falls, listings across 8 neighbourhoods, 30-year mortgages with 20% down, and tenants. Live in one place to stop paying rent and rent the rest out, up to office towers and a private island.
 - **Garage**: a dealership from a used hatchback to a vintage racer. Most cars lose value, while collectibles swing in price and tend to climb. Your best car lifts your mood, and every car brings followers.
 - **Lifestyle**: gadgets, art, yachts and jets for mood and followers, each with upkeep.
-- **Generations**: when you die, your heir inherits half your net worth plus a permanent business bonus.
+- **Generations**: when you die, you pick which of your kids takes over. They start at their real age (or 18 if younger), keep your surviving spouse as a parent and your other kids as siblings, and get a little of your smarts and looks. Closer kids start happier. The heir inherits half your net worth plus a permanent business bonus. With no kids, a relative inherits.
+- **Goals**: 28 milestones, from opening your first business to a billion-dollar net worth. The next three show on Home, and the full list is behind See all. Goals are a family trophy case that carries across generations.
 
 **Playing it:** a short guided tour starts with every new life (reopen it with the ? button or the ? key). the Home screen lists everything that needs you. Answer decisions right there, collect full tills, and hire managers when they pay off. Quick actions sit underneath, with your net worth chart and a breakdown of where your money is. The side menu groups the other screens and flags what needs attention; on a phone it becomes a bottom tab bar. Keys 1–0 switch screens, Space pauses, C collects everything.
 
