@@ -1,6 +1,6 @@
 # hustle.
 
-An idle life simulator in one HTML file. You turn 18, and from then on one second is one day.
+An idle life simulator: `index.html`, `style.css` and `game.js`, no build step. You turn 18, and from then on one second is one day.
 
 - **Life**: health, happiness, smarts and looks. Things to do, education, dating, marriage, kids, a cat.
 - **Education**: a diploma, bachelor's, master's, MBA, law school, medical school and a PhD (which pays a stipend), plus a trade certificate, police academy, coding bootcamp, flight school and teaching certificate. There are five schools, from an online university you can study at around a job to an elite university that is hard to get into and impresses interviewers. Majors count as a year of experience, and you can win a scholarship. While studying you have a grade, and can study hard, party or hire a tutor. Student loans repay themselves daily. Lawyers need a JD, surgeons an MD, pilots flight school.
@@ -19,5 +19,5 @@ An idle life simulator in one HTML file. You turn 18, and from then on one secon
 
 **Playing it:** a short guided tour starts with every new life (reopen it with the ? button or the ? key). the Home screen lists everything that needs you. Answer decisions right there, collect full tills, and hire managers when they pay off. Quick actions sit underneath, with your net worth chart and a breakdown of where your money is. The side menu groups the other screens and flags what needs attention; on a phone it becomes a bottom tab bar. Keys 1–0 switch screens, Space pauses, C collects everything.
 
-Play: open `index.html`. It saves to localStorage automatically.
+Play: open `index.html` (keep the three files together). It saves to localStorage automatically.
 Self-check: open with `?test=1` (a query string, so serve the file with a server that keeps queries) and look for `self-test passed` in the console.
