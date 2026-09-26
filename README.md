@@ -1,6 +1,8 @@
 # hustle.
 
-An idle life simulator: `index.html`, `style.css` and `game.js`, no build step. You turn 18, and from then on a day lasts 12 minutes of real time. A clock in the top bar shows the weekday and time, and the speed buttons shorten a day to 1 minute, 10 seconds or 1 second.
+An idle life simulator: `index.html`, `style.css` and `game.js`, no build step. You turn 18, and the clock starts. A full life takes about a day of play.
+
+**Time**: the top bar shows the date and time. On **Auto**, a game day passes in about 5 seconds while you're idle, slows to about 30 seconds while you're clicking or typing, and slows again to trading pace (a stock market session in about 30 seconds) while you're on Markets or Crypto. **Fast** runs a day a second. Time keeps passing while the game is closed, at a day every 15 real minutes with no cap (overnight is about a month, a week about two years), and a summary greets you when you're back. Everything in the economy is priced per game day, so the pace changes how long things take for you, not how much they earn.
 
 - **Life**: health, happiness, smarts and looks. Things to do, education, dating, marriage, kids, a cat.
 - **Education**: a diploma, bachelor's, master's, MBA, law school, medical school and a PhD (which pays a stipend), plus a trade certificate, police academy, coding bootcamp, flight school and teaching certificate. There are five schools, from an online university you can study at around a job to an elite university that is hard to get into and impresses interviewers. Majors count as a year of experience, and you can win a scholarship. While studying you have a grade, and can study hard, party or hire a tutor. Student loans repay themselves daily. Lawyers need a JD, surgeons an MD, pilots flight school.

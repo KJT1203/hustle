@@ -262,7 +262,11 @@ const GAMES=[
 ];
 const TF={'1W':5,'1M':21,'3M':63,'All':240}; // trading days
 const BYCAP=[...STOCKS].sort((a,b)=>b.p*b.sh-a.p*a.sh),WSECS=['All','Held','Penny',...new Set(STOCKS.filter(k=>!k.pn).map(k=>k.sec))];
-const SPEEDS=[[0,'','Pause'],[2,'12m','A day lasts 12 minutes'],[24,'1m','A day lasts 1 minute'],[144,'10s','A day lasts 10 seconds'],[1440,'1s','A day lasts 1 second']]; // game minutes per real second
+// ---------- pace: speed 1 (Auto) runs fast while you're idle and slows while you play; speed 2 (Fast) is a second a day ----------
+const PACE={idle:288,active:48,trade:13,fast:1440},AWAY=1440/900; // game minutes per real second: a day takes 5 s idle, 30 s while you play, a market session about 30 s while you trade; closed, a day takes 15 minutes
+const PACE_TXT={idle:'Auto · idle, 5 seconds a day',active:'Auto · slowed while you play, 30 seconds a day',trade:'Auto · trading pace, a market session takes about 30 seconds',fast:'Fast · 1 second a day'};
+let lastAct=-1e9,catching=false;
+function paceNow(){const idle=performance.now()-lastAct;if(speed===2)return 'fast';if((tab==='crypto'||tab==='stock'&&inSession())&&idle<120000)return 'trade';return idle<20000?'active':'idle'}
 const RBETS=[['red','Red'],['black','Black'],['odd','Odd'],['even','Even'],['low','1–18'],['high','19–36'],['d1','1st 12'],['d2','2nd 12'],['d3','3rd 12']];
 const GM=Object.fromEntries(GAMES.map(g=>[g.id,g]));
 const EM=Object.fromEntries,JM=EM(JOBS.map(j=>[j.id,j])),BM=EM(BIZ.map(b=>[b.id,b])),SK=EM(STOCKS.map(k=>[k.t,k])),SM=EM(SHOP.map(i=>[i.id,i])),AM=EM(ACTS.map(a=>[a.id,a])),PM=EM(PROPS.map(p=>[p.id,p])),CM=EM(CARS.map(c=>[c.id,c]));
@@ -413,8 +417,8 @@ const EVM=EM(EV.map(e=>[e.id,e]));
 
 // ---------- state ----------
 const SAVE='hustle-v1',GROW=1.13,CAP=10,MILES=[10,25,50,100,150,200,300,400,500];
-let helpOpen={},showAll={},openP=null,tour=-1,tourSpeed=1,tourJump=false,enr=null,iv=null,bmode='1',wf='All',lastSpeed=2,lastIn=[],cg=null,tf='3M',cmode='candle',hov=null,ot={side:'buy',qty:10}; // screen state, not saved
-let s=null,tab='dash',sel='NOVA',csel='SATS',speed=2,holding=false,wiped=false,heir={},hiddenAt=0;
+let helpOpen={},showAll={},openP=null,tour=-1,tourSpeed=1,tourJump=false,enr=null,iv=null,bmode='1',wf='All',lastSpeed=1,lastIn=[],cg=null,tf='3M',cmode='candle',hov=null,ot={side:'buy',qty:10}; // screen state, not saved
+let s=null,tab='dash',sel='NOVA',csel='SATS',speed=1,holding=false,wiped=false,heir={},hiddenAt=0;
 const age=()=>s.startAge+s.day/365;
 const add=(k,v)=>s.st[k]=clamp(s.st[k]+v,0,100);
 const job=()=>s.job&&JM[s.job];
@@ -546,7 +550,7 @@ function bjEnd(){const b=s.cz.bj,p=hv(b.p),nat=b.p.length===2&&p===21;
 function netWorth(){let w=s.cash;for(const t in s.port)w+=s.port[t].sh*s.px[t].p;for(const id in s.biz)w+=s.biz[id].spent*.5;for(const id in s.own)w+=SM[id].cost*.6;for(const p of s.props)w+=pval(p)-p.loan;for(const c of s.cars)w+=c.v;return w+walletVal()-(s.debt||0)}
 function log(t,k='info'){s.log.unshift({d:s.day,t,k});if(s.log.length>80)s.log.pop()}
 function chirp(h,n,x,v){s.feed.unshift({h,n,x,v,l:0,tl:rint(3,40)*(v?40:1),d:s.day});if(s.feed.length>60)s.feed.pop()}
-function toast(m){const t=document.createElement('div');t.className='toast';t.innerHTML=m;$('#toasts').append(t);setTimeout(()=>t.remove(),2800)}
+function toast(m){if(catching)return;const t=document.createElement('div');t.className='toast';t.innerHTML=m;$('#toasts').append(t);setTimeout(()=>t.remove(),2800)}
 
 function newGame(name,bg,h={}){
   const b=BG[bg];
@@ -880,15 +884,28 @@ function heirOf(k){
   return {...h,kid:k.n,age:(s.day-k.b+skip)/365,rel:k.rel,
     fam:[...s.people.filter(p=>p.role==='spouse').map(p=>({...carry(p),role:'parent'})),...kids().filter(p=>p!==k).map(p=>({...carry(p),role:'sibling'}))]};
 }
-function offline(ms){
-  const sec=Math.min(ms,8*36e5)/1000;if(sec<60)return;
-  const days=sec/720; // the days that would have passed at normal speed
-  let g=0;for(const b of BIZ){const o=s.biz[b.id];if(!o?.n)continue;const i=bizInc(b,o);if(o.mgr)g+=i;else o.pend=Math.min(i*CAP,o.pend+i*days)}
-  const earn=g*days;if(earn<1)return; // ponytail: managers earn at normal speed while you're away, but you don't age, 8h cap
-  s.cash+=earn;log(`Your managers earned ${fmt(earn)} while you were away.`,'good');
-  modal(`<h2>While you were out</h2><p>You were away for <b>${dur(sec)}</b>. Your managers kept the lights on and earned <b class="num">${fmt(earn)}</b>.</p><button class="pri" data-a="close">Nice</button>`);
+function skipDay(){cstep(1);if(tradingDay())tradeDay(0);s.min=1439;minute()} // a whole day in one step, from midnight to midnight
+function catchUp(g,step,done){ // g game minutes: finish today minute by minute, jump whole days, then the last minutes. step(daysLeft) reports progress; sync when no step
+  while(g>0&&s.min!==0&&!s.dead){minute();g--}
+  const run=()=>{let n=0;while(g>=1440&&!s.dead&&(!step||n<150)){skipDay();g-=1440;n++}
+    if(g>=1440&&!s.dead){step(Math.floor(g/1440));setTimeout(run,0);return}
+    while(g>0&&!s.dead){minute();g--}done()};
+  run();
 }
-const dur=sec=>sec<3600?`${Math.round(sec/60)}m`:`${Math.floor(sec/3600)}h ${Math.round(sec%3600/60)}m`;
+function offline(ms){ // time keeps passing while the game is closed, at a day per 15 real minutes, with no cap
+  const sec=ms/1000;if(sec<60)return;const g=Math.floor(sec*AWAY);if(g<1)return;
+  const before=netWorth(),age0=Math.floor(age()),day0=s.day,mark=s.log[0];catching=true;
+  const show=d=>modal(`<p class="kicker">Welcome back</p><h2>Catching up</h2><p>You were away for ${dur(sec)}. ${plainDays(d)} left to play out.</p>`);
+  if(g>=1440*150)show(Math.floor(g/1440));
+  catchUp(g,show,()=>{catching=false;const k=s.log.indexOf(mark),news=(k<0?s.log:s.log.slice(0,k)).filter(l=>l.k!=='info').slice(0,8),after=netWorth(),dn=after-before;
+    save();if(s.dead){closeModal();deathModal();return}
+    modal(`<p class="kicker">Welcome back</p><h2>While you were away</h2><p>You were gone for <b>${dur(sec)}</b>, and <b>${plainDays(s.day-day0)}</b> passed. ${esc(s.name)} is now ${Math.floor(age())}${Math.floor(age())>age0?` (was ${age0})`:''}.</p>
+    <table class="ledger"><tr><td>Net worth</td><td class="r num">${fmt(before)} → ${fmt(after)} ${sign(dn)}</td></tr><tr><td>Cash</td><td class="r num">${fmt(s.cash)}</td></tr><tr><td>Hustle 500</td><td class="r num">${idx().toFixed(0)} · ${mktLabel().toLowerCase()}</td></tr></table>
+    ${news.length?`<h3 style="margin-top:var(--space-sm)">What happened</h3><div class="awaylog">${news.map(l=>`<div class="aw ${l.k}">${l.t}</div>`).join('')}</div>`:''}
+    <button class="pri" data-a="close" style="margin-top:var(--space-sm)">Back to it</button>`);render()});
+}
+const plainDays=d=>d<60?`${d} day${d===1?'':'s'}`:d<730?`${Math.round(d/30.4)} months`:`${(d/365).toFixed(1)} years`;
+const dur=sec=>sec<3600?`${Math.round(sec/60)} minutes`:sec<172800?`${Math.floor(sec/3600)}h ${Math.round(sec%3600/60)}m`:`${Math.round(sec/86400)} days`;
 
 // ---------- actions ----------
 const ACT={
@@ -919,7 +936,7 @@ const ACT={
   howto:()=>{helpOpen[tab]=!helpOpen[tab]},
   showall:()=>{showAll[tab]=!showAll[tab]},
   pmore:x=>{openP=openP===+x?null:+x},
-  guide:()=>{if(tour<0){tourSpeed=speed||lastSpeed||2;speed=0}tour=0;ACT.tab(TOUR[0].tab);tourJump=true},
+  guide:()=>{if(tour<0){tourSpeed=speed||lastSpeed||1;speed=0}tour=0;ACT.tab(TOUR[0].tab);tourJump=true},
   tnext:()=>{if(tour>=TOUR.length-1)return ACT.tend();tour++;ACT.tab(TOUR[tour].tab);tourJump=true},
   tback:()=>{if(tour>0){tour--;ACT.tab(TOUR[tour].tab);tourJump=true}},
   tend:()=>{if(tour<0)return;tour=-1;s.tour=1;speed=tourSpeed;coach()},
@@ -1041,7 +1058,7 @@ function startModal(h={}){
   heir=h;
   const fam=h.fam?.length?` ${h.fam.map(p=>`${esc(p.n)} (${p.role==='parent'?'your parent':'your sibling'})`).join(', ').replace(/, ([^,]*)$/,' and $1')} ${h.fam.length>1?'are':'is'} still around.`:'';
   modal(`<p class="kicker">${h.gen?`Generation ${h.gen}`:'The Hustle'}</p><h2>${h.kid?`${esc(h.kid)} takes over`:h.gen?'The family business continues':'You just turned eighteen'}</h2>
-  <p>${h.kid?`You are ${esc(h.last)}'s kid, starting at ${Math.floor(h.age)}. You inherit <b class="num">${fmt(h.inherit)}</b> and a permanent <b>+${(h.gen-1)*25}%</b> business income bonus.${fam}`:h.gen?`With no children, a relative inherits <b class="num">${fmt(h.inherit)}</b> and a permanent <b>+${(h.gen-1)*25}%</b> business income bonus.`:'Work, study, open businesses, trade stocks and build a following. Decisions will land on your desk along the way. A day lasts 12 minutes, and the clock keeps running. You can speed it up.'}</p>
+  <p>${h.kid?`You are ${esc(h.last)}'s kid, starting at ${Math.floor(h.age)}. You inherit <b class="num">${fmt(h.inherit)}</b> and a permanent <b>+${(h.gen-1)*25}%</b> business income bonus.${fam}`:h.gen?`With no children, a relative inherits <b class="num">${fmt(h.inherit)}</b> and a permanent <b>+${(h.gen-1)*25}%</b> business income bonus.`:'Work, study, open businesses, trade stocks and build a following. Decisions will land on your desk along the way. Time flies while you’re idle, slows down while you play, and keeps passing when you’re away.'}</p>
   <label>Your name<input id="nm" maxlength="20" value="${h.kid?esc(h.kid):h.last?esc(h.last.split(' ')[0])+' Jr.':pick(NAMES)}"></label>
   <label>Pick your start</label>
   <div class="bgs">${Object.entries(BG).map(([k,b])=>`<button data-a="begin" data-x="${k}"><b>${b.n}</b><small>${b.d}</small></button>`).join('')}</div>`);
@@ -1411,7 +1428,7 @@ const GROUPS=[['',['dash']],['You',['life','work','people','school']],['Money',[
 const BAR=[['Home',['dash'],'home'],['Life',['life','work','people','school'],'user'],['Money',['biz','stock','crypto','home'],'chart'],['Spend',['garage','shop'],'bag'],['Fun',['chirp','casino'],'dice']];
 const KEYTABS=['dash','life','work','people','school','biz','stock','crypto','home','garage'];
 const TOUR=[
- {tab:'dash',t:'Welcome to The Hustle',x:'A day of your life lasts 12 minutes of real time, and the clock keeps running while you play. The buttons at the top right speed it up to as fast as a second a day. The game is paused while this guide is open. The ? button replays it, and holds settings and keyboard shortcuts.',hi:['#guideBtn']},
+ {tab:'dash',t:'Welcome to The Hustle',x:'Time runs on Auto: a day passes in about 5 seconds while you’re idle, slows to 30 seconds while you’re playing, and slows further while you trade on Markets. Fast skips ahead at a second a day. Time keeps passing while the game is closed, at a day every 15 minutes. The game is paused while this guide is open. The ? button replays it, and holds settings and keyboard shortcuts.',hi:['#guideBtn']},
  {tab:'dash',t:'Your numbers',x:'The top bar shows your cash, net worth, what you earn each day, and your age. Pause or speed up time with the buttons on the right.',hi:['.ticker','#speed']},
  {tab:'dash',t:'Needs you',x:'Home lists everything that needs your attention: decisions, money waiting to collect, and warnings. A decision left alone for 30 days decides itself.',hi:['.needs']},
  {tab:'dash',t:'Quick actions',x:'Gigs pay a little cash right away. Activities raise your health, happiness, smarts and looks, and each one has a cooldown.',hi:['.quick']},
@@ -1463,7 +1480,8 @@ function hdr(){
 function render(){
   if(!s)return;hdr();
   document.body.classList.toggle('wide',!['dash','life'].includes(tab));
-  $('#speed').innerHTML=SPEEDS.map(([v,l,a])=>`<button class="${speed===v?'on':''}" data-a="spd" data-x="${v}" aria-label="${a}" title="${a}">${v?l:ICON.pause}</button>`).join('');
+  const pc=paceNow(),pl={idle:'Auto',active:'Auto · slow',trade:'Auto · trade'}[pc]||'Auto';
+  $('#speed').innerHTML=[[0,ICON.pause,'Pause'],[1,pl,PACE_TXT[pc==='fast'?'idle':pc]],[2,'Fast',PACE_TXT.fast]].map(([v,l,a])=>`<button class="${speed===v?'on':''}" data-a="spd" data-x="${v}" aria-label="${a}" title="${a}">${l}</button>`).join('');
   $('#nav').innerHTML=railHtml();$('#tabbar').innerHTML=barHtml();
   const keep=[...$$('#view [data-keep]')].map(e=>[e.dataset.keep,e.scrollTop]); // inner scroll boxes survive the rebuild
   $('#view').innerHTML=subtabs()+VIEWS[tab]();
@@ -1520,17 +1538,19 @@ document.addEventListener('keydown',e=>{ // 1–0 screens, Space pause, C collec
   if(e.key==='?'){ACT.guide();render()}
   else if(e.key==='Escape'&&tour>=0){ACT.tend();render()}
   else if(k>=0){ACT.tab(KEYTABS[k]);render()}
-  else if(e.key===' '&&!e.target.closest?.('button,tr,a')){e.preventDefault();ACT.spd(speed?0:lastSpeed||2);render()}
+  else if(e.key===' '&&!e.target.closest?.('button,tr,a')){e.preventDefault();ACT.spd(speed?0:lastSpeed||1);render()}
   else if(e.key==='c'||e.key==='C'){ACT.colAll();render()}
 });
 document.addEventListener('keydown',e=>{const r=e.target.closest?.('tr[data-a]');if(r&&(e.key==='Enter'||e.key===' ')){e.preventDefault();r.click()}});
+for(const ev of ['pointerdown','keydown','wheel','input','touchstart'])addEventListener(ev,()=>lastAct=performance.now(),{passive:true,capture:true}); // what counts as playing
+addEventListener('pointermove',e=>{if(e.target.id==='tchart'||e.target.id==='chart')lastAct=performance.now()},{passive:true}); // studying a chart counts too
 addEventListener('pointerdown',()=>holding=true);
 addEventListener('pointerup',()=>holding=false);addEventListener('pointercancel',()=>holding=false);
 let last=performance.now(),acc=0;
 setInterval(()=>{
   const now=performance.now(),dt=now-last;last=now;
-  if(!s||s.dead||!speed||document.hidden||!$('#modal').hidden)return; // decisions & dialogs pause time
-  acc=Math.min(acc+dt*speed/1000,2880);let n=0;
+  if(!s||s.dead||!speed||catching||document.hidden||!$('#modal').hidden)return; // decisions & dialogs pause time
+  acc=Math.min(acc+dt*PACE[paceNow()]/1000,2880);let n=0;
   while(acc>=1){acc--;minute();n++;if(s.dead)break}
   if(n){if(holding||document.activeElement?.id==='opx')hdr();else render()} // ponytail: skip DOM rebuild mid-click so buttons don't vanish under the cursor
 },100);
@@ -1618,6 +1638,11 @@ function selfTest(){ // open with ?test=1 — never touches your real save
   const eq=s.px.MSFY,e0=eq.eps;eq.er=s.day;events();ok(eq.eps!==e0&&eq.er>s.day&&eq.last,'earnings report');
   const dk=STOCKS.find(k=>k.div),dq=s.px[dk.t];s.port[dk.t]={sh:1000,cost:1};const dc=s.cash,dp=dq.p;dq.nd=s.day;events();ok(s.cash>dc&&dq.p<dp&&dq.nd>s.day,'ex-dividend pays and drops the price');delete s.port[dk.t];
   newGame('Long','street');const ix0=idx();for(let d=0;d<365*40;d++){s.day=d;marketDay(1)}const ar=Math.log(idx()/ix0)/40;ok(ar>-.03&&ar<.18&&fear()>5&&fear()<200,'index returns '+(ar*100).toFixed(1)+'% a year');
+  newGame('Pace','street');const sp0=speed,tb0=tab;speed=1;lastAct=-1e9;tab='dash';ok(paceNow()==='idle'&&PACE.idle===288,'idle: 5 seconds a day');lastAct=performance.now();ok(paceNow()==='active','playing slows time');
+  s.day=nextTrading(s.day);s.min=600;tab='stock';ok(paceNow()==='trade','trading pace on Markets');s.min=1000;ok(paceNow()==='active','closed market, normal play pace');speed=2;ok(paceNow()==='fast','fast');speed=sp0;tab=tb0;lastAct=-1e9;
+  s.min=480;const aw0=s.day,mk2=s.px.NOVA.k.at(-1);let sess=0;for(let d=aw0;d<aw0+32;d++)sess+=tradingDay(d)?1:0;let fin=false;catchUp(Math.floor(8*3600*AWAY),null,()=>fin=true);
+  ok(fin&&s.day===aw0+32&&s.min===480&&s.px.NOVA.k.length-1-s.px.NOVA.k.indexOf(mk2)===sess,'8 hours away plays out a month, one bar per session');
+  offline(8*36e5);ok(!catching&&$('#mbox').innerHTML.includes('While you were away'),'welcome-back summary');closeModal();
   newGame('Goal','street');s.cash=2e6;checkGoals();ok(s.goals.nw1&&s.goals.nw2&&!s.goals.nw3,'goals unlock');const gn=Object.keys(s.goals).length;checkGoals();ok(Object.keys(s.goals).length===gn,'goals unlock once');delete s.goals;upgrade();ok(s.goals.nw2&&s.log[0].t.includes('already reached'),'old saves backfill goals quietly');
   tab='dash';ok(VIEWS.dash().includes('Goals'),'goals on home');goalsModal();
   const sp2=meet('spouse',70),k1=addChild(),k2=addChild(),k3=addChild();k1.b=s.day-40*365;k2.b=s.day-30*365;k3.b=s.day-5*365;k1.rel=90;
