@@ -198,7 +198,8 @@ const GAMES=[
  {id:'coin',n:'Coin flip',edge:'2%',d:'Heads or tails. A right call pays 1.96×.'},
  {id:'slot',n:'Slots',edge:'about 8%',d:'Three reels. Three 7s pay 150×.'},
 ];
-const TF={'1W':7,'1M':30,'3M':90,'All':240};
+const TF={'1W':5,'1M':21,'3M':63,'All':240}; // trading days
+const SPEEDS=[[0,'','Pause'],[2,'12m','A day lasts 12 minutes'],[24,'1m','A day lasts 1 minute'],[144,'10s','A day lasts 10 seconds'],[1440,'1s','A day lasts 1 second']]; // game minutes per real second
 const RBETS=[['red','Red'],['black','Black'],['odd','Odd'],['even','Even'],['low','1–18'],['high','19–36'],['d1','1st 12'],['d2','2nd 12'],['d3','3rd 12']];
 const GM=Object.fromEntries(GAMES.map(g=>[g.id,g]));
 const EM=Object.fromEntries,JM=EM(JOBS.map(j=>[j.id,j])),BM=EM(BIZ.map(b=>[b.id,b])),SK=EM(STOCKS.map(k=>[k.t,k])),SM=EM(SHOP.map(i=>[i.id,i])),AM=EM(ACTS.map(a=>[a.id,a])),PM=EM(PROPS.map(p=>[p.id,p])),CM=EM(CARS.map(c=>[c.id,c]));
@@ -349,8 +350,8 @@ const EVM=EM(EV.map(e=>[e.id,e]));
 
 // ---------- state ----------
 const SAVE='hustle-v1',GROW=1.13,CAP=10,MILES=[10,25,50,100,150,200,300,400,500];
-let helpOpen={},showAll={},openP=null,tour=-1,tourSpeed=1,tourJump=false,enr=null,iv=null,bmode='1',lastSpeed=1,lastIn=[],cg=null,tf='3M',cmode='candle',hov=null,ot={side:'buy',qty:10}; // screen state, not saved
-let s=null,tab='dash',sel='NOVA',csel='SATS',speed=1,holding=false,wiped=false,heir={},hiddenAt=0;
+let helpOpen={},showAll={},openP=null,tour=-1,tourSpeed=1,tourJump=false,enr=null,iv=null,bmode='1',lastSpeed=2,lastIn=[],cg=null,tf='3M',cmode='candle',hov=null,ot={side:'buy',qty:10}; // screen state, not saved
+let s=null,tab='dash',sel='NOVA',csel='SATS',speed=2,holding=false,wiped=false,heir={},hiddenAt=0;
 const age=()=>s.startAge+s.day/365;
 const add=(k,v)=>s.st[k]=clamp(s.st[k]+v,0,100);
 const job=()=>s.job&&JM[s.job];
@@ -426,6 +427,9 @@ function upgrade(){ // bring older saves up to date
   if(!s.people){const r=s.rel,k=s.kids||0;delete s.rel;delete s.kids;s.people=[];makeFamily();if(r)meet(r===2?'spouse':'date',65);for(let i=0;i<k;i++)addChild().b=s.day-rint(1,12)*365;
     s.xp={};if(s.job)s.xp[JM[s.job].fld]=s.jobDays;s.perf=55;s.raise=0;s.pension=0}
   if(!s.goals){s.goals={};checkGoals(1)}
+  s.min??=480;
+  for(const k of STOCKS){const q=s.px[k.t];if(q.k)continue; // daily candles used to be drawn from closes alone
+    q.k=q.h.map((c,i)=>{const o=i?q.h[i-1]:c;return [o,Math.max(o,c)*(1+.005*hsh(i,1)),Math.min(o,c)*(1-.005*hsh(i,2))]});[q.op,q.hi,q.lo]=q.k.at(-1)}
 }
 function flows(){const f={job:(s.job?jobPay():0)+(s.pension||0),biz:0,pend:0,spon:sponsor(),exp:expenses(),rent:s.props.reduce((t,p)=>t+rentOf(p),0),mort:s.props.reduce((t,p)=>t+(p.loan>0?p.pay:0),0)+loanPay()};for(const b of BIZ){const o=s.biz[b.id];if(o?.n)f[o.mgr?'biz':'pend']+=bizInc(b,o)}return f}
 const pfmt=n=>n>=1?fmt(n):'$'+(n<1e-6?n.toExponential(1):n.toPrecision(3));
@@ -457,7 +461,7 @@ function cryptoDay(quiet){
 const rc=n=>n===0?'g':RED.has(n)?'red':'blk';
 const rlMult=(k,n)=>k[0]==='n'?(+k.slice(1)===n?36:0):n===0?0:({red:RED.has(n),black:!RED.has(n),odd:n%2===1,even:n%2===0,low:n<=18,high:n>18}[k]?2:k[0]==='d'&&Math.ceil(n/12)===+k[1]?3:0);
 const hsh=(a,b)=>{const x=Math.sin(a*12.9898+b*78.233)*43758.5453;return x-Math.floor(x)}; // stable pseudo-random per day
-const volAt=(k,i)=>{const h=s.px[k.t].h,r=i?Math.abs(h[i]/h[i-1]-1):0;return k.sh*.004*(1+40*r)*(.6+.8*hsh(s.day-h.length+1+i,k.t.length))};
+const volAt=(k,i)=>{const h=s.px[k.t].h,r=i?Math.abs(h[i]/h[i-1]-1):0,part=i===h.length-1&&mktOpen()?(s.min-OPEN+1)/SESS:1;return k.sh*.004*(1+40*r)*(.6+.8*hsh(s.day-h.length+1+i,k.t.length))*part};
 function hv(h){let t=0,a=0;for(const c of h){const r=c>>2;t+=Math.min(r,10);if(r===1)a++}return a&&t+10<=21?t+10:t}
 function drawCard(){const z=s.cz;if(!z.shoe||z.shoe.length<52){z.shoe=[];for(let d=0;d<6;d++)for(let c=4;c<56;c++)z.shoe.push(c);for(let i=z.shoe.length-1;i>0;i--){const j=Math.floor(R()*(i+1));[z.shoe[i],z.shoe[j]]=[z.shoe[j],z.shoe[i]]}}return z.shoe.pop()}
 function slotSpin(){const W=SLOT.reduce((t,x)=>t+x[1],0),r=[0,0,0].map(()=>{let k=R()*W;for(const x of SLOT)if((k-=x[1])<0)return x[0];return SLOT[0][0]}),[a,b,c]=r;
@@ -479,11 +483,11 @@ function newGame(name,bg,h={}){
   const b=BG[bg];
   s={v:1,name,handle:'@'+(name.toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,15)||'you'),day:0,startAge:18,cash:b.cash+(h.inherit||0),st:{...b.st},edu:b.edu||0,study:null,
      job:b.job||null,jobDays:0,rank:0,biz:{},port:{},px:{},mkt:{bull:true},fol:b.fol||0,feed:[],own:{},people:[],degs:b.edu?[{p:'dip',sc:'cc',mj:'Computer science',hon:false}]:[],debt:0,xp:{},perf:50,raise:0,pension:0,wallet:{},cz:{chip:100,net:0,played:0,rh:[],ban:0},props:[],cars:[],home:null,re:{idx:1,list:[],next:0},cd:{},inbox:[],later:[],log:[],pet:0,
-     gen:h.gen||1,boost:0,lastPost:0,dead:0,lastSeen:Date.now(),goals:{...h.goals}};
+     gen:h.gen||1,boost:0,lastPost:0,dead:0,lastSeen:Date.now(),goals:{...h.goals},min:480};
   s.legacy=1+.25*(s.gen-1);
   if(h.gen){s.st.sma=Math.round(s.st.sma*.7+h.sma*.3);s.st.loo=Math.round(s.st.loo*.7+h.loo*.3)} // a little of the family runs in the blood
   if(h.kid){s.startAge=h.age;add('hap',(h.rel-50)*.3)}
-  for(const k of STOCKS)s.px[k.t]={p:k.p,o:k.p,h:[k.p]};
+  for(const k of STOCKS)s.px[k.t]={p:k.p,o:k.p,op:k.p,hi:k.p,lo:k.p,h:[k.p],k:[[k.p,k.p,k.p]]};
   for(let i=0;i<239;i++)marketDay(1);
   initCrypto();relist();
   if(h.fam){for(const p of h.fam)s.people.push({...p,uid:uid(),met:0,c:{}});for(let i=rint(1,2);i>0;i--)meet('friend',rint(45,70),-s.startAge*365+rint(-2,2)*365)}else makeFamily();
@@ -492,7 +496,7 @@ function newGame(name,bg,h={}){
 }
 
 // ---------- simulation ----------
-function day(){
+function day(live){
   s.day++;const A=age(),f=flows();
   s.cash+=f.job+f.biz+f.spon+f.rent-f.exp-f.mort;
   if(s.debt>0){s.debt=Math.max(0,s.debt*(1+.06/365)-loanPay());if(s.debt<1){s.debt=0;log('Student loans paid off.','good')}}
@@ -517,7 +521,7 @@ function day(){
   s.fol+=shopSum('fame')+carSum('fame')+s.props.reduce((t,p)=>t+(PM[p.t].fame||0),0);if(s.day-s.lastPost>30)s.fol*=.999;
   for(const p of s.feed)if(p.l<p.tl)p.l+=Math.ceil((p.tl-p.l)*.35);
   if(R()<.3)npcChatter();
-  marketDay();cryptoDay();
+  marketDay(0,live);cryptoDay();
   if(s.day%91===0)dividends();
   if(s.day%7===0){(s.nwh??=[]).push(Math.round(netWorth()));if(s.nwh.length>104)s.nwh.shift()}
   s.later=s.later.filter(p=>p.d>s.day||(runLater(p),false));
@@ -526,22 +530,49 @@ function day(){
   const pd=s.st.hea<=0?1:A>60?Math.min(.5,((A-60)/30)**3*3)/365:0;
   if(R()<pd)die();else checkGoals();
 }
-function marketDay(quiet){
+// ---------- the clock: a day lasts 12 minutes at normal speed, and the stock market keeps real hours ----------
+// Stocks trade 9:30 to 4:00, Monday to Friday. Per-session drift and variance are scaled by 7/5 so a year returns what it did when every day traded.
+const OPEN=570,CLOSE=960,SESS=CLOSE-OPEN,WK=7/5,RW=Math.sqrt(WK),GAP=.3,WD=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const tradingDay=(d=s.day)=>d%7<5,mktOpen=()=>tradingDay()&&s.min>=OPEN&&s.min<CLOSE;
+const clock=m=>`${(Math.floor(m/60)+11)%12+1}:${String(m%60).padStart(2,'0')} ${m<720?'AM':'PM'}`;
+function nextOpen(){if(tradingDay()&&s.min<OPEN)return `at ${clock(OPEN)}`;let d=s.day+1;while(!tradingDay(d))d++;return d===s.day+1?`tomorrow at ${clock(OPEN)}`:`${WD[d%7]} at ${clock(OPEN)}`}
+function minute(){
+  if(++s.min>=1440){s.min=0;day(1);if(s.dead)return}
+  if(tradingDay()){if(s.min===OPEN)openBell();else if(s.min>OPEN&&s.min<=CLOSE)mtick()}
+}
+function marketDay(quiet,live){ // once per calendar day; live play moves prices minute by minute instead of here
   const M=s.mkt;
   if(R()<(M.bull?.003:.008)){M.bull=!M.bull;if(!quiet)chirp('@MarketWire','MarketWire',M.bull?'analysts call it: a new bull market has begun.':'stocks slide as recession fears grow. bear market territory.',1)}
-  const m=(M.bull?.0005:-.0008)+gauss()*.007,sec={};
-  for(const k of STOCKS){sec[k.sec]??=gauss()*.006;const q=s.px[k.t];q.o=q.p;q.p=Math.max(.01,q.p*Math.exp(k.mu-k.v*k.v/2+m*k.b+sec[k.sec]+k.v*gauss()));q.h.push(q.p);if(q.h.length>240)q.h.shift()}
-  if(quiet)return;
-  if(R()<.0006)crash();else if(R()<.05)news();
+  if(!live&&tradingDay())tradeDay(quiet);
 }
-function shock(t,p){const q=s.px[t];q.p=Math.max(.01,q.p*(1+p));q.h[q.h.length-1]=q.p}
+const drift=k=>k.mu*WK-(k.v*RW)**2/2+(s.mkt.bull?.0005:-.0008)*WK*k.b;
+function newBar(q){q.o=q.h.at(-1);q.h.push(q.p);q.k.push([q.p,q.p,q.p]);q.op=q.hi=q.lo=q.p;if(q.h.length>240){q.h.shift();q.k.shift()}}
+function mstep(w){ // one slice of a session carrying share w of the day's drift and variance
+  const f=RW*Math.sqrt(w),m=gauss()*.007*f,sec={};
+  for(const k of STOCKS){sec[k.sec]??=gauss()*.006*f;const q=s.px[k.t],b=q.k.at(-1);
+    q.p=Math.max(.01,q.p*Math.exp(drift(k)*w+m*k.b+sec[k.sec]+k.v*f*gauss()));q.hi=b[1]=Math.max(q.hi,q.p);q.lo=b[2]=Math.min(q.lo,q.p);q.h[q.h.length-1]=q.p}
+}
+function openBell(){ // the overnight share of the move lands as a gap at the open
+  for(const k of STOCKS)newBar(s.px[k.t]);mstep(GAP);
+  for(const k of STOCKS){const q=s.px[k.t];q.op=q.hi=q.lo=q.p;q.k[q.k.length-1]=[q.p,q.p,q.p]}
+}
+function mtick(){mstep((1-GAP)/SESS);if(R()<.0006*WK/SESS)crash();else if(R()<.05*WK/SESS)news()}
+function tradeDay(quiet){ // a whole session in one step, for price history and fast simulation
+  const m=gauss()*.007*RW,sec={};
+  for(const k of STOCKS){sec[k.sec]??=gauss()*.006*RW;const q=s.px[k.t],r=drift(k)+m*k.b+sec[k.sec]+k.v*RW*gauss(),op=q.p*Math.exp(r*GAP+.002*gauss());
+    newBar(q);q.p=Math.max(.01,q.p*Math.exp(r));q.h[q.h.length-1]=q.p;q.op=op;q.hi=Math.max(op,q.p)*(1+.005*R());q.lo=Math.min(op,q.p)*(1-.005*R());q.k[q.k.length-1]=[op,q.hi,q.lo]}
+  if(!quiet){if(R()<.0006*WK)crash();else if(R()<.05*WK)news()}
+}
+function shock(t,p,sess=true){ // outside the session a move only shifts where the next open starts
+  const q=s.px[t];q.p=Math.max(.01,q.p*(1+p));if(!sess)return;
+  const b=q.k.at(-1);q.h[q.h.length-1]=q.p;q.hi=b[1]=Math.max(q.hi,q.p);q.lo=b[2]=Math.min(q.lo,q.p)}
 function news(){const k=pick(STOCKS),up=R()<.55,p=(up?1:-1)*(.06+R()*.16);shock(k.t,p);chirp('@MarketWire','MarketWire',`$${k.t} ${up?'▲':'▼'} ${Math.abs(p*100).toFixed(0)}% — ${pick(up?GOOD:BAD).replace('{n}',k.n)}`,1)}
 function crash(){s.mkt.bull=false;s.re.idx*=.9;for(const c of s.cx.coins)if(!c.stable)c.p*=.7;for(const k of STOCKS)shock(k.t,-(.12+R()*.2));chirp('@MarketWire','MarketWire','FLASH CRASH: markets plunge across the board',1);log('The stock market crashed!','bad');toast('Market crash!')}
 function dividends(){let t=0;for(const k of STOCKS){const h=s.port[k.t];if(h&&k.div)t+=h.sh*s.px[k.t].p*k.div/4}if(t>0){s.cash+=t;log(`Dividends paid: ${fmt(t)}`,'good')}}
 function npcChatter(){const[h,n]=pick(NPC);chirp(h,n,s.fol>300&&R()<.15?pick(ABOUT).replace('{h}',s.handle):pick(CHAT))}
 function runLater(p){
   if(p.k==='cash'){s.cash+=p.v;log(`${p.m} ${fmt(p.v)}`,'good');toast(`${p.m} ${fmt(p.v)}`)}
-  else if(p.k==='shock'){shock(p.t,p.v);chirp('@MarketWire','MarketWire',`$${p.t} ${p.v>0?'rips':'tanks'} ${Math.round(Math.abs(p.v)*100)}% on rumors`,1)}
+  else if(p.k==='shock'){shock(p.t,p.v,mktOpen());chirp('@MarketWire','MarketWire',`$${p.t} ${p.v>0?'rips':'tanks'} ${Math.round(Math.abs(p.v)*100)}% on rumors`,1)}
   else{log(p.m,'bad');toast(p.m)}
 }
 function newEvent(){
@@ -603,8 +634,9 @@ function heirOf(k){
 }
 function offline(ms){
   const sec=Math.min(ms,8*36e5)/1000;if(sec<60)return;
-  let g=0;for(const b of BIZ){const o=s.biz[b.id];if(!o?.n)continue;const i=bizInc(b,o);if(o.mgr)g+=i;else o.pend=Math.min(i*CAP,o.pend+i*sec*.1)}
-  const earn=g*sec*.1;if(earn<1)return; // ponytail: offline = 10% of real-time managed income, no aging, 8h cap
+  const days=sec/720; // the days that would have passed at normal speed
+  let g=0;for(const b of BIZ){const o=s.biz[b.id];if(!o?.n)continue;const i=bizInc(b,o);if(o.mgr)g+=i;else o.pend=Math.min(i*CAP,o.pend+i*days)}
+  const earn=g*days;if(earn<1)return; // ponytail: managers earn at normal speed while you're away, but you don't age, 8h cap
   s.cash+=earn;log(`Your managers earned ${fmt(earn)} while you were away.`,'good');
   modal(`<h2>While you were out</h2><p>You were away for <b>${dur(sec)}</b>. Your managers kept the lights on and earned <b class="num">${fmt(earn)}</b>.</p><button class="pri" data-a="close">Nice</button>`);
 }
@@ -638,7 +670,7 @@ const ACT={
   howto:()=>{helpOpen[tab]=!helpOpen[tab]},
   showall:()=>{showAll[tab]=!showAll[tab]},
   pmore:x=>{openP=openP===+x?null:+x},
-  guide:()=>{if(tour<0){tourSpeed=speed||lastSpeed||1;speed=0}tour=0;ACT.tab(TOUR[0].tab);tourJump=true},
+  guide:()=>{if(tour<0){tourSpeed=speed||lastSpeed||2;speed=0}tour=0;ACT.tab(TOUR[0].tab);tourJump=true},
   tnext:()=>{if(tour>=TOUR.length-1)return ACT.tend();tour++;ACT.tab(TOUR[tour].tab);tourJump=true},
   tback:()=>{if(tour>0){tour--;ACT.tab(TOUR[tour].tab);tourJump=true}},
   tend:()=>{if(tour<0)return;tour=-1;s.tour=1;speed=tourSpeed;coach()},
@@ -699,7 +731,7 @@ const ACT={
   side:x=>{ot.side=x},
   qty:x=>{const st=10**Math.max(0,Math.floor(Math.log10(Math.max(1,ot.qty-(x==='-'?1:0)))));ot.qty=Math.max(1,ot.qty+(x==='+'?st:-st))},
   qset:x=>{const p=s.px[sel].p,h=s.port[sel];ot.qty=x==='max'?Math.max(1,ot.side==='buy'?Math.floor(s.cash/p):h?.sh||1):+x},
-  order:()=>{const n=ot.qty,p=s.px[sel].p;if(ot.side==='buy'){if(n*p>s.cash)return;ACT.buy(sel,n)}else{const h=s.port[sel];if(!h||h.sh<n)return;ACT.sell(sel,n)}toast(`Filled: ${ot.side==='buy'?'bought':'sold'} ${big(n)} ${sel} at ${fmt(p)}`)},
+  order:()=>{if(!mktOpen())return;const n=ot.qty,p=s.px[sel].p;if(ot.side==='buy'){if(n*p>s.cash)return;ACT.buy(sel,n)}else{const h=s.port[sel];if(!h||h.sh<n)return;ACT.sell(sel,n)}toast(`Filled: ${ot.side==='buy'?'bought':'sold'} ${big(n)} ${sel} at ${fmt(p)}`)},
   deal:()=>{const b=stake();if(!b)return;const z=s.cz;z.bj={p:[drawCard(),drawCard()],d:[drawCard(),drawCard()],bet:b,done:0,msg:''};if(hv(z.bj.p)===21||hv(z.bj.d)===21)bjEnd()},
   hit:()=>{const b=s.cz.bj;if(!b||b.done)return;b.p.push(drawCard());if(hv(b.p)>=21)bjEnd()},
   stand:()=>{const b=s.cz.bj;if(b&&!b.done)bjEnd()},
@@ -749,7 +781,7 @@ function startModal(h={}){
   heir=h;
   const fam=h.fam?.length?` ${h.fam.map(p=>`${esc(p.n)} (${p.role==='parent'?'your parent':'your sibling'})`).join(', ').replace(/, ([^,]*)$/,' and $1')} ${h.fam.length>1?'are':'is'} still around.`:'';
   modal(`<p class="kicker">${h.gen?`Generation ${h.gen}`:'The Hustle'}</p><h2>${h.kid?`${esc(h.kid)} takes over`:h.gen?'The family business continues':'You just turned eighteen'}</h2>
-  <p>${h.kid?`You are ${esc(h.last)}'s kid, starting at ${Math.floor(h.age)}. You inherit <b class="num">${fmt(h.inherit)}</b> and a permanent <b>+${(h.gen-1)*25}%</b> business income bonus.${fam}`:h.gen?`With no children, a relative inherits <b class="num">${fmt(h.inherit)}</b> and a permanent <b>+${(h.gen-1)*25}%</b> business income bonus.`:'Work, study, open businesses, trade stocks and build a following. Decisions will land on your desk along the way. One second is one day, and the clock keeps running.'}</p>
+  <p>${h.kid?`You are ${esc(h.last)}'s kid, starting at ${Math.floor(h.age)}. You inherit <b class="num">${fmt(h.inherit)}</b> and a permanent <b>+${(h.gen-1)*25}%</b> business income bonus.${fam}`:h.gen?`With no children, a relative inherits <b class="num">${fmt(h.inherit)}</b> and a permanent <b>+${(h.gen-1)*25}%</b> business income bonus.`:'Work, study, open businesses, trade stocks and build a following. Decisions will land on your desk along the way. A day lasts 12 minutes, and the clock keeps running. You can speed it up.'}</p>
   <label>Your name<input id="nm" maxlength="20" value="${h.kid?esc(h.kid):h.last?esc(h.last.split(' ')[0])+' Jr.':pick(NAMES)}"></label>
   <label>Pick your start</label>
   <div class="bgs">${Object.entries(BG).map(([k,b])=>`<button data-a="begin" data-x="${k}"><b>${b.n}</b><small>${b.d}</small></button>`).join('')}</div>`);
@@ -938,12 +970,13 @@ stock(){
   const k=SK[sel],q=s.px[sel],h=s.port[sel],M=s.mkt,d=q.p/q.o-1,H=q.h,buy=ot.side==='buy';
   let val=0,cost=0,dpl=0;for(const x in s.port){const o=s.port[x],y=s.px[x];val+=o.sh*y.p;cost+=o.cost;dpl+=o.sh*(y.p-y.o)}
   const idx=STOCKS.reduce((t,k)=>t+s.px[k.t].p/k.p,0)/STOCKS.length*1000,idxd=STOCKS.reduce((t,k)=>t+s.px[k.t].p/s.px[k.t].o,0)/STOCKS.length-1;
-  const dh=Math.max(q.o,q.p)*(1+.006*hsh(s.day,3)),dl=Math.min(q.o,q.p)*(1-.006*hsh(s.day,5));
-  const ok=buy?ot.qty*q.p<=s.cash:h&&h.sh>=ot.qty,news=s.feed.filter(p=>p.h==='@MarketWire'&&p.x.includes('$'+sel)).slice(0,5);
+  const live=mktOpen();
+  const ok=live&&(buy?ot.qty*q.p<=s.cash:h&&h.sh>=ot.qty),news=s.feed.filter(p=>p.h==='@MarketWire'&&p.x.includes('$'+sel)).slice(0,5);
   const st=(l,v)=>`<div><span>${l}</span><b class="num">${v}</b></div>`,pl=(n)=>`<span class="num ${n>=0?'up':'dn'}">${n>=0?'+':''}${fmt(n)}</span>`;
   return `<div class="tbar">
     <div><small>Hustle 500</small><b class="num">${idx.toFixed(2)}</b> <span class="num ${idxd>=0?'up':'dn'}">${pct(idxd)}</span></div>
     <div><small>Market</small><b class="${M.bull?'up':'dn'}">${M.bull?'Bull':'Bear'}</b></div>
+    <div><small>Session</small><b class="${live?'up':''}">${live?'Open':'Closed'}</b> <span class="mut sess">${live?`until ${clock(CLOSE)}`:`opens ${nextOpen()}`}</span></div>
     <div><small>Total assets</small><b class="num">${fmt(val+s.cash)}</b></div>
     <div><small>Market value</small><b class="num">${fmt(val)}</b></div>
     <div><small>Day P/L</small><b>${pl(dpl)}</b></div>
@@ -956,7 +989,7 @@ stock(){
    <section>
     <div class="qhead"><div><h2 class="qt">${k.t} <span class="mut">${k.n}</span></h2>
       <p><span class="price ${d>=0?'up':'dn'}">${fmt(q.p)}</span> <span class="num ${d>=0?'up':'dn'}">${d>=0?'+':''}${fmt(q.p-q.o)} (${pct(d)})</span></p></div><span class="chip">${k.sec}</span></div>
-    <div class="stats4">${st('Open',fmt(q.o))}${st('High',fmt(dh))}${st('Low',fmt(dl))}${st('Prev close',fmt(q.o))}${st('240d high',fmt(Math.max(...H)))}${st('240d low',fmt(Math.min(...H)))}${st('Volume',big(volAt(k,H.length-1)))}${st('Mkt cap',fmt(q.p*k.sh))}${st('P/E',k.pe?(k.pe*q.p/k.p).toFixed(1):'—')}${st('Div yield',k.div?(k.div*100).toFixed(1)+'%':'—')}</div>
+    <div class="stats4">${st('Open',fmt(q.op))}${st('High',fmt(q.hi))}${st('Low',fmt(q.lo))}${st('Prev close',fmt(q.o))}${st('240d high',fmt(Math.max(...H)))}${st('240d low',fmt(Math.min(...H)))}${st('Volume',big(volAt(k,H.length-1)))}${st('Mkt cap',fmt(q.p*k.sh))}${st('P/E',k.pe?(k.pe*q.p/k.p).toFixed(1):'—')}${st('Div yield',k.div?(k.div*100).toFixed(1)+'%':'—')}</div>
     <div class="tfbar">${Object.keys(TF).map(x=>`<button class="${tf===x?'on':''}" data-a="tf" data-x="${x}">${x}</button>`).join('')}<span class="sp"></span><button class="${cmode==='line'?'on':''}" data-a="cmode" data-x="line">Line</button><button class="${cmode==='candle'?'on':''}" data-a="cmode" data-x="candle">Candles</button></div>
     <canvas id="tchart"></canvas>
     <h3>News</h3>
@@ -969,7 +1002,7 @@ stock(){
     <div class="presets">${['1','10','100'].map(v=>`<button data-a="qset" data-x="${v}">${v}</button>`).join('')}<button data-a="qset" data-x="max">Max</button></div>
     <dl><dt>Estimated ${buy?'cost':'proceeds'}</dt><dd class="num">${fmt(ot.qty*q.p)}</dd><dt>${buy?'Buying power':'Shares held'}</dt><dd class="num">${buy?fmt(s.cash):big(h?.sh||0)}</dd>${h?`<dt>Your avg cost</dt><dd class="num">${fmt(h.cost/h.sh)}</dd>`:''}</dl>
     <button class="place ${buy?'buy':'sell'}" data-a="order" ${ok?'':'disabled'}>${buy?'Buy':'Sell'} ${big(ot.qty)} ${k.t}</button>
-    ${ok?'':`<p class="mut" style="font-size:var(--text-xs)">${buy?'Not enough buying power.':"You don't hold that many shares."}</p>`}
+    ${ok?'':`<p class="mut" style="font-size:var(--text-xs)">${!live?`The market is closed. It opens ${nextOpen()}.`:buy?'Not enough buying power.':"You don't hold that many shares."}</p>`}
    </div>
   </div>
   <h3>Positions</h3>
@@ -1093,7 +1126,7 @@ const GROUPS=[['',['dash']],['You',['life','work','people','school']],['Money',[
 const BAR=[['Home',['dash'],'home'],['Life',['life','work','people','school'],'user'],['Money',['biz','stock','crypto','home'],'chart'],['Spend',['garage','shop'],'bag'],['Fun',['chirp','casino'],'dice']];
 const KEYTABS=['dash','life','work','people','school','biz','stock','crypto','home','garage'];
 const TOUR=[
- {tab:'dash',t:'Welcome to The Hustle',x:'One second of real time is one day of your life, and the clock keeps running while you play. The game is paused while this guide is open. The ? button replays it, and holds settings and keyboard shortcuts.',hi:['#guideBtn']},
+ {tab:'dash',t:'Welcome to The Hustle',x:'A day of your life lasts 12 minutes of real time, and the clock keeps running while you play. The buttons at the top right speed it up to as fast as a second a day. The game is paused while this guide is open. The ? button replays it, and holds settings and keyboard shortcuts.',hi:['#guideBtn']},
  {tab:'dash',t:'Your numbers',x:'The top bar shows your cash, net worth, what you earn each day, and your age. Pause or speed up time with the buttons on the right.',hi:['.ticker','#speed']},
  {tab:'dash',t:'Needs you',x:'Home lists everything that needs your attention: decisions, money waiting to collect, and warnings. A decision left alone for 30 days decides itself.',hi:['.needs']},
  {tab:'dash',t:'Quick actions',x:'Gigs pay a little cash right away. Activities raise your health, happiness, smarts and looks, and each one has a cooldown.',hi:['.quick']},
@@ -1101,7 +1134,7 @@ const TOUR=[
  {tab:'school',t:'Education',x:'Degrees and certificates unlock better jobs. Better schools cost more and are harder to get into, but they impress employers. Student loans pay themselves off over time.',hi:['#view .ledger']},
  {tab:'people',t:'People',x:'Call, hang out and give gifts to stay close. Close relationships make you happier every day. Neglected ones fade, and a neglected partner may leave.',hi:['.plist']},
  {tab:'biz',t:'Businesses',x:'This is how you get rich. Buy a Lemonade Stand first. Tills fill up until you collect them. Hire a manager and the money comes in on its own, even when you are away.',hi:['.blist','#collectBtn']},
- {tab:'stock',t:'Grow your money',x:'Markets, Crypto and Property are other places to put spare cash. Prices move every day, so they can fall as well as rise.',hi:['#nav [data-x="stock"]','#nav [data-x="crypto"]','#nav [data-x="home"]','#tabbar [data-x="2"]']},
+ {tab:'stock',t:'Grow your money',x:'Markets, Crypto and Property are other places to put spare cash. Stocks trade from 9:30 to 4:00 on weekdays, like a real exchange. Prices can fall as well as rise.',hi:['#nav [data-x="stock"]','#nav [data-x="crypto"]','#nav [data-x="home"]','#tabbar [data-x="2"]']},
  {tab:'dash',t:'Getting around',x:'The menu groups every screen, and on a phone it sits at the bottom. Keys 1 to 0 switch screens, Space pauses, and C collects every till. That is everything. Enjoy your life.',hi:['#nav','#tabbar']},
 ];
 function coach(){
@@ -1132,7 +1165,7 @@ const subtabs=()=>{const b=BAR.find(b=>b[1].includes(tab));return b&&b[1].length
 
 function hdr(){
   if(!s)return;const f=flows(),net=f.job+f.biz+f.pend+f.spon+f.rent-f.exp-f.mort,p=pendAll();
-  $('#dateline').textContent=`year ${Math.floor(s.day/365)+1}, day ${s.day%365+1}`;
+  $('#dateline').innerHTML=`<span class="clk">${WD[s.day%7]} ${clock(s.min)}</span><span class="yd"> · year ${Math.floor(s.day/365)+1}, day ${s.day%365+1}</span>`;
   $('#hCash').textContent=fmt(s.cash);$('#hCash').className=s.cash<0?'dn':'';
   $('#hNw').textContent=fmt(netWorth());
   $('#hInc').textContent=(net>=0?'+':'')+fmt(net);$('#hInc').className=net>=0?'up':'dn';
@@ -1145,7 +1178,7 @@ function hdr(){
 function render(){
   if(!s)return;hdr();
   document.body.classList.toggle('wide',!['dash','life'].includes(tab));
-  $('#speed').innerHTML=[[0,'Pause'],[1,'1×'],[2,'2×'],[5,'5×'],[10,'10×']].map(([v,l])=>`<button class="${speed===v?'on':''}" data-a="spd" data-x="${v}" ${v?'':'aria-label="Pause"'}>${v?l:ICON.pause}</button>`).join('');
+  $('#speed').innerHTML=SPEEDS.map(([v,l,a])=>`<button class="${speed===v?'on':''}" data-a="spd" data-x="${v}" aria-label="${a}" title="${a}">${v?l:ICON.pause}</button>`).join('');
   $('#nav').innerHTML=railHtml();$('#tabbar').innerHTML=barHtml();
   $('#view').innerHTML=subtabs()+VIEWS[tab]();
   if(tab==='stock')drawStock();
@@ -1155,14 +1188,14 @@ function render(){
 function drawStock(){
   const c=$('#tchart');if(!c)return;const dpr=devicePixelRatio||1,W=c.clientWidth,H=c.clientHeight;c.width=W*dpr;c.height=H*dpr;
   const T=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim(),g=c.getContext('2d');g.scale(dpr,dpr);
-  const k=SK[sel],all=s.px[sel].h,n=Math.min(TF[tf],all.length),st=all.length-n,grp=cmode==='candle'?Math.max(1,Math.ceil(n/60)):1,bars=[];
-  for(let i=0;i<n;i+=grp){const ix=Array.from({length:Math.min(grp,n-i)},(_,j)=>st+i+j),seg=ix.map(j=>all[j]),o=ix[0]?all[ix[0]-1]:seg[0],cl=seg.at(-1),day=s.day-all.length+1+ix[0];
-    bars.push({o,c:cl,hi:Math.max(o,...seg)*(1+.005*hsh(day,1)),lo:Math.min(o,...seg)*(1-.005*hsh(day,2)),v:ix.reduce((t,j)=>t+volAt(k,j),0),ago:all.length-1-ix.at(-1)})}
+  const k=SK[sel],all=s.px[sel].h,K=s.px[sel].k,n=Math.min(TF[tf],all.length),st=all.length-n,grp=cmode==='candle'?Math.max(1,Math.ceil(n/60)):1,bars=[],live=mktOpen();
+  for(let i=0;i<n;i+=grp){const ix=Array.from({length:Math.min(grp,n-i)},(_,j)=>st+i+j);
+    bars.push({o:K[ix[0]][0],c:all[ix.at(-1)],hi:Math.max(...ix.map(j=>K[j][1])),lo:Math.min(...ix.map(j=>K[j][2])),v:ix.reduce((t,j)=>t+volAt(k,j),0),ago:all.length-1-ix.at(-1)})}
   const AX=62,PW=W-AX,PH=H*.76,VT=PH+10,VH=H-VT-16,lo0=Math.min(...bars.map(b=>b.lo)),hi0=Math.max(...bars.map(b=>b.hi)),pad=(hi0-lo0||hi0*.02)*.06,lo=lo0-pad,hi=hi0+pad,vmax=Math.max(...bars.map(b=>b.v));
   const X=i=>(i+.5)*PW/bars.length,Y=v=>6+(hi-v)/(hi-lo)*(PH-6),up=T('--color-up'),dn=T('--color-down'),mono=T('--font-mono');
   g.font=`11px ${mono}`;g.strokeStyle=T('--color-rule');g.fillStyle=T('--color-ink-3');g.lineWidth=1;
   for(let j=0;j<=4;j++){const v=lo+(hi-lo)*j/4,y=Y(v);g.beginPath();g.moveTo(0,y);g.lineTo(PW,y);g.stroke();g.fillText(fmt(v),PW+6,y+4)}
-  g.fillText(`${n} days ago`,0,H-3);g.textAlign='right';g.fillText('Today',PW,H-3);g.textAlign='left';
+  g.fillText(`${n} sessions ago`,0,H-3);g.textAlign='right';g.fillText(live?'Now':'Last close',PW,H-3);g.textAlign='left';
   const rise=bars.at(-1).c>=bars[0].o;
   if(cmode==='line'){g.beginPath();bars.forEach((b,i)=>i?g.lineTo(X(i),Y(b.c)):g.moveTo(X(i),Y(b.c)));g.strokeStyle=rise?up:dn;g.lineWidth=1.6;g.lineJoin='round';g.stroke();
     g.lineTo(X(bars.length-1),PH);g.lineTo(X(0),PH);g.globalAlpha=.12;g.fillStyle=rise?up:dn;g.fill();g.globalAlpha=1}
@@ -1174,7 +1207,7 @@ function drawStock(){
   g.setLineDash([]);g.fillStyle=rise?up:dn;g.fillRect(PW+2,ly-9,AX-2,18);g.fillStyle=T('--color-paper');g.fillText(fmt(last),PW+6,ly+4);
   if(hov!=null&&hov<PW){const i=clamp(Math.floor(hov/PW*bars.length),0,bars.length-1),b=bars[i],x=X(i);
     g.strokeStyle=T('--color-ink-3');g.setLineDash([3,3]);g.beginPath();g.moveTo(x,0);g.lineTo(x,H-16);g.stroke();g.setLineDash([]);
-    const lines=[b.ago?`${b.ago} days ago`:'Today',`O ${fmt(b.o)}  H ${fmt(b.hi)}`,`L ${fmt(b.lo)}  C ${fmt(b.c)}`,`Vol ${big(b.v)}`],bx=x>PW/2?8:PW-200;
+    const lines=[b.ago?`${b.ago} session${b.ago>1?'s':''} ago`:live?'Today, trading':'Last session',`O ${fmt(b.o)}  H ${fmt(b.hi)}`,`L ${fmt(b.lo)}  C ${fmt(b.c)}`,`Vol ${big(b.v)}`],bx=x>PW/2?8:PW-200;
     g.fillStyle=T('--color-paper-2');g.fillRect(bx,8,192,lines.length*16+10);g.strokeStyle=T('--color-rule');g.strokeRect(bx,8,192,lines.length*16+10);
     g.fillStyle=T('--color-ink');lines.forEach((l,j)=>g.fillText(l,bx+8,26+j*16))}
 }
@@ -1199,7 +1232,7 @@ document.addEventListener('keydown',e=>{ // 1–0 screens, Space pause, C collec
   if(e.key==='?'){ACT.guide();render()}
   else if(e.key==='Escape'&&tour>=0){ACT.tend();render()}
   else if(k>=0){ACT.tab(KEYTABS[k]);render()}
-  else if(e.key===' '&&!e.target.closest?.('button,tr,a')){e.preventDefault();ACT.spd(speed?0:lastSpeed||1);render()}
+  else if(e.key===' '&&!e.target.closest?.('button,tr,a')){e.preventDefault();ACT.spd(speed?0:lastSpeed||2);render()}
   else if(e.key==='c'||e.key==='C'){ACT.colAll();render()}
 });
 document.addEventListener('keydown',e=>{const r=e.target.closest?.('tr[data-a]');if(r&&(e.key==='Enter'||e.key===' ')){e.preventDefault();r.click()}});
@@ -1209,8 +1242,8 @@ let last=performance.now(),acc=0;
 setInterval(()=>{
   const now=performance.now(),dt=now-last;last=now;
   if(!s||s.dead||!speed||document.hidden||!$('#modal').hidden)return; // decisions & dialogs pause time
-  acc=Math.min(acc+dt*speed/1000,20);let n=0;
-  while(acc>=1){acc--;day();n++;if(s.dead)break}
+  acc=Math.min(acc+dt*speed/1000,2880);let n=0;
+  while(acc>=1){acc--;minute();n++;if(s.dead)break}
   if(n){if(holding)hdr();else render()} // ponytail: skip DOM rebuild mid-click so buttons don't vanish under the cursor
 },100);
 function save(){if(!s||wiped)return;s.lastSeen=Date.now();try{localStorage.setItem(SAVE,JSON.stringify(s))}catch{}}
@@ -1255,10 +1288,21 @@ function selfTest(){ // open with ?test=1 — never touches your real save
   s.inbox=[{id:'lotto',d:s.day,a:0}];ok(needs().some(n=>n.k==='dec'),'decision shows in needs');ACT.pick('lotto','1');ok(!s.inbox.length,'inline decision');
   ok(plural('Car Wash')==='Car Washes'&&plural('Rocket Company')==='Rocket Companies'&&plural('Food Truck')==='Food Trucks','plurals');
   bmode='10';tab='biz';VIEWS.biz();bmode='1';for(const g of GAMES){cg=g.id;VIEWS.casino()}cg=null;
-  s.cash=1e6;sel='NOVA';ot={side:'buy',qty:7};const n0=s.port.NOVA?.sh||0;ACT.order();ok(s.port.NOVA.sh===n0+7,'order ticket buys');ot.side='sell';ot.qty=3;ACT.order();ok(s.port.NOVA.sh===n0+4,'order ticket sells');ot={side:'buy',qty:10};
+  s.day+=(7-s.day%7)%7;s.min=600;s.cash=1e6;sel='NOVA';ot={side:'buy',qty:7};const n0=s.port.NOVA?.sh||0;ACT.order();ok(s.port.NOVA.sh===n0+7,'order ticket buys');ot.side='sell';ot.qty=3;ACT.order();ok(s.port.NOVA.sh===n0+4,'order ticket sells');ot={side:'buy',qty:10};
   s.cz.chip=100;for(let i=0;i<20000;i++){ACT.dice(['under','over','seven'][i%3]);ACT.flip(i%2?'h':'t')}const dg=s.cz.g.dice,cf=s.cz.g.coin;
   ok(dg.n===20000&&cf.n===20000&&dg.net/2e6>-.08&&dg.net/2e6<.02&&cf.net/2e6>-.05&&cf.net/2e6<.01,'dice and coin edges');
   newGame('Old','street');delete s.re;delete s.cx;delete s.cz;delete s.people;delete s.degs;s.edu=2;s.study={lvl:3,left:50};s.rel=2;s.kids=2;s.own={apt:1,car:1,bike:1};s.port.MOON={sh:10,cost:12};upgrade();ok(partner()?.role==='spouse'&&kids().length===2&&!('rel' in s),'old relationships upgrade');ok(s.degs.length===2&&s.study.p==='ma','old education upgrade');ok(s.props.length===1&&s.cars.length===1&&s.own.bike&&homeP()&&s.wallet.MOON.u===10&&!s.port.MOON&&s.cz,'old saves upgrade');
+  newGame('Clock','street');delete s.min;for(const k of STOCKS){const x=s.px[k.t];delete x.k;delete x.op}upgrade();ok(s.min===480&&s.px.NOVA.k.length===s.px.NOVA.h.length&&s.px.NOVA.op>0,'old saves get a clock and candles');tab='stock';VIEWS.stock();
+  const q=s.px.NOVA,pc=q.h.at(-1),mk=q.k.at(-1);ok(s.day%7===0&&s.min===480&&!mktOpen(),'Monday 8 AM, market shut');
+  s.cash=1e6;s.min=500;ot={side:'buy',qty:5};ACT.order();ok(!s.port.NOVA,'no trading while closed');
+  s.min=480;for(let i=0;i<91;i++)minute();ok(mktOpen()&&q.o===pc&&q.k.at(-1)[0]===q.op&&q.k.at(-2)===mk,'the bell opens a new session');
+  for(let i=0;i<400;i++)minute();const c=q.p;ok(!mktOpen()&&q.h.at(-1)===c&&q.hi>=Math.max(q.op,c)&&q.lo<=Math.min(q.op,c),'the session closes with its high and low');
+  for(let i=0;i<600;i++)minute();ok(q.p===c&&s.day===1,'prices hold overnight');
+  for(let i=0;i<7*1440;i++)minute();ok(q.k.length-1-q.k.indexOf(mk)===6,'five sessions a week');
+  const sd=a=>{const r=[];for(let i=1;i<a.length;i++)r.push(Math.abs(Math.log(a[i]/a[i-1])));return r.sort((x,y)=>x-y)[r.length>>1]};
+  let lv=0,bk=0;for(const k of STOCKS){const x=s.px[k.t];x.p=k.p;x.h=[k.p];x.k=[[k.p,k.p,k.p]]}for(let i=0;i<1440*7*40;i++)minute();for(const k of STOCKS)lv+=sd(s.px[k.t].h);
+  for(const k of STOCKS){const x=s.px[k.t];x.h=[k.p];x.k=[[k.p,k.p,k.p]]}for(let i=0;i<200;i++)tradeDay(1);for(const k of STOCKS)bk+=sd(s.px[k.t].h);
+  ok(lv/bk>.8&&lv/bk<1.25,'live sessions move like whole-day steps '+(lv/bk).toFixed(2));
   newGame('Goal','street');s.cash=2e6;checkGoals();ok(s.goals.nw1&&s.goals.nw2&&!s.goals.nw3,'goals unlock');const gn=Object.keys(s.goals).length;checkGoals();ok(Object.keys(s.goals).length===gn,'goals unlock once');delete s.goals;upgrade();ok(s.goals.nw2&&s.log[0].t.includes('already reached'),'old saves backfill goals quietly');
   tab='dash';ok(VIEWS.dash().includes('Goals'),'goals on home');goalsModal();
   const sp2=meet('spouse',70),k1=addChild(),k2=addChild(),k3=addChild();k1.b=s.day-40*365;k2.b=s.day-30*365;k3.b=s.day-5*365;k1.rel=90;
