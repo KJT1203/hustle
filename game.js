@@ -1,5 +1,5 @@
 // ---------- helpers ----------
-const $=q=>document.querySelector(q);
+const $=q=>document.querySelector(q),$$=q=>document.querySelectorAll(q);
 const R=Math.random,rint=(a,b)=>a+Math.floor(R()*(b-a+1)),pick=a=>a[Math.floor(R()*a.length)],clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const gauss=()=>{let u=0,v=0;while(!u)u=R();while(!v)v=R();return Math.sqrt(-2*Math.log(u))*Math.cos(6.2832*v)};
 const U=['','K','M','B','T','Qa','Qi','Sx','Sp'];
@@ -109,6 +109,57 @@ const STOCKS=[
  {t:'LUXE',n:'Luxe Maison',sec:'Consumer',p:210,v:.02,mu:.0005,b:1,pe:27,sh:5e+08},
  {t:'MEDI',n:'MediCore',sec:'Health',p:95,v:.022,mu:.00055,b:.7,pe:22,sh:1.1e+09},
  {t:'BANC',n:'Banco Unido',sec:'Finance',p:60,v:.015,mu:.0003,b:1.1,div:.04,pe:11,sh:6e+09},
+ // big real-world names, lightly renamed: rough prices, share counts, volatility and dividends
+ {t:'NVBA',n:'Nvibia',sec:'Semis',p:180,v:.028,mu:.0008,b:1.6,pe:50,sh:2.44e10},
+ {t:'MSFY',n:'Microsaft',sec:'Tech',p:500,v:.015,mu:.0005,b:1,div:.007,pe:36,sh:7.43e9},
+ {t:'APEL',n:'Appel',sec:'Tech',p:230,v:.016,mu:.0004,b:1.1,div:.005,pe:34,sh:1.49e10},
+ {t:'ABUT',n:'Alphabut',sec:'Tech',p:240,v:.018,mu:.0005,b:1.1,div:.004,pe:25,sh:1.21e10},
+ {t:'AMZM',n:'Amazin',sec:'Consumer',p:225,v:.02,mu:.0005,b:1.2,pe:35,sh:1.07e10},
+ {t:'METT',n:'Metta Platforms',sec:'Tech',p:720,v:.024,mu:.0006,b:1.3,div:.003,pe:27,sh:2.52e9},
+ {t:'AVGA',n:'Broadcomb',sec:'Semis',p:330,v:.026,mu:.0007,b:1.4,div:.007,pe:60,sh:4.7e9},
+ {t:'ARMC',n:'Saudi Aramko',sec:'Energy',p:6.5,v:.009,mu:.0002,b:.4,div:.065,pe:16,sh:2.42e11},
+ {t:'TSMS',n:'Taiwon Semiconductor',sec:'Semis',p:250,v:.022,mu:.0006,b:1.3,div:.012,pe:25,sh:5.19e9},
+ {t:'TSLE',n:'Tessla',sec:'Consumer',p:400,v:.036,mu:.0007,b:1.9,pe:180,sh:3.2e9},
+ {t:'BRKH',n:'Birkshire Hathaway',sec:'Finance',p:490,v:.01,mu:.00035,b:.8,pe:14,sh:2.16e9},
+ {t:'JBM',n:'JB Morgen Chase',sec:'Finance',p:300,v:.015,mu:.0004,b:1.1,div:.019,pe:15,sh:2.75e9},
+ {t:'WLMT',n:'Wallmart',sec:'Consumer',p:100,v:.011,mu:.0004,b:.6,div:.009,pe:38,sh:7.98e9},
+ {t:'LOLY',n:'Eli Lolly',sec:'Health',p:800,v:.02,mu:.0006,b:.5,div:.007,pe:55,sh:8.97e8},
+ {t:'VIZ',n:'Viza',sec:'Finance',p:345,v:.012,mu:.0004,b:.9,div:.007,pe:33,sh:1.95e9},
+ {t:'ORKL',n:'Orakle',sec:'Tech',p:240,v:.026,mu:.0006,b:1.3,div:.008,pe:50,sh:2.81e9},
+ {t:'TCNT',n:'Tensent',sec:'Tech',p:70,v:.022,mu:.0004,b:1.1,div:.008,pe:22,sh:9.2e9},
+ {t:'MAK',n:'Masterkard',sec:'Finance',p:570,v:.013,mu:.0004,b:1,div:.005,pe:38,sh:9.1e8},
+ {t:'NFLK',n:'Netflux',sec:'Consumer',p:120,v:.024,mu:.0006,b:1.2,pe:48,sh:4.25e9},
+ {t:'XOMM',n:'ExxonMobeel',sec:'Energy',p:112,v:.015,mu:.0002,b:.8,div:.035,pe:15,sh:4.3e9},
+ {t:'CSTK',n:'Costko',sec:'Consumer',p:950,v:.012,mu:.0004,b:.8,div:.005,pe:52,sh:4.43e8},
+ {t:'JAJ',n:'Jonson & Jonson',sec:'Health',p:175,v:.01,mu:.00025,b:.5,div:.029,pe:18,sh:2.41e9},
+ {t:'HDP',n:'Home Deepot',sec:'Consumer',p:400,v:.014,mu:.0003,b:1,div:.023,pe:27,sh:9.95e8},
+ {t:'PLTA',n:'Palantar',sec:'Tech',p:160,v:.036,mu:.0009,b:2,pe:400,sh:2.37e9},
+ {t:'PGG',n:'Procter & Gumble',sec:'Consumer',p:155,v:.009,mu:.00025,b:.4,div:.026,pe:24,sh:2.34e9},
+ {t:'BOA',n:'Bank of Amerika',sec:'Finance',p:48,v:.018,mu:.0003,b:1.2,div:.022,pe:14,sh:7.6e9},
+ {t:'SMSG',n:'Samsang Electronics',sec:'Semis',p:60,v:.02,mu:.0004,b:1.1,div:.02,pe:13,sh:5.9e9},
+ {t:'ABVE',n:'AbbVee',sec:'Health',p:200,v:.014,mu:.0004,b:.5,div:.033,pe:20,sh:1.77e9},
+ {t:'SAPP',n:'Sapp',sec:'Tech',p:280,v:.018,mu:.0004,b:1,div:.009,pe:45,sh:1.17e9},
+ {t:'ASNL',n:'ASNL Holding',sec:'Semis',p:800,v:.024,mu:.0005,b:1.3,div:.009,pe:32,sh:3.93e8},
+ {t:'KOKA',n:'Koka-Kola',sec:'Consumer',p:70,v:.009,mu:.00025,b:.5,div:.029,pe:24,sh:4.3e9},
+ {t:'LVHM',n:'LVHM Moët Hennessey',sec:'Consumer',p:600,v:.019,mu:.0003,b:1.1,div:.02,pe:24,sh:5e8},
+ {t:'BABU',n:'Alibabu',sec:'Consumer',p:130,v:.03,mu:.0005,b:1.2,div:.008,pe:16,sh:2.3e9},
+ {t:'AMDD',n:'Advanced Macro Devices',sec:'Semis',p:165,v:.032,mu:.0006,b:1.7,pe:95,sh:1.62e9},
+ {t:'UNHY',n:'UnitedHealthy Group',sec:'Health',p:310,v:.022,mu:.0003,b:.6,div:.028,pe:14,sh:9.05e8},
+ {t:'CVXX',n:'Chevronn',sec:'Energy',p:155,v:.016,mu:.0002,b:.8,div:.043,pe:17,sh:1.75e9},
+ {t:'CSKO',n:'Cisko Systems',sec:'Tech',p:68,v:.015,mu:.0003,b:.9,div:.024,pe:26,sh:3.96e9},
+ {t:'TOYD',n:'Toyoda Motor',sec:'Consumer',p:190,v:.015,mu:.0003,b:.8,div:.03,pe:9,sh:1.3e9},
+ {t:'IMB',n:'International Busyness Machines',sec:'Tech',p:260,v:.015,mu:.0003,b:.9,div:.026,pe:26,sh:9.3e8},
+ {t:'SFRC',n:'Salesforse',sec:'Tech',p:250,v:.021,mu:.0004,b:1.1,div:.007,pe:38,sh:9.6e8},
+ {t:'NVOK',n:'Novo Nordiks',sec:'Health',p:55,v:.025,mu:.0002,b:.6,div:.03,pe:15,sh:4.44e9},
+ {t:'GSAX',n:'Goldmann Sax',sec:'Finance',p:720,v:.02,mu:.0004,b:1.3,div:.017,pe:16,sh:3.07e8},
+ {t:'MCDD',n:"McDoonald's",sec:'Consumer',p:300,v:.01,mu:.0003,b:.6,div:.024,pe:26,sh:7.13e8},
+ {t:'DIZ',n:'Dizney',sec:'Consumer',p:115,v:.018,mu:.0003,b:1.1,div:.009,pe:20,sh:1.8e9},
+ {t:'UBR',n:'Ubar',sec:'Tech',p:90,v:.026,mu:.0005,b:1.3,pe:16,sh:2.09e9},
+ {t:'ADBI',n:'Adobi',sec:'Tech',p:360,v:.021,mu:.0003,b:1.1,pe:22,sh:4.24e8},
+ {t:'PFZ',n:'Pfyzer',sec:'Health',p:25,v:.015,mu:.0001,b:.6,div:.068,pe:10,sh:5.68e9},
+ {t:'NIKA',n:'Nika',sec:'Consumer',p:75,v:.022,mu:.0002,b:1,div:.021,pe:30,sh:1.48e9},
+ {t:'ITEL',n:'Intell',sec:'Semis',p:24,v:.026,mu:.0003,b:1.2,pe:0,sh:4.37e9},
+ {t:'CBAS',n:'Coinbass',sec:'Finance',p:300,v:.038,mu:.0008,b:2.1,pe:30,sh:2.54e8},
 ];
 const SHOP=[
  {id:'bike',n:'Bicycle',cost:300,up:0,hap:.02,fame:0},
@@ -199,6 +250,7 @@ const GAMES=[
  {id:'slot',n:'Slots',edge:'about 8%',d:'Three reels. Three 7s pay 150×.'},
 ];
 const TF={'1W':5,'1M':21,'3M':63,'All':240}; // trading days
+const BYCAP=[...STOCKS].sort((a,b)=>b.p*b.sh-a.p*a.sh),WSECS=['All','Held',...new Set(STOCKS.map(k=>k.sec))];
 const SPEEDS=[[0,'','Pause'],[2,'12m','A day lasts 12 minutes'],[24,'1m','A day lasts 1 minute'],[144,'10s','A day lasts 10 seconds'],[1440,'1s','A day lasts 1 second']]; // game minutes per real second
 const RBETS=[['red','Red'],['black','Black'],['odd','Odd'],['even','Even'],['low','1–18'],['high','19–36'],['d1','1st 12'],['d2','2nd 12'],['d3','3rd 12']];
 const GM=Object.fromEntries(GAMES.map(g=>[g.id,g]));
@@ -350,7 +402,7 @@ const EVM=EM(EV.map(e=>[e.id,e]));
 
 // ---------- state ----------
 const SAVE='hustle-v1',GROW=1.13,CAP=10,MILES=[10,25,50,100,150,200,300,400,500];
-let helpOpen={},showAll={},openP=null,tour=-1,tourSpeed=1,tourJump=false,enr=null,iv=null,bmode='1',lastSpeed=2,lastIn=[],cg=null,tf='3M',cmode='candle',hov=null,ot={side:'buy',qty:10}; // screen state, not saved
+let helpOpen={},showAll={},openP=null,tour=-1,tourSpeed=1,tourJump=false,enr=null,iv=null,bmode='1',wf='All',lastSpeed=2,lastIn=[],cg=null,tf='3M',cmode='candle',hov=null,ot={side:'buy',qty:10}; // screen state, not saved
 let s=null,tab='dash',sel='NOVA',csel='SATS',speed=2,holding=false,wiped=false,heir={},hiddenAt=0;
 const age=()=>s.startAge+s.day/365;
 const add=(k,v)=>s.st[k]=clamp(s.st[k]+v,0,100);
@@ -428,6 +480,7 @@ function upgrade(){ // bring older saves up to date
     s.xp={};if(s.job)s.xp[JM[s.job].fld]=s.jobDays;s.perf=55;s.raise=0;s.pension=0}
   if(!s.goals){s.goals={};checkGoals(1)}
   s.min??=480;
+  const fresh=STOCKS.filter(k=>!s.px[k.t]);if(fresh.length){for(const k of fresh)seedStock(k);for(let i=0;i<239;i++)tradeDay(1,fresh);fresh.forEach(anchor)} // stocks added since this save
   for(const k of STOCKS){const q=s.px[k.t];if(q.k)continue; // daily candles used to be drawn from closes alone
     q.k=q.h.map((c,i)=>{const o=i?q.h[i-1]:c;return [o,Math.max(o,c)*(1+.005*hsh(i,1)),Math.min(o,c)*(1-.005*hsh(i,2))]});[q.op,q.hi,q.lo]=q.k.at(-1)}
 }
@@ -487,8 +540,9 @@ function newGame(name,bg,h={}){
   s.legacy=1+.25*(s.gen-1);
   if(h.gen){s.st.sma=Math.round(s.st.sma*.7+h.sma*.3);s.st.loo=Math.round(s.st.loo*.7+h.loo*.3)} // a little of the family runs in the blood
   if(h.kid){s.startAge=h.age;add('hap',(h.rel-50)*.3)}
-  for(const k of STOCKS)s.px[k.t]={p:k.p,o:k.p,op:k.p,hi:k.p,lo:k.p,h:[k.p],k:[[k.p,k.p,k.p]]};
+  for(const k of STOCKS)seedStock(k);
   for(let i=0;i<239;i++)marketDay(1);
+  for(const k of STOCKS)anchor(k);
   initCrypto();relist();
   if(h.fam){for(const p of h.fam)s.people.push({...p,uid:uid(),met:0,c:{}});for(let i=rint(1,2);i>0;i--)meet('friend',rint(45,70),-s.startAge*365+rint(-2,2)*365)}else makeFamily();
   log(h.kid?`${esc(name)}, ${Math.floor(s.startAge)}, takes over from ${esc(h.last)} with a ${fmt(h.inherit)} inheritance. Generation ${s.gen} begins.`:h.gen?`${esc(name)} begins generation ${s.gen} with a ${fmt(h.inherit)} inheritance.`:`${esc(name)} turns 18 and moves out. Time to hustle.`,'good');
@@ -546,7 +600,10 @@ function marketDay(quiet,live){ // once per calendar day; live play moves prices
   if(!live&&tradingDay())tradeDay(quiet);
 }
 const drift=k=>k.mu*WK-(k.v*RW)**2/2+(s.mkt.bull?.0005:-.0008)*WK*k.b;
-function newBar(q){q.o=q.h.at(-1);q.h.push(q.p);q.k.push([q.p,q.p,q.p]);q.op=q.hi=q.lo=q.p;if(q.h.length>240){q.h.shift();q.k.shift()}}
+const r6=x=>+x.toPrecision(6); // finished bars keep 6 significant figures, which keeps the save small
+function anchor(k){const q=s.px[k.t],f=k.p/q.p;for(let i=0;i<q.h.length;i++){q.h[i]*=f;q.k[i]=q.k[i].map(x=>x*f)}for(const x of ['p','o','op','hi','lo'])q[x]*=f} // history ends at the listed price
+const seedStock=k=>s.px[k.t]={p:k.p,o:k.p,op:k.p,hi:k.p,lo:k.p,h:[k.p],k:[[k.p,k.p,k.p]]};
+function newBar(q){const i=q.h.length-1,b=q.k[i];q.h[i]=r6(q.h[i]);for(let j=0;j<3;j++)b[j]=r6(b[j]);q.o=q.h[i];q.h.push(q.p);q.k.push([q.p,q.p,q.p]);q.op=q.hi=q.lo=q.p;if(q.h.length>240){q.h.shift();q.k.shift()}}
 function mstep(w){ // one slice of a session carrying share w of the day's drift and variance
   const f=RW*Math.sqrt(w),m=gauss()*.007*f,sec={};
   for(const k of STOCKS){sec[k.sec]??=gauss()*.006*f;const q=s.px[k.t],b=q.k.at(-1);
@@ -557,9 +614,9 @@ function openBell(){ // the overnight share of the move lands as a gap at the op
   for(const k of STOCKS){const q=s.px[k.t];q.op=q.hi=q.lo=q.p;q.k[q.k.length-1]=[q.p,q.p,q.p]}
 }
 function mtick(){mstep((1-GAP)/SESS);if(R()<.0006*WK/SESS)crash();else if(R()<.05*WK/SESS)news()}
-function tradeDay(quiet){ // a whole session in one step, for price history and fast simulation
+function tradeDay(quiet,list=STOCKS){ // a whole session in one step, for price history and fast simulation
   const m=gauss()*.007*RW,sec={};
-  for(const k of STOCKS){sec[k.sec]??=gauss()*.006*RW;const q=s.px[k.t],r=drift(k)+m*k.b+sec[k.sec]+k.v*RW*gauss(),op=q.p*Math.exp(r*GAP+.002*gauss());
+  for(const k of list){sec[k.sec]??=gauss()*.006*RW;const q=s.px[k.t],r=drift(k)+m*k.b+sec[k.sec]+k.v*RW*gauss(),op=q.p*Math.exp(r*GAP+.002*gauss());
     newBar(q);q.p=Math.max(.01,q.p*Math.exp(r));q.h[q.h.length-1]=q.p;q.op=op;q.hi=Math.max(op,q.p)*(1+.005*R());q.lo=Math.min(op,q.p)*(1-.005*R());q.k[q.k.length-1]=[op,q.hi,q.lo]}
   if(!quiet){if(R()<.0006*WK)crash();else if(R()<.05*WK)news()}
 }
@@ -594,7 +651,7 @@ const GOALS=[
  {id:'pay',n:'Four figures a day',d:'Earn a $1K a day salary',p:()=>[s.job?jobPay():0,1000],m:1},
  {id:'nw2',n:'Millionaire',d:'Reach a net worth of $1M',p:()=>[netWorth(),1e6],m:1},
  {id:'honors',n:'With honors',d:'Graduate with a grade of A',p:()=>has(s.degs.some(d=>d.hon))},
- {id:'stocks',n:'Diversified',d:`Hold all ${STOCKS.length} stocks at once`,p:()=>[STOCKS.filter(k=>s.port[k.t]?.sh>0).length,STOCKS.length]},
+ {id:'stocks',n:'Diversified',d:'Hold 10 different stocks at once',p:()=>[STOCKS.filter(k=>s.port[k.t]?.sh>0).length,10]},
  {id:'kids3',n:'Full house',d:'Have 3 kids',p:()=>[kids().length,3]},
  {id:'close5',n:'Inner circle',d:'Be very close (80+) to 5 people',p:()=>[s.people.filter(p=>p.rel>=80).length,5]},
  {id:'fol1',n:'Influencer',d:'Reach 100K followers',p:()=>[s.fol,1e5]},
@@ -651,6 +708,7 @@ const ACT={
   gobj:()=>{ACT.tab('casino');cg='bj'},
   pick:(id,c)=>{const i=s.inbox.findIndex(x=>x.id===id);if(i<0)return;const it=s.inbox.splice(i,1)[0],e=EVM[id],msg=e.c&&!e.c(s)?'The moment has passed.':e.ch[+c][1](s,it.a);log(`<b>${e.t}</b> ${msg}`);toast(msg)},
   sel:x=>sel=x,
+  wf:x=>{wf=x},
   close:()=>closeModal(),
   act:id=>{const a=AM[id];if(s.day<(s.cd[id]||0)||s.cash<a.c)return;s.cash-=a.c;s.cd[id]=s.day+a.cd;toast(a.fx())},
   learn:id=>{const P=PG[id];if(!P||s.study||progMiss(P).length)return;enr={p:id,mj:P.mj?'Business':null};modal(enrHtml(),1)},
@@ -967,7 +1025,7 @@ biz(){
   ${howto(`The buy button follows the switch above and shrinks to what you can afford. Milestones at ${MILES.slice(0,5).join(', ')} and on double a business's income. Managers keep earning while you're away.`)}`;
 },
 stock(){
-  const k=SK[sel],q=s.px[sel],h=s.port[sel],M=s.mkt,d=q.p/q.o-1,H=q.h,buy=ot.side==='buy';
+  const k=SK[sel],q=s.px[sel],h=s.port[sel],M=s.mkt,d=q.p/q.o-1,H=q.h,buy=ot.side==='buy',wl=BYCAP.filter(k=>wf==='All'||(wf==='Held'?s.port[k.t]:k.sec===wf));
   let val=0,cost=0,dpl=0;for(const x in s.port){const o=s.port[x],y=s.px[x];val+=o.sh*y.p;cost+=o.cost;dpl+=o.sh*(y.p-y.o)}
   const idx=STOCKS.reduce((t,k)=>t+s.px[k.t].p/k.p,0)/STOCKS.length*1000,idxd=STOCKS.reduce((t,k)=>t+s.px[k.t].p/s.px[k.t].o,0)/STOCKS.length-1;
   const live=mktOpen();
@@ -983,8 +1041,8 @@ stock(){
     <div><small>Total P/L</small><b>${pl(val-cost)}</b></div>
   </div>
   <div class="tui">
-   <div class="watch"><div class="wh"><span>Watchlist</span><span>Day</span></div>
-    ${STOCKS.map(k=>{const q=s.px[k.t],d=q.p/q.o-1;return `<button class="wrow ${k.t===sel?'on':''}" data-a="sel" data-x="${k.t}"><span><b>${k.t}</b>${s.port[k.t]?' <span class="mut">·held</span>':''}<small>${k.n}</small></span><span class="num">${fmt(q.p)}</span><span class="pill ${d>=0?'up':'dn'}">${pct(d)}</span></button>`}).join('')}
+   <div class="watch"><div class="wf">${WSECS.map(x=>`<button class="${wf===x?'on':''}" data-a="wf" data-x="${x}">${x}</button>`).join('')}</div><div class="wh"><span>${wl.length} stock${wl.length===1?'':'s'}</span><span>Day</span></div>
+    <div class="wlist" data-keep="w-${wf}">${wl.length?'':`<p class="mut" style="padding:var(--space-xs)">You don't hold any stocks yet.</p>`}${wl.map(k=>{const q=s.px[k.t],d=q.p/q.o-1;return `<button class="wrow ${k.t===sel?'on':''}" data-a="sel" data-x="${k.t}"><span><b>${k.t}</b>${s.port[k.t]?' <span class="mut">·held</span>':''}<small>${k.n}</small></span><span class="num">${fmt(q.p)}</span><span class="pill ${d>=0?'up':'dn'}">${pct(d)}</span></button>`}).join('')}</div>
    </div>
    <section>
     <div class="qhead"><div><h2 class="qt">${k.t} <span class="mut">${k.n}</span></h2>
@@ -1180,7 +1238,9 @@ function render(){
   document.body.classList.toggle('wide',!['dash','life'].includes(tab));
   $('#speed').innerHTML=SPEEDS.map(([v,l,a])=>`<button class="${speed===v?'on':''}" data-a="spd" data-x="${v}" aria-label="${a}" title="${a}">${v?l:ICON.pause}</button>`).join('');
   $('#nav').innerHTML=railHtml();$('#tabbar').innerHTML=barHtml();
+  const keep=[...$$('#view [data-keep]')].map(e=>[e.dataset.keep,e.scrollTop]); // inner scroll boxes survive the rebuild
   $('#view').innerHTML=subtabs()+VIEWS[tab]();
+  for(const[k,y]of keep){const e=$(`#view [data-keep="${k}"]`);if(e)e.scrollTop=y}
   if(tab==='stock')drawStock();
   if(tab==='crypto'){const c=coin(csel),w=s.wallet[csel];if(c)drawChart(c.h,w&&w.c/w.u,pfmt)}
   coach();
@@ -1295,7 +1355,7 @@ function selfTest(){ // open with ?test=1 — never touches your real save
   newGame('Clock','street');delete s.min;for(const k of STOCKS){const x=s.px[k.t];delete x.k;delete x.op}upgrade();ok(s.min===480&&s.px.NOVA.k.length===s.px.NOVA.h.length&&s.px.NOVA.op>0,'old saves get a clock and candles');tab='stock';VIEWS.stock();
   const q=s.px.NOVA,pc=q.h.at(-1),mk=q.k.at(-1);ok(s.day%7===0&&s.min===480&&!mktOpen(),'Monday 8 AM, market shut');
   s.cash=1e6;s.min=500;ot={side:'buy',qty:5};ACT.order();ok(!s.port.NOVA,'no trading while closed');
-  s.min=480;for(let i=0;i<91;i++)minute();ok(mktOpen()&&q.o===pc&&q.k.at(-1)[0]===q.op&&q.k.at(-2)===mk,'the bell opens a new session');
+  s.min=480;for(let i=0;i<91;i++)minute();ok(mktOpen()&&Math.abs(q.o/pc-1)<1e-5&&q.k.at(-1)[0]===q.op&&q.k.at(-2)===mk,'the bell opens a new session');
   for(let i=0;i<400;i++)minute();const c=q.p;ok(!mktOpen()&&q.h.at(-1)===c&&q.hi>=Math.max(q.op,c)&&q.lo<=Math.min(q.op,c),'the session closes with its high and low');
   for(let i=0;i<600;i++)minute();ok(q.p===c&&s.day===1,'prices hold overnight');
   for(let i=0;i<7*1440;i++)minute();ok(q.k.length-1-q.k.indexOf(mk)===6,'five sessions a week');
@@ -1303,6 +1363,8 @@ function selfTest(){ // open with ?test=1 — never touches your real save
   let lv=0,bk=0;for(const k of STOCKS){const x=s.px[k.t];x.p=k.p;x.h=[k.p];x.k=[[k.p,k.p,k.p]]}for(let i=0;i<1440*7*40;i++)minute();for(const k of STOCKS)lv+=sd(s.px[k.t].h);
   for(const k of STOCKS){const x=s.px[k.t];x.h=[k.p];x.k=[[k.p,k.p,k.p]]}for(let i=0;i<200;i++)tradeDay(1);for(const k of STOCKS)bk+=sd(s.px[k.t].h);
   ok(lv/bk>.8&&lv/bk<1.25,'live sessions move like whole-day steps '+(lv/bk).toFixed(2));
+  delete s.px.NVBA;delete s.px.CBAS;upgrade();ok(s.px.NVBA.h.length===240&&s.px.CBAS.k.length===240&&Number.isFinite(s.px.NVBA.p),'new stocks seed into old saves');ok(Math.abs(s.px.NVBA.p/SK.NVBA.p-1)<1e-9,'history ends at the listed price');
+  tab='stock';wf='Semis';ok(VIEWS.stock().includes('NVBA')&&!VIEWS.stock().includes('>MSFY<'),'sector filter');wf='Held';VIEWS.stock();wf='All';
   newGame('Goal','street');s.cash=2e6;checkGoals();ok(s.goals.nw1&&s.goals.nw2&&!s.goals.nw3,'goals unlock');const gn=Object.keys(s.goals).length;checkGoals();ok(Object.keys(s.goals).length===gn,'goals unlock once');delete s.goals;upgrade();ok(s.goals.nw2&&s.log[0].t.includes('already reached'),'old saves backfill goals quietly');
   tab='dash';ok(VIEWS.dash().includes('Goals'),'goals on home');goalsModal();
   const sp2=meet('spouse',70),k1=addChild(),k2=addChild(),k3=addChild();k1.b=s.day-40*365;k2.b=s.day-30*365;k3.b=s.day-5*365;k1.rel=90;
