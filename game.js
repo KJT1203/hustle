@@ -490,16 +490,19 @@ const units=u=>u>=1000?big(u):u>=1?u.toFixed(2):u.toPrecision(3);
 const coin=k=>s.cx.coins.find(c=>c.t===k);
 const walletVal=()=>Object.entries(s.wallet).reduce((t,[k,w])=>t+w.u*(coin(k)?.p||0),0);
 function initCrypto(){s.cx={bull:true,launched:0,coins:COINS.map(c=>({...c,o:c.p,h:[c.p]}))};for(let i=0;i<239;i++)cryptoDay(1)}
-function cryptoDay(quiet){
+// crypto never closes: in live play each day's move is spread over its 1,440 minutes; fast simulation takes it in one step
+const cdrift=c=>c.mu-c.v*c.v/2+(s.cx.bull?.0012:-.0015)*c.b;
+function cstep(w){const m=gauss()*.02*Math.sqrt(w);for(const c of s.cx.coins)if(!c.stable&&!c.dead){c.p=Math.max(1e-8,c.p*Math.exp(cdrift(c)*w+m*c.b+c.v*Math.sqrt(w)*gauss()));c.h[c.h.length-1]=c.p}}
+function cryptoDay(quiet,live){
   const X=s.cx;
   if(R()<(X.bull?.004:.006)){X.bull=!X.bull;if(!quiet)chirp('@coinwire','CoinWire',X.bull?'crypto is so back. green candles everywhere':'crypto winter is here. hold on to your seed phrases',1)}
-  const m=(X.bull?.0012:-.0015)+gauss()*.02;
+  for(const c of X.coins){c.o=c.h[c.h.length-1]=r6(c.p);c.h.push(c.p);if(c.h.length>240)c.h.shift()} // the day's line starts at yesterday's close
+  if(!live)cstep(1);
   for(const c of X.coins){
-    c.o=c.p;if(!c.stable&&!c.dead)c.p=Math.max(1e-8,c.p*Math.exp(c.mu-c.v*c.v/2+m*c.b+c.v*gauss()));
-    c.h.push(c.p);if(c.h.length>240)c.h.shift();
     if(c.fd&&s.day>=c.fd){const held=s.wallet[c.t];c.fd=0;
       if(c.fate==='moon'){const x=rint(5,40);c.p*=x;c.v=.1;chirp('@coinwire','CoinWire',`$${c.t} is up ${(x-1)*100}% this week and nobody knows why`,1);if(held)log(`$${c.t} mooned: up ${x}×.`,'good')}
-      else{c.p*=.02;c.dead=s.day;chirp('@degen_dan','Degen Dan',`$${c.t} devs pulled the liquidity. it's over 💀`);if(held)log(`$${c.t} got rugged. Down 98%.`,'bad')}}
+      else{c.p*=.02;c.dead=s.day;chirp('@degen_dan','Degen Dan',`$${c.t} devs pulled the liquidity. it's over 💀`);if(held)log(`$${c.t} got rugged. Down 98%.`,'bad')}
+      c.h[c.h.length-1]=c.p}
   }
   if(quiet)return;
   for(const c of X.coins)if(c.stable&&s.wallet[c.t])s.wallet[c.t].u*=1+c.apy/365;
@@ -575,7 +578,7 @@ function day(live){
   s.fol+=shopSum('fame')+carSum('fame')+s.props.reduce((t,p)=>t+(PM[p.t].fame||0),0);if(s.day-s.lastPost>30)s.fol*=.999;
   for(const p of s.feed)if(p.l<p.tl)p.l+=Math.ceil((p.tl-p.l)*.35);
   if(R()<.3)npcChatter();
-  marketDay(0,live);cryptoDay();
+  marketDay(0,live);cryptoDay(0,live);
   if(s.day%91===0)dividends();
   if(s.day%7===0){(s.nwh??=[]).push(Math.round(netWorth()));if(s.nwh.length>104)s.nwh.shift()}
   s.later=s.later.filter(p=>p.d>s.day||(runLater(p),false));
@@ -592,6 +595,7 @@ const clock=m=>`${(Math.floor(m/60)+11)%12+1}:${String(m%60).padStart(2,'0')} ${
 function nextOpen(){if(tradingDay()&&s.min<OPEN)return `at ${clock(OPEN)}`;let d=s.day+1;while(!tradingDay(d))d++;return d===s.day+1?`tomorrow at ${clock(OPEN)}`:`${WD[d%7]} at ${clock(OPEN)}`}
 function minute(){
   if(++s.min>=1440){s.min=0;day(1);if(s.dead)return}
+  cstep(1/1440);
   if(tradingDay()){if(s.min===OPEN)openBell();else if(s.min>OPEN&&s.min<=CLOSE)mtick()}
 }
 function marketDay(quiet,live){ // once per calendar day; live play moves prices minute by minute instead of here
@@ -1100,7 +1104,7 @@ crypto(){
      <button data-a="xsell" data-x="${c.t}" data-y=".25" ${w?'':'disabled'}>Sell 25%</button><button data-a="xsell" data-x="${c.t}" data-y=".5" ${w?'':'disabled'}>Sell 50%</button><button class="bad" data-a="xsell" data-x="${c.t}" data-y="all" ${w?'':'disabled'}>Sell all</button></div>
    </section>
   </div>
-  ${howto(`Every trade costs a 1% fee. New meme coins launch every few weeks. A few go up a hundredfold; most get rugged. Hustle Dollar holds at $1 and pays interest every day.`)}`;
+  ${howto(`Crypto never closes: prices move every minute, day and night, weekends included. Every trade costs a 1% fee. New meme coins launch every few weeks. A few go up a hundredfold; most get rugged. Hustle Dollar holds at $1 and pays interest every day.`)}`;
 },
 casino(){
   const z=s.cz,ban=s.day<z.ban,can=!ban&&s.cash>=z.chip;
@@ -1365,6 +1369,9 @@ function selfTest(){ // open with ?test=1 — never touches your real save
   ok(lv/bk>.8&&lv/bk<1.25,'live sessions move like whole-day steps '+(lv/bk).toFixed(2));
   delete s.px.NVBA;delete s.px.CBAS;upgrade();ok(s.px.NVBA.h.length===240&&s.px.CBAS.k.length===240&&Number.isFinite(s.px.NVBA.p),'new stocks seed into old saves');ok(Math.abs(s.px.NVBA.p/SK.NVBA.p-1)<1e-9,'history ends at the listed price');
   tab='stock';wf='Semis';ok(VIEWS.stock().includes('NVBA')&&!VIEWS.stock().includes('>MSFY<'),'sector filter');wf='Held';VIEWS.stock();wf='All';
+  newGame('Coins','street');const sats=coin('SATS'),usd=s.cx.coins.find(c=>c.stable);s.day=5;s.min=120;const cp=sats.p;for(let i=0;i<30;i++)minute();ok(sats.p!==cp&&sats.h.at(-1)===sats.p&&usd.p===1,'crypto trades at 2 AM on a Saturday');
+  const fixed=()=>s.cx.coins.filter(c=>!c.meme&&!c.stable),cs=()=>fixed().reduce((a,c)=>a+sd(c.h),0),reset=()=>{for(const c of s.cx.coins){c.h=[c.p];c.fd=0}};
+  reset();for(let i=0;i<1440*200;i++)minute();const cl=cs();reset();for(let i=0;i<200;i++){s.day++;cryptoDay(1)}const cb=cs();ok(cl/cb>.75&&cl/cb<1.33,'live crypto moves like whole-day steps '+(cl/cb).toFixed(2));
   newGame('Goal','street');s.cash=2e6;checkGoals();ok(s.goals.nw1&&s.goals.nw2&&!s.goals.nw3,'goals unlock');const gn=Object.keys(s.goals).length;checkGoals();ok(Object.keys(s.goals).length===gn,'goals unlock once');delete s.goals;upgrade();ok(s.goals.nw2&&s.log[0].t.includes('already reached'),'old saves backfill goals quietly');
   tab='dash';ok(VIEWS.dash().includes('Goals'),'goals on home');goalsModal();
   const sp2=meet('spouse',70),k1=addChild(),k2=addChild(),k3=addChild();k1.b=s.day-40*365;k2.b=s.day-30*365;k3.b=s.day-5*365;k1.rel=90;
