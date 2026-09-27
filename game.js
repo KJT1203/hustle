@@ -415,6 +415,44 @@ const EV=[
 ];
 const EVM=EM(EV.map(e=>[e.id,e]));
 
+// ---------- businesses: realistic returns, and profits that ride the economy ----------
+// f scales income so the first ten units return about 600% a year for a lemonade stand down to 20-35% for hotels, banks and rockets.
+// cyc = how much demand swings with the economy, lev = operating leverage (fixed costs magnify swings), cl = yearly chance a location closes.
+const BZX=[{f:.6,cyc:.3,lev:1.2,cl:.05},{f:.5,cyc:.6,lev:1.5,cl:.06},{f:.36,cyc:.7,lev:2,cl:.08},{f:.28,cyc:.8,lev:2,cl:.05},{f:.24,cyc:1,lev:2.5,cl:.07},{f:.24,cyc:1.2,lev:2.5,cl:.12},{f:.21,cyc:1.6,lev:3,cl:.04},{f:.2,cyc:1.3,lev:3,cl:.02},{f:.5,cyc:1,lev:3.5,cl:.08}];
+BIZ.forEach((b,i)=>{const x=BZX[i];b.inc=+(b.inc*x.f).toPrecision(3);b.cyc=x.cyc;b.lev=x.lev;b.cl=x.cl});
+const CLOSE_WHY=['A competitor opened across the street.','The landlord doubled the rent when the lease ran out.','The regulars moved on.','Your best employee left and took the customers with them.','A health scare kept people away for good.'];
+
+// ---------- prices: every price table keeps its base, and today's price is the base times the price level ----------
+const PRICED=[[JOBS,['pay']],[ACTS,['c']],[SHOP,['cost','up']],[CARS,['price','up']],[PROGS,['cost','stipend']],[BIZ,['cost','inc']]];
+const BASEP=PRICED.map(([arr,ks])=>arr.map(o=>Object.fromEntries(ks.filter(k=>o[k]!=null).map(k=>[k,o[k]]))));
+const r3=x=>x>=100?Math.round(x):+x.toPrecision(3);
+function applyPrices(){const P=s?.eco?.P||1;PRICED.forEach(([arr],i)=>arr.forEach((o,j)=>{const B=BASEP[i][j];for(const k in B)o[k]=r3(B[k]*P)}))}
+
+// ---------- the economy: it follows the market's hidden cycle with a lag. g is the output gap, from about +0.4 in a boom to -1 in a slump ----------
+const ecoNew=()=>({g:.3,u:.04,pi:.025,r:.04,lr:.045,P:1,rec:false});
+const mrate=()=>s.eco.lr+.017; // 30-year fixed follows long rates
+const pctA=x=>(x*100).toFixed(Math.abs(x)<.1?2:1)+'%';
+const ecoLabel=()=>s.eco.rec?'Recession':s.eco.g>.15?'Growing':s.eco.g>-.1?'Slowing':'Contracting';
+function ecoDay(){
+  const E=s.eco,M=s.mkt;
+  E.g=clamp(E.g+((M.bull?.35:-.75)-E.g)/60+.01*gauss(),-1.2,.8);
+  E.u+=(clamp(.05-.045*E.g,.03,.14)-E.u)/60;
+  E.pi=clamp(E.pi+(.025+.02*E.g-E.pi)/200+.0006*gauss(),-.02,.15);
+  if(R()<1/(365*25)){E.pi+=.03+R()*.04;chirp('@MarketWire','MarketWire',`oil prices spike on a supply shock. inflation jumps to ${pctA(E.pi)}`,1);log(`A supply shock sends inflation to ${pctA(E.pi)}.`,'bad')}
+  E.P*=1+E.pi/365;
+  E.lr+=(E.r+.01-E.lr)/250;
+  if(s.day%45===0){ // the central bank meets every six weeks and moves in quarter or half points (a Taylor rule)
+    const tgt=clamp(.005+E.pi+.5*(E.pi-.025)+.015*E.g,0,.15),d=tgt-E.r;
+    if(Math.abs(d)>=.002){const st=Math.abs(d)>.01?.005:.0025;E.r=Math.max(0,Math.round((E.r+Math.sign(d)*st)*400)/400);
+      chirp('@CentralBank','Central Bank',`the bank ${d>0?'raises':'cuts'} interest rates by ${st===.005?'0.50':'0.25'} points to ${pctA(E.r)}${d>0?`, citing inflation of ${pctA(E.pi)}`:`, as unemployment reaches ${pctA(E.u)}`}`,1)}}
+  // a recession starts deep and ends once growth is clearly back
+  const rec=E.rec?E.g<-.1:E.g<-.4;if(rec!==E.rec){E.rec=rec;const m=rec?'The economy has slipped into recession. Layoffs are rising and customers are spending less.':'The recession is over. Hiring is picking up again.';log(m,rec?'bad':'good');chirp('@MarketWire','MarketWire',m.toLowerCase(),1)}
+  applyPrices();
+}
+const bizPf=b=>1+b.lev*b.cyc*.25*((s.eco?.g??.2)-.2); // profit factor: demand swing times operating leverage; it can go below zero
+function closeCheck(b,o,p=o.n*b.cl*(s.eco.rec?2.5:1)*(o.mgr?.7:1)/365){ // competition closes locations now and then
+  if(!o.n||R()>=p)return;o.spent*=(o.n-1)/o.n;o.n--;log(`One of your ${plural(b.n)} closed. ${s.eco.rec&&R()<.5?'Customers stopped spending.':pick(CLOSE_WHY)}`,'bad')}
+
 // ---------- state ----------
 const SAVE='hustle-v1',GROW=1.13,CAP=10,MILES=[10,25,50,100,150,200,300,400,500];
 let helpOpen={},showAll={},openP=null,tour=-1,tourSpeed=1,tourJump=false,enr=null,iv=null,bmode='1',wf='All',bd={},lastSpeed=1,lastIn=[],cg=null,tf='3M',cmode='candle',hov=null,ot={side:'buy',qty:10}; // screen state, not saved
@@ -458,13 +496,13 @@ function peopleDay(){
   if(s.job&&friendsN()<10&&R()<1/250){const p=meet('friend',35);log(`You became friends with ${esc(p.n)} from work.`,'good')}
 }
 const bmul=n=>2**MILES.filter(m=>n>=m).length;
-const bizInc=(b,o)=>b.inc*o.n*bmul(o.n)*s.legacy*(s.day<s.boost?1.25:1);
+const bizInc=(b,o)=>b.inc*o.n*bmul(o.n)*s.legacy*(s.day<s.boost?1.25:1)*bizPf(b);
 const bcost=(b,n,q)=>b.cost*GROW**n*(GROW**q-1)/(GROW-1);
 const bmax=(b,n)=>Math.floor(Math.log(s.cash*(GROW-1)/(b.cost*GROW**n)+1)/Math.log(GROW));
 const buyout=id=>{const o=s.biz[id];return bcost(BM[id],Math.max(0,o.n-5),5)*2};
 const shopSum=k=>SHOP.reduce((t,i)=>t+(s.own[i.id]?i[k]:0),0);
 const sponsor=()=>s.fol<1000?0:s.fol*.0015*(.5+s.st.loo/100);
-const MR=.055/365,MN=30*365,mpay=L=>L*MR/(1-(1+MR)**-MN);
+const MN=30*365,mpay=(L,rate=mrate())=>L*(rate/365)/(1-(1+rate/365)**-MN);
 const uid=()=>s.nid=(s.nid||0)+1;
 const pval=p=>PM[p.t].base*p.m*s.re.idx;
 const pname=p=>`${PM[p.t].n}, ${p.loc}`;
@@ -475,7 +513,7 @@ const rentOf=p=>renting(p)?pval(p)*PM[p.t].yld/365:0;
 const carSum=k=>s.cars.reduce((t,c)=>t+CM[c.t][k],0);
 const bestCar=()=>s.cars.reduce((m,c)=>!m||CM[c.t].hap>CM[m.t].hap?c:m,null);
 const upkeep=()=>shopSum('up')+carSum('up')+s.props.reduce((t,p)=>t+pval(p)*.01/365,0);
-const expenses=()=>15+(homeP()?0:30)+kidsHome()*35+(partner()?.role==='spouse'?10:0)+upkeep();
+const expenses=()=>(15+(homeP()?0:30)+kidsHome()*35+(partner()?.role==='spouse'?10:0))*s.eco.P+upkeep();
 const canBorrow=L=>{const f=flows();return mpay(L)+f.mort<=(f.job+f.biz+f.rent)*.4};
 function listing(){const nw=Math.max(netWorth(),60000),ok=PROPS.filter(p=>p.base<=nw*4),[loc,m]=pick(LOCS);return {uid:uid(),t:pick(ok.slice(-4)).id,loc,m:m*(.92+R()*.16)}}
 function relist(){s.re.list=Array.from({length:6},listing);s.re.next=s.day+30}
@@ -494,7 +532,7 @@ function upgrade(){ // bring older saves up to date
   if(!s.people){const r=s.rel,k=s.kids||0;delete s.rel;delete s.kids;s.people=[];makeFamily();if(r)meet(r===2?'spouse':'date',65);for(let i=0;i<k;i++)addChild().b=s.day-rint(1,12)*365;
     s.xp={};if(s.job)s.xp[JM[s.job].fld]=s.jobDays;s.perf=55;s.raise=0;s.pension=0}
   if(!s.goals){s.goals={};checkGoals(1)}
-  s.min??=480;
+  s.min??=480;s.eco??=ecoNew();applyPrices();
   const fresh=STOCKS.filter(k=>!s.px[k.t]);if(fresh.length){for(const k of fresh)seedStock(k);for(let i=0;i<239;i++)tradeDay(1,fresh);fresh.forEach(anchor)}
   s.orders??=[];const M=s.mkt;M.h??=MVOL.bull**2/YR;M.eps??=0;M.cb??=0;for(const k of STOCKS)initStock(k);if(!M.rc){M.rc=capSum()*.6;M.div=(capSum()+M.rc)/5000;M.ic=M.ih=5000;M.lab='Bull market'} // stocks added since this save
   for(const k of STOCKS){const q=s.px[k.t];if(q.k)continue; // daily candles used to be drawn from closes alone
@@ -557,7 +595,7 @@ function newGame(name,bg,h={}){
   const b=BG[bg];
   s={v:1,name,handle:'@'+(name.toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,15)||'you'),day:0,startAge:18,cash:b.cash+(h.inherit||0),st:{...b.st},edu:b.edu||0,study:null,
      job:b.job||null,jobDays:0,rank:0,biz:{},port:{},px:{},mkt:{bull:true,h:MVOL.bull**2/YR,eps:0,cb:0,div:1,ic:1,ih:1,rc:1e13},orders:[],fol:b.fol||0,feed:[],own:{},people:[],degs:b.edu?[{p:'dip',sc:'cc',mj:'Computer science',hon:false}]:[],debt:0,xp:{},perf:50,raise:0,pension:0,wallet:{},cz:{chip:100,net:0,played:0,rh:[],ban:0},props:[],cars:[],home:null,re:{idx:1,list:[],next:0},cd:{},inbox:[],later:[],log:[],pet:0,
-     gen:h.gen||1,boost:0,lastPost:0,dead:0,lastSeen:Date.now(),goals:{...h.goals},min:480};
+     gen:h.gen||1,boost:0,lastPost:0,dead:0,lastSeen:Date.now(),goals:{...h.goals},min:480,eco:h.eco?{...h.eco}:ecoNew()};applyPrices();
   s.legacy=1+.25*(s.gen-1);
   if(h.gen){s.st.sma=Math.round(s.st.sma*.7+h.sma*.3);s.st.loo=Math.round(s.st.loo*.7+h.loo*.3)} // a little of the family runs in the blood
   if(h.kid){s.startAge=h.age;add('hap',(h.rel-50)*.3)}
@@ -573,19 +611,20 @@ function newGame(name,bg,h={}){
 
 // ---------- simulation ----------
 function day(live){
-  s.day++;const A=age(),f=flows();
+  s.day++;ecoDay();const A=age(),f=flows();
   s.cash+=f.job+f.biz+f.spon+f.rent+f.own-f.exp-f.mort;
   if(s.debt>0){s.debt=Math.max(0,s.debt*(1+.06/365)-loanPay());if(s.debt<1){s.debt=0;log('Student loans paid off.','good')}}
-  for(const p of s.props)if(p.loan>0){p.loan-=p.pay-p.loan*MR;if(p.loan<=1){p.loan=p.pay=0;log(`Paid off the mortgage on your ${pname(p)}.`,'good')}}
-  s.re.idx*=Math.exp((s.mkt.bull?.00016:-.0001)+.0035*gauss());
+  for(const p of s.props)if(p.loan>0){p.loan-=p.pay-p.loan*(p.rate||.055)/365;if(p.loan<=1){p.loan=p.pay=0;log(`Paid off the mortgage on your ${pname(p)}.`,'good')}}
+  s.re.idx*=Math.exp((s.eco.pi+.012+.06*s.eco.g-2*(mrate()-.06))/365+.0035*gauss());
   for(const c of s.cars){const k=CM[c.t];c.v=Math.max(k.price*.08,c.v*Math.exp(-k.dep/365+(k.vol?k.vol/19.1*gauss():0)))}
   if(s.day>=s.re.next)relist();
-  for(const b of BIZ){const o=s.biz[b.id];if(o?.n&&!o.mgr){const g=bizInc(b,o);o.pend=Math.min(o.pend+g,g*CAP)}}
+  for(const b of BIZ){const o=s.biz[b.id];if(!o?.n)continue;closeCheck(b,o);if(o.n&&!o.mgr){const g=bizInc(b,o);if(g<0)s.cash+=g;else o.pend=Math.min(o.pend+g,g*CAP)}} // losses come straight out of cash
   if(s.cash<0){s.cash*=1.0003;add('hap',-.05)}
   if(s.job){const J=job();s.jobDays++;s.xp[J.fld]=(s.xp[J.fld]||0)+1;
     s.perf=clamp(s.perf+((40+s.st.sma*.3+(s.st.hap-50)*.2-J.str*2)-s.perf)*.02,0,100);
     if(s.jobDays%120===0&&!topRank()){if(s.perf>=promoNeed()){s.rank++;s.perf-=10;log(`Promoted to <b>${jobTitle()}</b>! Now ${fmt(jobPay())} a day.`,'good');toast('Promotion!')}else log(`Passed over for promotion. You needed a performance of ${promoNeed()}.`,'bad')}
-    if(s.perf<20&&R()<.01){const j=jobTitle();fire();add('hap',-15);log(`Fired from ${j} for poor performance.`,'bad');toast(`Fired from ${j}.`)}}
+    if(s.job&&s.eco.u>.05&&R()<(s.eco.u-.045)*2/365){const j=jobTitle(),sev=jobPay()*30;fire();s.cash+=sev;add('hap',-12);log(`Laid off from ${j} as the economy slows. Severance: ${fmt(sev)}.`,'bad');toast(`Laid off from ${j}`)}
+    if(s.job&&s.perf<20&&R()<.01){const j=jobTitle();fire();add('hap',-15);log(`Fired from ${j} for poor performance.`,'bad');toast(`Fired from ${j}.`)}}
   peopleDay();
   if(s.study){const st=s.study,P=PG[st.p];st.left--;st.g=clamp(st.g+((40+s.st.sma*.4+(s.st.hap-50)*.2)-st.g)*.02,0,100);if(P.stipend)s.cash+=P.stipend;
     if(st.left<=0){if(st.g<30){st.left=60;st.g=45;log(`Failed the final exams for ${degName(st)}. One more term.`,'bad');toast('Failed the finals. One more term.')}else graduate()}}
@@ -891,7 +930,7 @@ const goalAmt=(g,v)=>g.m?fmt(v):g.id==='old'||g.id==='peak'||g.id==='gen3'?Math.
 
 // ---------- the heir: one of your kids, or a relative if you had none ----------
 function heirOf(k){
-  const h={inherit:Math.max(0,netWorth()*.5),gen:s.gen+1,last:s.name,goals:s.goals,sma:s.st.sma,loo:s.st.loo};
+  const h={inherit:Math.max(0,netWorth()*.5),gen:s.gen+1,last:s.name,goals:s.goals,sma:s.st.sma,loo:s.st.loo,eco:s.eco};
   if(!k)return h;
   const skip=Math.max(0,18*365-(s.day-k.b)),carry=p=>({n:p.n,b:p.b-s.day-skip,rel:(p.rel+k.rel)/2});
   return {...h,kid:k.n,age:(s.day-k.b+skip)/365,rel:k.rel,
@@ -1009,7 +1048,7 @@ const ACT={
     if(viral)log(`Your ${P.n.toLowerCase()} went viral! +${big(gain)} followers`,'good')},
   pbuy:(u,x)=>{const i=s.re.list.findIndex(l=>l.uid===+u);if(i<0)return;const l=s.re.list[i],v=PM[l.t].base*l.m*s.re.idx,mort=x==='m';
     if(s.cash<(mort?v*.2:v)||(mort&&!canBorrow(v*.8)))return;
-    s.cash-=mort?v*.2:v;const p={...l,paid:v,bought:s.day,loan:mort?v*.8:0,pay:mort?mpay(v*.8):0,from:s.day+rint(5,20)};
+    s.cash-=mort?v*.2:v;const p={...l,paid:v,bought:s.day,loan:mort?v*.8:0,pay:mort?mpay(v*.8):0,rate:mort?mrate():0,from:s.day+rint(5,20)};
     s.props.push(p);s.re.list.splice(i,1,listing());if(!homeP()&&!PM[p.t].biz)s.home=p.uid;add('hap',5);
     log(`Bought ${art(pname(p))} for ${fmt(v)}${mort?' with a mortgage':''}${s.home===p.uid?', and moved in':''}.`,'good')},
   live:u=>{const p=P(+u);if(!p||PM[p.t].biz)return;const o=homeP();if(o)o.from=s.day+rint(5,20);s.home=p.uid;log(`Moved into your ${pname(p)}.`)},
@@ -1057,9 +1096,9 @@ const ACT={
   goals:()=>goalsModal(),
   begin:bg=>{newGame(($('#nm').value.trim()||pick(NAMES)).slice(0,20),bg,heir);closeModal();save();if(heir.gen)s.tour=1;else ACT.guide()},
 };
-const gig=()=>4+s.st.sma*.15+(s.job?jobPay()*.02:0);
+const gig=()=>(4+s.st.sma*.15)*s.eco.P+(s.job?jobPay()*.02:0);
 const canJob=j=>!jobMiss(j).length;
-function ivOdds(j,k){const sc=k==='exp'?xpY(j.fld)*15+(s.st.sma-j.s)*.8:k==='charm'?(s.st.loo-50)*.8+(s.fol>1000?10:0):-10;return clamp(.55+sc/100+eduBonus(j),.1,.95)}
+function ivOdds(j,k){const sc=k==='exp'?xpY(j.fld)*15+(s.st.sma-j.s)*.8:k==='charm'?(s.st.loo-50)*.8+(s.fol>1000?10:0):-10;return clamp(.55+sc/100+eduBonus(j)-Math.max(0,s.eco.u-.045)*3,.1,.95)} // a weak job market makes interviews harder
 const eduBonus=j=>Math.max(0,...s.degs.map(d=>(SCHOOLS[d.sc]?.pres||0)*.04+(d.hon?.03:0)+(d.mj&&MAJORS[d.mj]===j.fld?.1:0)));
 const schoolOf=st=>st.sc==='inst'?{id:'inst',n:PG[st.p].at,pres:0}:{id:st.sc,...SCHOOLS[st.sc]};
 const schoolsFor=P=>P.at?[{id:'inst',n:P.at,cost:1,adm:0,pres:0}]:P.sch.map(id=>({id,...SCHOOLS[id]}));
@@ -1159,7 +1198,7 @@ function needHtml(n){
   if(n.k==='till'){const f=n.full;return row('Business',f.length?(f.length===1?`${f[0]}'s till is full`:`${f.length} tills are full`):'Tills are filling up',f.length?`${f.join(' and ')} ${f.length===1?'has':'have'} stopped earning until you collect.`:'Collect before they stop earning.',`<span class="amt">${fmt(n.pend)}</span><button class="pri" data-a="colAll">Collect</button>`)}
   if(n.k==='mgr')return row('Worth it now',`Hire a manager for ${n.b.n}`,`It earns ${fmt(bizInc(n.b,s.biz[n.b.id]))} a day, but only while you keep collecting.`,`<button data-a="mgr" data-x="${n.b.id}">Hire for ${fmt(n.b.cost*12)}</button>`);
   if(n.k==='low')return row(n.st==='hea'?'Health':'Mood',`${n.st==='hea'?'Health':'Happiness'} is low`,n.st==='hea'?'If it hits zero, your life ends.':'Unhappy people stop getting promoted, and their health slips.',n.a?`<button data-a="act" data-x="${n.a.id}">${n.a.n}${n.a.c?` · ${fmt(n.a.c)}`:''}</button>`:'');
-  if(n.k==='home'){const k=PM[n.l.t],v=k.base*n.l.m*s.re.idx;return row('Save on rent','You pay $30 a day in rent',`${k.n}, ${n.l.loc} is for sale for ${fmt(v)}. On a mortgage it would cost ${fmt(mpay(v*.8))} a day.`,`<button data-a="tab" data-x="home">See listings</button>`)}
+  if(n.k==='home'){const k=PM[n.l.t],v=k.base*n.l.m*s.re.idx;return row('Save on rent',`You pay ${fmt(30*s.eco.P)} a day in rent`,`${k.n}, ${n.l.loc} is for sale for ${fmt(v)}. On a mortgage it would cost ${fmt(mpay(v*.8))} a day.`,`<button data-a="tab" data-x="home">See listings</button>`)}
   if(n.k==='rel'){const A=PACTS.date,w=(n.p.c?.date||0)>s.day,c=A.c(n.p);return row('Relationship',`${esc(n.p.n)} feels neglected`,`Closeness is down to ${Math.round(n.p.rel)}. If it keeps falling, they may leave.`,`<button data-a="pp" data-x="${n.p.uid}" data-y="date" ${w||s.cash<c?'disabled':''}>Date night · ${fmt(c)}</button>`)}
   if(n.k==='perf'){const w=(s.cd.w_hard||0)>s.day;return row('Work','You could be fired',`Your performance is ${Math.round(s.perf)}. Below 20, your boss starts looking for a replacement.`,`<button data-a="work" data-x="hard" ${w?'disabled':''}>Work hard</button>`)}
   if(n.k==='guide')return row('New here?','Take the one-minute tour','It shows where everything is and how to make your first money.','<button class="pri" data-a="guide">Start the tour</button><button data-a="tskip">No thanks</button>',1);
@@ -1175,7 +1214,7 @@ function bestBuy(){ // cheapest income per dollar, counting milestone doublings
   let best=null;
   for(const b of BIZ){const o=s.biz[b.id]||{n:0};if(!o.n&&s.cash<b.cost)continue;const nm=MILES.find(m=>m>o.n);
     for(const k of [1,nm?nm-o.n:1]){if(k<1||k>100)continue;const c=bcost(b,o.n,k);if(c>s.cash)continue;
-      const gain=b.inc*((o.n+k)*bmul(o.n+k)-o.n*bmul(o.n))*s.legacy,pb=c/gain;if(!best||pb<best.pb)best={b,k,c,pb,m:bmul(o.n+k)>bmul(o.n)?o.n+k:0}}}
+      const gain=b.inc*((o.n+k)*bmul(o.n+k)-o.n*bmul(o.n))*s.legacy*bizPf(b),pb=gain>0?c/gain:Infinity;if(!best||pb<best.pb)best={b,k,c,pb,m:bmul(o.n+k)>bmul(o.n)?o.n+k:0}}}
   return best;
 }
 function personRow(p){
@@ -1242,6 +1281,8 @@ dash(){
    <div><h2>Where it sits</h2><div class="stack">${parts.map(x=>`<span style="width:${x[1]/tot*100}%;background:${x[2]}"></span>`).join('')}</div>
     <div class="legend">${parts.map(x=>`<div><i style="background:${x[2]}"></i>${x[0]}<b>${fmt(x[1])}</b></div>`).join('')}</div></div>
   </section>
+  <div class="sec-h"><h2>The economy</h2><span class="${s.eco.rec?'dn':s.eco.g>.15?'up':''}">${ecoLabel()}</span></div>
+  <div class="stats4 eco">${[['Unemployment',s.eco.u],['Inflation',s.eco.pi],['Interest rate',s.eco.r],['Mortgage rate',mrate()]].map(([l,v])=>`<div><span>${l}</span><b class="num">${pctA(v)}</b></div>`).join('')}<div><span>Prices since you started</span><b class="num">${pct(s.eco.P-1)}</b></div></div>
   <div class="sec-h"><h2>Goals</h2><span>${Object.keys(s.goals).length} of ${GOALS.length} reached</span><button class="link2" data-a="goals">See all</button></div>
   <div class="glist">${gl.map(({g,c,t})=>`<div><b>${g.n}</b><span class="mut">${g.d}</span><small>${goalProg(g,c,t)}</small></div>`).join('')||'<p class="mut">Every goal is done. The family legend is complete.</p>'}</div>`;
 },
@@ -1305,13 +1346,13 @@ biz(){
   const f=flows(),last=BIZ.reduce((m,b,i)=>s.biz[b.id]?.n?i:m,-1),bb=bestBuy();
   return `<section class="lede">
     <div><h2 class="headline">Businesses</h2>
-     <p class="dek">Managers pay <b class="num">${fmt(f.biz)}</b> a day on their own. Your tills take in <b class="num">${fmt(f.pend)}</b> a day until you collect, and stop filling after ${CAP} days.${s.day<s.boost?` Your promotion adds 25% for ${s.boost-s.day} more days.`:''}</p></div>
+     <p class="dek">Managers pay <b class="num">${fmt(f.biz)}</b> a day on their own. Your tills take in <b class="num">${fmt(f.pend)}</b> a day until you collect, and stop filling after ${CAP} days. ${s.eco.rec?'<span class="dn">The recession has customers holding back: hotels, banks and app studios feel it most, and some may run at a loss.</span>':s.eco.g>.3?'The economy is strong and customers are spending.':''}${s.day<s.boost?` Your promotion adds 25% for ${s.boost-s.day} more days.`:''}</p></div>
     <div class="bmode"><span class="mut" style="font-size:var(--text-xs)">Buy at a time</span><div class="seg2">${['1','10','100','max'].map(m=>`<button class="${bmode===m?'on':''}" data-a="bmode" data-x="${m}">${m==='max'?'Max':'×'+m}</button>`).join('')}</div></div>
   </section>
   ${bb?`<div class="bestbuy"><p><b>Best next buy:</b> ${bb.k} ${bb.k>1?plural(bb.b.n):bb.b.n} for ${fmt(bb.c)}${bb.m?`, reaching ${bb.m} and doubling its income`:''}. Pays for itself in about ${Math.max(1,Math.round(bb.pb))} days.</p><button class="pri" data-a="bbuy" data-x="${bb.b.id}" data-y="${bb.k}">Buy ${bb.k}</button></div>`:''}
   <div class="blist"><div class="brow head"><span>Business</span><span class="own">Owned</span><span class="inc">Per day</span><span>Till</span><span></span></div>
   ${BIZ.map((b,i)=>bizRow(b,i,last)).join('')}</div>
-  ${howto(`The buy button follows the switch above and shrinks to what you can afford. Milestones at ${MILES.slice(0,5).join(', ')} and on double a business's income. Managers keep earning while you're away.`)}`;
+  ${howto(`The buy button follows the switch above and shrinks to what you can afford. Milestones at ${MILES.slice(0,5).join(', ')} and on double a business's income. Small businesses return far more on the money you put in, but big ones earn far more in total. Profits follow the economy: a lemonade stand barely notices a recession, while a hotel can run at a loss. Competition closes a location now and then, more often in a recession and less often with a manager. Managers keep earning while you're away.`)}`;
 },
 stock(){
   const k=SK[sel],q=s.px[sel],h=s.port[sel],M=s.mkt,d=q.p/q.o-1,H=q.h,buy=ot.side==='buy',wl=BYCAP.filter(k=>wf==='All'||(wf==='Held'?s.port[k.t]:wf==='Penny'?k.pn:k.sec===wf&&!k.pn));
@@ -1427,7 +1468,7 @@ home(){
   ${s.re.list.map(l=>{const k=PM[l.t],v=k.base*l.m*idx,ok=s.cash>=v*.2&&canBorrow(v*.8);return `<tr class="${s.cash>=v||ok?'':'dim'}"><td><b>${k.n}, ${l.loc}</b>${k.biz?' <span class="mut">· investment only</span>':''}</td><td class="r num">${fmt(v)}</td><td class="r num">${fmt(v*k.yld/365)}</td><td class="r num">${fmt(mpay(v*.8))}</td>
    <td class="act"><button data-a="pbuy" data-x="${l.uid}" ${s.cash<v?'disabled':''}>Buy outright</button><button class="pri" data-a="pbuy" data-x="${l.uid}" data-y="m" ${ok?'':'disabled'}>Mortgage, ${fmt(v*.2)} down</button></td></tr>`}).join('')}
   </tbody></table></div>
-  ${howto(`New listings in ${s.re.next-s.day} days. Mortgages take 20% down and run 30 years at 5.5%, and the bank only lends while repayments stay under 40% of your income. Selling costs 3% in fees. Anything you don't live in gets rented out once a tenant is found.`)}`;
+  ${howto(`New listings in ${s.re.next-s.day} days. Mortgages take 20% down and run 30 years at a fixed rate that follows the economy, ${pctA(mrate())} today, and the bank only lends while repayments stay under 40% of your income. Selling costs 3% in fees. Anything you don't live in gets rented out once a tenant is found.`)}`;
 },
 garage(){
   let val=0;for(const c of s.cars)val+=c.v;const b=bestCar();
@@ -1704,6 +1745,11 @@ function selfTest(){ // open with ?test=1 — never touches your real save
   ACT.buy('APEL',10);const ap=bq0.p;s.port.APEL.sl=ap*.9;s.port.APEL.tp=ap*1.2;bq0.op=ap*.8;bq0.lo=ap*.75;bq0.hi=ap*.85;const cash0=s.cash;brackets(1);ok(!s.port.APEL&&Math.abs(s.cash-cash0-10*ap*.8)<1e-6,'a gap through the stop fills at the open');
   ACT.xbuy('SATS','1000');const sc=coin('SATS');ACT.bq('coin:SATS','sl:-.05');ok(s.wallet.SATS.sl>0,'crypto stop loss set');sc.p*=.9;cbrackets();ok(!s.wallet.SATS,'crypto stop loss sells');
   ACT.buy('CSTK',10);s.port.CSTK.sl=500;s.port.CSTK.tp=2000;s.px.CSTK.p=2600;split(SK.CSTK);ok(s.port.CSTK.sl===50&&s.port.CSTK.tp===200,'splits move the levels too');sel='CSTK';tab='stock';ok(VIEWS.stock().includes('Take profit and stop loss'),'panel shows');
+  newGame('Eco','street');s.eco.P=2;applyPrices();ok(BIZ[0].cost===240&&JOBS[0].pay===2*BASEP[0][0].pay&&ACTS.find(a=>a.c>0).c===2*BASEP[1][ACTS.findIndex(a=>a.c>0)].c,'prices follow the price level');s.eco.P=1;applyPrices();
+  const hot=BM.hotel,lem=BM.lemon;s.eco.g=.4;const pfB=bizPf(hot);s.eco.g=-1;ok(pfB>1&&bizPf(hot)<0&&bizPf(lem)>.8,'a slump sinks hotels, barely touches lemonade');s.eco.g=.3;
+  s.biz.cafe={n:5,mgr:0,pend:0,spent:1e5};closeCheck(BM.cafe,s.biz.cafe,1);ok(s.biz.cafe.n===4&&s.biz.cafe.spent===8e4,'competition closes a location');
+  for(let y=0;y<30*365;y++){s.day++;ecoDay();marketDay(1)}const E=s.eco;ok([E.g,E.u,E.pi,E.r,E.lr,E.P].every(Number.isFinite)&&E.u>=.03&&E.u<=.14&&E.r>=0&&E.P>1.2&&E.P<6,'thirty years of economy stay sane');
+  s.cash=2e5;s.job='crew';relist();s.re.list[0]={...s.re.list[0],t:'studio'};const lu2=s.re.list[0].uid;ACT.pbuy(lu2,'m');const mp=s.props.find(p=>p.loan>0);ok(mp&&Math.abs(mp.rate-mrate())<1e-12,'a mortgage locks in the going rate');
   newGame('Goal','street');s.cash=2e6;checkGoals();ok(s.goals.nw1&&s.goals.nw2&&!s.goals.nw3,'goals unlock');const gn=Object.keys(s.goals).length;checkGoals();ok(Object.keys(s.goals).length===gn,'goals unlock once');delete s.goals;upgrade();ok(s.goals.nw2&&s.log[0].t.includes('already reached'),'old saves backfill goals quietly');
   tab='dash';ok(VIEWS.dash().includes('Goals'),'goals on home');goalsModal();
   const sp2=meet('spouse',70),k1=addChild(),k2=addChild(),k3=addChild();k1.b=s.day-40*365;k2.b=s.day-30*365;k3.b=s.day-5*365;k1.rel=90;
