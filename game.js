@@ -943,9 +943,23 @@ const ACT={
   study:k=>{const A=STUDY[k];if(!s.study||s.day<(s.cd['s_'+k]||0)||s.cash<(A.c||0))return;s.cash-=A.c||0;s.cd['s_'+k]=s.day+A.cd;toast(A.fx())},
   dropout:x=>{if(!s.study)return;if(x!=='yes')return modal(`<h2>Drop out of ${degName(s.study)}?</h2><p>You won't get your tuition back, and any student loan stays.</p><div class="row"><button class="bad" data-a="dropout" data-x="yes">Drop out</button><button data-a="close">Keep studying</button></div>`);log(`Dropped out of ${degName(s.study)}.`,'bad');s.study=null;closeModal()},
   payloan:()=>{if(!s.debt||s.cash<s.debt)return;s.cash-=s.debt;s.debt=0;log('Paid off your student loans.','good')},
-  help:()=>modal(`<p class="kicker">Help and settings</p><h2>The Hustle</h2><div class="choices"><button data-a="guide2">Replay the guide</button><button class="bad" data-a="reset">Start a new life</button><button class="pri" data-a="close">Back to the game</button></div>
+  help:()=>modal(`<p class="kicker">Help and settings</p><h2>The Hustle</h2><div class="choices"><button data-a="guide2">Replay the guide</button><button data-a="exp">Back up your save</button><button data-a="imp">Load a saved game</button><button class="bad" data-a="reset">Start a new life</button><button class="pri" data-a="close">Back to the game</button></div>
     <h3 style="margin-top:var(--space-lg)">Keyboard</h3><table class="ledger"><tbody><tr><td class="num">1 to 0</td><td>Switch screens</td></tr><tr><td>Space</td><td>Pause or resume</td></tr><tr><td>C</td><td>Collect every till</td></tr><tr><td>?</td><td>Replay the guide</td></tr><tr><td>Esc</td><td>Close the guide</td></tr></tbody></table>`),
   guide2:()=>{closeModal();ACT.guide()},
+  exp:()=>{modal('<p class="kicker">Back up</p><h2>Preparing your save…</h2>');packSave().then(code=>{expCode=code;modal(`<p class="kicker">Back up</p><h2>Your save</h2>
+    <p>Your game lives only in this browser. Keep a copy somewhere safe, or use it to move your family to another device. It holds ${esc(s.name)}, generation ${s.gen}, and everything they own.</p>
+    <textarea id="savecode" readonly rows="5" style="width:100%;font-size:var(--text-xs)">${code}</textarea><p class="mut sess">${Math.round(code.length/1024)} KB</p>
+    <div class="row" style="margin-top:var(--space-xs)"><button class="pri" data-a="expcopy">Copy the code</button><button data-a="expfile">Download a file</button><button data-a="close">Done</button></div>`)})},
+  expcopy:()=>{const el=$('#savecode');el.select();(navigator.clipboard?.writeText(expCode)||Promise.reject()).then(()=>toast('Save code copied'),()=>{try{document.execCommand('copy');toast('Save code copied')}catch{toast('Select the code and copy it')}})},
+  expfile:()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([expCode],{type:'text/plain'}));a.download=`hustle-${s.name.replace(/[^a-z0-9]+/gi,'-').toLowerCase()}-year-${dateOf(s.day).y}.hustle`;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),5000)},
+  imp:()=>modal(`<p class="kicker">Load a saved game</p><h2>Load a save</h2><p>Paste a save code, or pick a save file. It replaces the game you're playing now, so back that up first if you want to keep it.</p>
+    <textarea id="impcode" rows="5" style="width:100%;font-size:var(--text-xs)" placeholder="Paste your save code here"></textarea>
+    <label style="margin-top:var(--space-xs)">Or choose a file<input id="impfile" type="file" accept=".hustle,.txt,.json"></label>
+    <p id="imperr" class="dn sess"></p>
+    <div class="row" style="margin-top:var(--space-xs)"><button class="pri" data-a="imp2">Load it</button><button data-a="close">Cancel</button></div>`),
+  imp2:()=>{const code=$('#impcode').value;unpackSave(code).then(d=>{if(d?.v!==1||!d.px||!d.name||!d.st)throw 0;
+      s=d;upgrade();save();closeModal();tab='dash';render();toast(`Loaded ${esc(s.name)}, generation ${s.gen}`)},
+    ()=>{$('#imperr').textContent="That doesn't look like a save from this game. Check you copied all of it."})},
   howto:()=>{helpOpen[tab]=!helpOpen[tab]},
   showall:()=>{showAll[tab]=!showAll[tab]},
   pmore:x=>{openP=openP===+x?null:+x},
@@ -1072,6 +1086,15 @@ function ivHtml(){const j=JM[iv.id],o=k=>`${Math.round(ivOdds(j,k)*100)}% chance
   <button data-a="close">Not today</button></div>`}
 
 // ---------- modals ----------
+// ---------- save backups: gzip + base64 when the browser can, plain base64 otherwise ----------
+let expCode='';
+const b64=u=>{let s2='';for(let i=0;i<u.length;i+=0x8000)s2+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000));return btoa(s2)};
+async function packSave(o=s){const j=JSON.stringify(o);if(typeof CompressionStream==='undefined')return 'HJ'+btoa(unescape(encodeURIComponent(j)));
+  return 'HG'+b64(new Uint8Array(await new Response(new Blob([j]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer()))}
+async function unpackSave(code){code=code.replace(/\s+/g,'');if(code[0]==='{')return JSON.parse(code);const kind=code.slice(0,2),raw=atob(code.slice(2));
+  if(kind==='HJ')return JSON.parse(decodeURIComponent(escape(raw)));if(kind!=='HG')throw 0;
+  return JSON.parse(await new Response(new Blob([Uint8Array.from(raw,c=>c.charCodeAt(0))]).stream().pipeThrough(new DecompressionStream('gzip'))).text())}
+document.addEventListener('change',e=>{if(e.target.id==='impfile'&&e.target.files[0])e.target.files[0].text().then(x=>{$('#impcode').value=x.trim()})});
 function modal(h,wide){$('#mbox').innerHTML=h;$('#mbox').classList.toggle('wide',!!wide);$('#modal').hidden=false}
 function closeModal(){$('#modal').hidden=true;render()}
 function startModal(h={}){
@@ -1693,6 +1716,7 @@ function selfTest(){ // open with ?test=1 — never touches your real save
   const vals=[s.cash,netWorth(),s.fol,...Object.values(s.st),...Object.values(s.px).map(q=>q.p),...s.cx.coins.map(c=>c.p),walletVal()];
   ok(vals.every(Number.isFinite),'finite after sim');ok(s.dead,'eventually dies');
   console.log(`self-test passed · simulated ${d} days, died at ${Math.floor(age())}`);
+  const snap=JSON.parse(JSON.stringify(s));packSave(snap).then(unpackSave).then(x=>console.log(JSON.stringify(x)===JSON.stringify(snap)?'save backup round trip ok':'save backup round trip FAILED'),e=>console.log('save backup round trip FAILED '+e));
 }
 
 (function boot(){
