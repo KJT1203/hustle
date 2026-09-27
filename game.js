@@ -453,6 +453,23 @@ const bizPf=b=>1+b.lev*b.cyc*.25*((s.eco?.g??.2)-.2); // profit factor: demand s
 function closeCheck(b,o,p=o.n*b.cl*(s.eco.rec?2.5:1)*(o.mgr?.7:1)/365){ // competition closes locations now and then
   if(!o.n||R()>=p)return;o.spent*=(o.n-1)/o.n;o.n--;log(`One of your ${plural(b.n)} closed. ${s.eco.rec&&R()<.5?'Customers stopped spending.':pick(CLOSE_WHY)}`,'bad')}
 
+// ---------- the bank: savings, an index fund, government bonds and a retirement account ----------
+const finNew=()=>({sav:0,fu:0,fc:0,bonds:[],ira:0,iraC:0,iraPct:0,iraY:0,iraYr:0});
+const savRate=()=>Math.max(0,s.eco.r-.005),FUND_FEE=.0003,FUND_DY=.015;
+const fundPx=()=>idx()/10; // the Hustle 500 fund: a tenth of the index
+const bondY=term=>term>=10?s.eco.lr+.002:Math.max(0,s.eco.r+.001);
+const bondVal=b=>b.amt*Math.max(.3,1+(b.rate-bondY(b.term))*Math.max(0,(b.mat-s.day)/365)); // a bond's price moves against rates, more so the longer it has left
+const iraVal=()=>s.fin.ira*fundPx(),iraLimit=()=>25000*s.eco.P,iraRoom=()=>Math.max(0,iraLimit()-(s.fin.iraYr===dateOf(s.day).y?s.fin.iraY:0));
+const finVal=()=>{const F=s.fin;return F.sav+F.fu*fundPx()+F.bonds.reduce((a,b)=>a+bondVal(b),0)+iraVal()};
+function iraPut(c,match=0){const F=s.fin,y=dateOf(s.day).y;if(F.iraYr!==y){F.iraYr=y;F.iraY=0}F.iraY+=c;F.iraC+=c+match;F.ira+=(c+match)/fundPx()}
+function finDay(){
+  const F=s.fin,px=fundPx();
+  F.sav*=1+savRate()/365;F.fu*=1-FUND_FEE/365;F.ira*=1-FUND_FEE/365;
+  for(const b of [...F.bonds]){s.cash+=b.amt*b.rate/365;if(s.day>=b.mat){s.cash+=b.amt;F.bonds.splice(F.bonds.indexOf(b),1);log(`Your ${b.term}-year bond matured and paid back ${fmt(b.amt)}.`,'good')}}
+  if(s.job&&F.iraPct>0){const pay=jobPay(),c=Math.min(pay*F.iraPct,iraRoom(),Math.max(0,s.cash)),m=c>0?Math.min(c,pay*.06)*.5:0;if(c>0){s.cash-=c;iraPut(c,m)}} // the employer matches half, up to 6% of pay
+  if(s.day%91===45){const d=F.fu*px*FUND_DY/4;if(d>0){s.cash+=d;log(`The Hustle 500 fund paid ${fmt(d)} in dividends.`,'good')}F.ira*=1+FUND_DY/4}
+}
+
 // ---------- state ----------
 const SAVE='hustle-v1',GROW=1.13,CAP=10,MILES=[10,25,50,100,150,200,300,400,500];
 let helpOpen={},showAll={},openP=null,tour=-1,tourSpeed=1,tourJump=false,enr=null,iv=null,bmode='1',wf='All',bd={},lastSpeed=1,lastIn=[],cg=null,tf='3M',cmode='candle',hov=null,ot={side:'buy',qty:10}; // screen state, not saved
@@ -532,7 +549,7 @@ function upgrade(){ // bring older saves up to date
   if(!s.people){const r=s.rel,k=s.kids||0;delete s.rel;delete s.kids;s.people=[];makeFamily();if(r)meet(r===2?'spouse':'date',65);for(let i=0;i<k;i++)addChild().b=s.day-rint(1,12)*365;
     s.xp={};if(s.job)s.xp[JM[s.job].fld]=s.jobDays;s.perf=55;s.raise=0;s.pension=0}
   if(!s.goals){s.goals={};checkGoals(1)}
-  s.min??=480;s.eco??=ecoNew();applyPrices();
+  s.min??=480;s.eco??=ecoNew();s.fin??=finNew();applyPrices();
   const fresh=STOCKS.filter(k=>!s.px[k.t]);if(fresh.length){for(const k of fresh)seedStock(k);for(let i=0;i<239;i++)tradeDay(1,fresh);fresh.forEach(anchor)}
   s.orders??=[];const M=s.mkt;M.h??=MVOL.bull**2/YR;M.eps??=0;M.cb??=0;for(const k of STOCKS)initStock(k);if(!M.rc){M.rc=capSum()*.6;M.div=(capSum()+M.rc)/5000;M.ic=M.ih=5000;M.lab='Bull market'} // stocks added since this save
   for(const k of STOCKS){const q=s.px[k.t];if(q.k)continue; // daily candles used to be drawn from closes alone
@@ -586,7 +603,7 @@ function bjEnd(){const b=s.cz.bj,p=hv(b.p),nat=b.p.length===2&&p===21;
   const ret=p>21?0:nat&&!dnat?b.bet*2.5:dnat&&!nat?0:d>21||p>d?b.bet*2:p===d?b.bet:0;
   b.msg=p>21?'Bust.':nat&&!dnat?'Blackjack! Paid 3 to 2.':dnat&&!nat?'Dealer has blackjack.':ret>b.bet?(d>21?'Dealer busts. You win.':'You win.'):ret===b.bet?'Push. Your bet comes back.':'Dealer wins.';
   b.done=1;settle(b.bet,ret,'blackjack','bj')}
-function netWorth(){let w=s.cash;for(const t in s.port)w+=s.port[t].sh*s.px[t].p;for(const id in s.biz)w+=s.biz[id].spent*.5;for(const id in s.own)w+=SM[id].cost*.6;for(const p of s.props)w+=pval(p)-p.loan;for(const c of s.cars)w+=c.v;return w+walletVal()-(s.debt||0)}
+function netWorth(){let w=s.cash+(s.fin&&s.mkt.div?finVal():0);for(const t in s.port)w+=s.port[t].sh*s.px[t].p;for(const id in s.biz)w+=s.biz[id].spent*.5;for(const id in s.own)w+=SM[id].cost*.6;for(const p of s.props)w+=pval(p)-p.loan;for(const c of s.cars)w+=c.v;return w+walletVal()-(s.debt||0)}
 function log(t,k='info'){s.log.unshift({d:s.day,t,k});if(s.log.length>80)s.log.pop()}
 function chirp(h,n,x,v){s.feed.unshift({h,n,x,v,l:0,tl:rint(3,40)*(v?40:1),d:s.day});if(s.feed.length>60)s.feed.pop()}
 function toast(m){if(catching)return;const t=document.createElement('div');t.className='toast';t.innerHTML=m;$('#toasts').append(t);setTimeout(()=>t.remove(),2800)}
@@ -595,7 +612,7 @@ function newGame(name,bg,h={}){
   const b=BG[bg];
   s={v:1,name,handle:'@'+(name.toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,15)||'you'),day:0,startAge:18,cash:b.cash+(h.inherit||0),st:{...b.st},edu:b.edu||0,study:null,
      job:b.job||null,jobDays:0,rank:0,biz:{},port:{},px:{},mkt:{bull:true,h:MVOL.bull**2/YR,eps:0,cb:0,div:1,ic:1,ih:1,rc:1e13},orders:[],fol:b.fol||0,feed:[],own:{},people:[],degs:b.edu?[{p:'dip',sc:'cc',mj:'Computer science',hon:false}]:[],debt:0,xp:{},perf:50,raise:0,pension:0,wallet:{},cz:{chip:100,net:0,played:0,rh:[],ban:0},props:[],cars:[],home:null,re:{idx:1,list:[],next:0},cd:{},inbox:[],later:[],log:[],pet:0,
-     gen:h.gen||1,boost:0,lastPost:0,dead:0,lastSeen:Date.now(),goals:{...h.goals},min:480,eco:h.eco?{...h.eco}:ecoNew()};applyPrices();
+     gen:h.gen||1,boost:0,lastPost:0,dead:0,lastSeen:Date.now(),goals:{...h.goals},min:480,eco:h.eco?{...h.eco}:ecoNew(),fin:finNew()};applyPrices();
   s.legacy=1+.25*(s.gen-1);
   if(h.gen){s.st.sma=Math.round(s.st.sma*.7+h.sma*.3);s.st.loo=Math.round(s.st.loo*.7+h.loo*.3)} // a little of the family runs in the blood
   if(h.kid){s.startAge=h.age;add('hap',(h.rel-50)*.3)}
@@ -611,7 +628,7 @@ function newGame(name,bg,h={}){
 
 // ---------- simulation ----------
 function day(live){
-  s.day++;ecoDay();const A=age(),f=flows();
+  s.day++;ecoDay();finDay();const A=age(),f=flows();
   s.cash+=f.job+f.biz+f.spon+f.rent+f.own-f.exp-f.mort;
   if(s.debt>0){s.debt=Math.max(0,s.debt*(1+.06/365)-loanPay());if(s.debt<1){s.debt=0;log('Student loans paid off.','good')}}
   for(const p of s.props)if(p.loan>0){p.loan-=p.pay-p.loan*(p.rate||.055)/365;if(p.loan<=1){p.loan=p.pay=0;log(`Paid off the mortgage on your ${pname(p)}.`,'good')}}
@@ -912,6 +929,7 @@ const GOALS=[
  {id:'pension',n:'Well earned',d:'Retire on a pension',p:()=>has(s.pension>0)},
  {id:'fol2',n:'Household name',d:'Reach 1M followers',p:()=>[s.fol,1e6]},
  {id:'tycoon',n:'Tycoon',d:'Control a public company',p:()=>has(Object.keys(s.port).some(controls))},
+ {id:'nest',n:'Nest egg',d:'Have $1M in your retirement account',p:()=>[iraVal(),1e6],m:1},
  {id:'nw3',n:'Nine figures',d:'Reach a net worth of $100M',p:()=>[netWorth(),1e8],m:1},
  {id:'rocket',n:'To the moon',d:'Open a Rocket Company',p:()=>has(s.biz.rocket?.n)},
  {id:'old',n:'Long life',d:'Live to 85',p:()=>[age(),85]},
@@ -1076,6 +1094,15 @@ const ACT={
   bq:(key,y)=>{const[kind,t]=key.split(':'),[w,f]=y.split(':'),H=kind==='coin'?s.wallet[t]:s.port[t];if(!H)return;const now=kind==='coin'?coin(t).p:s.px[t].p,v=+(now*(1+ +f)).toPrecision(5);
     (bd[key]??={})[w]=v;ACT.bset(key)},
   bclr:key=>{const[kind,t]=key.split(':'),H=kind==='coin'?s.wallet[t]:s.port[t];if(H){delete H.tp;delete H.sl}delete bd[key]},
+  sdep:x=>{const a=x==='all'?Math.max(0,s.cash):Math.min(+x,s.cash);if(a<=0)return;s.cash-=a;s.fin.sav+=a},
+  swd:x=>{const F=s.fin,a=x==='all'?F.sav:Math.min(+x,F.sav);if(a<=0)return;F.sav-=a;s.cash+=a},
+  fbuy:x=>{if(!mktOpen())return;const a=x==='all'?Math.max(0,s.cash):Math.min(+x,s.cash);if(a<=0)return;s.cash-=a;s.fin.fu+=a/fundPx();s.fin.fc+=a;log(`Put ${fmt(a)} into the Hustle 500 fund.`)},
+  fsell:x=>{if(!mktOpen())return;const F=s.fin,f=x==='all'?1:+x,u=F.fu*f,v=u*fundPx(),c=F.fc*f;if(u<=0)return;F.fu-=u;F.fc-=c;s.cash+=v;log(`Sold ${fmt(v)} of the Hustle 500 fund (${v>=c?'+':''}${fmt(v-c)}).`,v>=c?'good':'bad')},
+  bnd:(term,x)=>{const a=Math.min(+x,s.cash),n=+term;if(a<=0)return;s.cash-=a;s.fin.bonds.push({amt:a,rate:bondY(n),term:n,mat:s.day+n*365,start:s.day});log(`Bought a ${n}-year government bond: ${fmt(a)} at ${pctA(bondY(n))}.`)},
+  bndsell:i=>{const F=s.fin,b=F.bonds[+i];if(!b)return;const v=bondVal(b);s.cash+=v;F.bonds.splice(+i,1);log(`Sold a ${b.term}-year bond early for ${fmt(v)} (${v>=b.amt?'+':''}${fmt(v-b.amt)}).`,v>=b.amt?'good':'bad')},
+  irapct:x=>{s.fin.iraPct=+x},
+  iradep:x=>{const a=Math.min(+x,s.cash,iraRoom());if(a<=0)return;s.cash-=a;iraPut(a);log(`Put ${fmt(a)} into your retirement account.`)},
+  iraw:x=>{const F=s.fin,v=iraVal(),a=x==='all'?v:Math.min(+x,v);if(a<=0)return;const pen=age()<60?a*.1:0;F.ira-=a/fundPx();F.iraC*=v?1-a/v:0;s.cash+=a-pen;log(`Took ${fmt(a)} out of your retirement account${pen?`, paying a ${fmt(pen)} early-withdrawal penalty`:''}.`,pen?'bad':'good')},
   ocancel:id=>{s.orders=s.orders.filter(o=>o.id!==+id)},
   qty:x=>{const st=10**Math.max(0,Math.floor(Math.log10(Math.max(1,ot.qty-(x==='-'?1:0)))));ot.qty=Math.max(1,ot.qty+(x==='+'?st:-st))},
   qset:x=>{const h=s.port[sel];ot.qty=x==='max'?Math.max(1,ot.side==='buy'?maxBuy(sel):h?.sh||1):+x},
@@ -1264,10 +1291,34 @@ function companyHtml(k,live){
     <div class="row"><button class="pri" data-a="ctrl" data-x="${k.t}" ${!live||nc>s.cash?'disabled':''}>Buy a controlling stake · ${fmt(nc)}</button>${!live?`<span class="mut sess">The market opens ${nextOpen()}.</span>`:nc>s.cash?`<span class="mut sess">You need ${fmt(nc-s.cash)} more.</span>`:''}</div>
     <p class="mut sess">That is ${big(need)} shares. Buying this many pushes the price up as you go.</p>`}</div>`;
 }
+function bankView(){
+  const F=s.fin,E=s.eco,px=fundPx(),fv=F.fu*px,live=mktOpen(),room=iraRoom(),old=age()>=60,btn=(a,x,l,dis)=>`<button data-a="${a}" data-x="${x}" ${dis?'disabled':''}>${l}</button>`;
+  return `<section class="lede"><div><h2 class="headline">Bank</h2>
+    <p class="dek">The central bank's rate is <b>${pctA(E.r)}</b> and inflation is <b>${pctA(E.pi)}</b>. Cash in your pocket loses that much a year. Savings earn <b>${pctA(savRate())}</b>, the index fund tracks the whole market, and bonds lock in today's rates.</p></div>
+    <div class="side"><p class="mut"><span class="figure">${fmt(finVal())}</span><br>in the bank and invested</p></div></section>
+  <div class="sec-h"><h2>Savings account</h2><span>${pctA(savRate())} a year, paid daily</span></div>
+  <p><b class="num">${fmt(F.sav)}</b> saved.${savRate()<E.pi?' <span class="mut">Right now that trails inflation, so savings are slowly losing buying power.</span>':''}</p>
+  <div class="quick">${['1000','10000','100000'].map(x=>btn('sdep',x,`Deposit ${fmt(+x)}`,s.cash<+x)).join('')}${btn('sdep','all','Deposit all cash',s.cash<1)}${btn('swd','1000',`Withdraw ${fmt(1000)}`,F.sav<1000)}${btn('swd','all','Withdraw all',F.sav<1)}</div>
+  <div class="sec-h"><h2>Hustle 500 index fund</h2><span>${qfmt(px)} a unit · ${pct(idxDay())} today</span></div>
+  <p>${F.fu?`You hold <b class="num">${fmt(fv)}</b>, <span class="num ${fv>=F.fc?'up':'dn'}">${pct(fv/F.fc-1)}</span> on the ${fmt(F.fc)} you put in.`:'The whole market in one purchase: every company in the Hustle 500, weighted by size.'} It charges 0.03% a year and pays about 1.5% a year in dividends each quarter.${live?'':` <span class="mut">It trades while the market is open; it opens ${nextOpen()}.</span>`}</p>
+  <div class="quick">${['1000','10000','100000'].map(x=>btn('fbuy',x,`Buy ${fmt(+x)}`,!live||s.cash<+x)).join('')}${btn('fbuy','all','Invest all cash',!live||s.cash<1)}${btn('fsell','.5','Sell half',!live||!F.fu)}${btn('fsell','all','Sell all',!live||!F.fu)}</div>
+  <div class="sec-h"><h2>Government bonds</h2><span>safe, and paid daily</span></div>
+  <div class="scroll"><table class="ledger"><thead><tr><th>Bond</th><th class="r">Yield</th><th></th></tr></thead><tbody>
+   ${[[1,'1-year bill'],[10,'10-year note']].map(([n,l])=>`<tr><td><b>${l}</b><div class="sub">${n===1?'Follows the central bank closely.':'Locks in a rate for a decade. If rates rise, its price falls if you sell early.'}</div></td><td class="r num">${pctA(bondY(n))}</td><td class="act">${['10000','100000','1000000'].map(x=>`<button data-a="bnd" data-x="${n}" data-y="${x}" ${s.cash<+x?'disabled':''}>${fmt(+x)}</button>`).join('')}</td></tr>`).join('')}
+  </tbody></table></div>
+  ${F.bonds.length?`<div class="scroll"><table class="ledger"><thead><tr><th>You hold</th><th class="r">Rate</th><th class="r">Matures</th><th class="r">Worth today</th><th></th></tr></thead><tbody>${F.bonds.map((b,i)=>{const v=bondVal(b);return `<tr><td>${fmt(b.amt)} ${b.term}-year</td><td class="r num">${pctA(b.rate)}</td><td class="r">${dstr(b.mat)}, year ${dateOf(b.mat).y}</td><td class="r num ${v>=b.amt?'':'dn'}">${fmt(v)}</td><td class="act"><button data-a="bndsell" data-x="${i}">Sell</button></td></tr>`}).join('')}</tbody></table></div>`:''}
+  <div class="sec-h"><h2>Retirement account</h2><span>invested in the index fund</span></div>
+  <p><b class="num">${fmt(iraVal())}</b>${F.iraC?`, from ${fmt(F.iraC)} put in`:''}. You can add ${fmt(room)} more this year. ${s.job?'Your employer adds 50 cents for every dollar, up to 6% of your pay.':'Get a job and your employer will match part of what you put in.'} ${old?'You are old enough to take money out freely.':'Taking money out before 60 costs a 10% penalty.'}</p>
+  <p class="mut" style="margin-top:var(--space-2xs)">Automatically put in this much of your pay each day</p>
+  <div class="seg2" style="display:inline-flex;margin-top:4px">${[0,.03,.06,.1,.15].map(x=>`<button class="${F.iraPct===x?'on':''}" data-a="irapct" data-x="${x}">${x?x*100+'%':'None'}</button>`).join('')}</div>
+  <div class="quick" style="margin-top:var(--space-xs)">${['1000','5000'].map(x=>btn('iradep',x,`Add ${fmt(+x)}`,s.cash<+x||room<+x)).join('')}${btn('iraw','10000',`Take out ${fmt(10000)}`,iraVal()<10000)}${btn('iraw','all','Take out everything',iraVal()<1)}</div>
+  ${howto('A savings account is safe and follows interest rates. The index fund owns the whole market, so it rises about 7% a year on average but can fall by half in a bad bear market. Bonds pay a fixed rate; a 1-year bill is nearly cash, a 10-year note pays more but its price drops when rates rise. The retirement account grows in the index fund, gets your employer\'s match, and is meant to be left alone until 60.')}`;
+}
 const VIEWS={
+bank(){return bankView()},
 dash(){
   const f=flows(),N=needs(),net=f.job+f.biz+f.pend+f.spon+f.rent+f.own-f.exp-f.mort,h=s.nwh||[];
-  const parts=[['Cash',Math.max(0,s.cash)],['Businesses',Object.values(s.biz).reduce((a,o)=>a+o.spent*.5,0)],['Stocks',Object.entries(s.port).reduce((a,[k,o])=>a+o.sh*s.px[k].p,0)],['Crypto',walletVal()],['Property',s.props.reduce((a,p)=>a+Math.max(0,pval(p)-p.loan),0)],['Cars',s.cars.reduce((a,c)=>a+c.v,0)],['Lifestyle',Object.keys(s.own).reduce((a,k)=>a+SM[k].cost*.6,0)]].map((x,i)=>[...x,`var(--cat-${i+1})`]).filter(x=>x[1]>=1);
+  const parts=[['Cash',Math.max(0,s.cash)],['Businesses',Object.values(s.biz).reduce((a,o)=>a+o.spent*.5,0)],['Stocks',Object.entries(s.port).reduce((a,[k,o])=>a+o.sh*s.px[k].p,0)],['Crypto',walletVal()],['Bank',s.fin.sav+s.fin.fu*fundPx()+s.fin.bonds.reduce((a,b)=>a+bondVal(b),0)],['Retirement',iraVal()],['Property',s.props.reduce((a,p)=>a+Math.max(0,pval(p)-p.loan),0)],['Cars',s.cars.reduce((a,c)=>a+c.v,0)],['Lifestyle',Object.keys(s.own).reduce((a,k)=>a+SM[k].cost*.6,0)]].map((x,i)=>[...x,`var(--cat-${i+1})`]).filter(x=>x[1]>=1);
   const tot=parts.reduce((a,x)=>a+x[1],0)||1,gl=goalsLeft().slice(0,3);
   return `<section class="lede solo"><div><h2 class="headline">${esc(s.name)}, ${Math.floor(age())}</h2><p class="dek">${esc(s.name)} ${lifeLine()}</p></div></section>
   <div class="sec-h"><h2>Needs you</h2><span>${N.length?`${N.length} thing${N.length>1?'s':''}`:'all clear'}</span></div>
@@ -1513,13 +1564,13 @@ coin:(z,can)=>{const F=z.flip;return `<div class="coin">${F?(F.r==='h'?'Heads':'
   <div class="row"><button class="pri" data-a="flip" data-x="h" ${can?'':'disabled'}>Heads</button><button class="pri" data-a="flip" data-x="t" ${can?'':'disabled'}>Tails</button></div>`},
 };
 const ic=d=>`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
-const ICON={home:ic('<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/>'),user:ic('<circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4.5-6 8-6s7 2 8 6"/>'),work:ic('<rect x="3" y="7" width="18" height="13" rx="1"/><path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M3 12h18"/>'),
+const ICON={bank:ic('<path d="M3 10l9-6 9 6M5 10v8M10 10v8M14 10v8M19 10v8M3 20h18"/>'),home:ic('<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/>'),user:ic('<circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4.5-6 8-6s7 2 8 6"/>'),work:ic('<rect x="3" y="7" width="18" height="13" rx="1"/><path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M3 12h18"/>'),
  store:ic('<path d="M4 9l1.5-5h13L20 9M4 9v11h16V9M4 9h16M9 20v-6h6v6"/>'),chart:ic('<path d="M4 19h16M6 15l4-5 3 3 5-7"/>'),coin:ic('<circle cx="12" cy="12" r="8"/><path d="M10 8h3a2 2 0 0 1 0 4h-3m0 0h3.5a2 2 0 0 1 0 4H10m0-8v8"/>'),building:ic('<path d="M5 21V4h9v17M14 9h5v12M8 8h3M8 12h3M8 16h3M3 21h18"/>'),
  car:ic('<path d="M5 16l1.5-5.5A2 2 0 0 1 8.4 9h7.2a2 2 0 0 1 1.9 1.5L19 16M4 16h16v3H4zM7 19v1.5M17 19v1.5"/>'),bag:ic('<path d="M6 8h12l-1 12H7zM9 8a3 3 0 0 1 6 0"/>'),chat:ic('<path d="M4 5h16v11H9l-5 4z"/>'),cap:ic('<path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"/>'),heart:ic('<path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.5-7 10-7 10z"/>'),
  dice:ic('<rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="9" cy="9" r="1"/><circle cx="15" cy="15" r="1"/><circle cx="15" cy="9" r="1"/><circle cx="9" cy="15" r="1"/>'),pause:ic('<path d="M8 5v14M16 5v14"/>')};
-const TABS={dash:['Home','home'],life:['Life','user'],work:['Work','work'],people:['People','heart'],school:['Education','cap'],biz:['Business','store'],stock:['Markets','chart'],crypto:['Crypto','coin'],home:['Property','building'],garage:['Garage','car'],shop:['Lifestyle','bag'],chirp:['Chirp','chat'],casino:['Casino','dice']};
-const GROUPS=[['',['dash']],['You',['life','work','people','school']],['Money',['biz','stock','crypto','home']],['Spend',['garage','shop']],['Fun',['chirp','casino']]];
-const BAR=[['Home',['dash'],'home'],['Life',['life','work','people','school'],'user'],['Money',['biz','stock','crypto','home'],'chart'],['Spend',['garage','shop'],'bag'],['Fun',['chirp','casino'],'dice']];
+const TABS={dash:['Home','home'],bank:['Bank','bank'],life:['Life','user'],work:['Work','work'],people:['People','heart'],school:['Education','cap'],biz:['Business','store'],stock:['Markets','chart'],crypto:['Crypto','coin'],home:['Property','building'],garage:['Garage','car'],shop:['Lifestyle','bag'],chirp:['Chirp','chat'],casino:['Casino','dice']};
+const GROUPS=[['',['dash']],['You',['life','work','people','school']],['Money',['biz','stock','crypto','bank','home']],['Spend',['garage','shop']],['Fun',['chirp','casino']]];
+const BAR=[['Home',['dash'],'home'],['Life',['life','work','people','school'],'user'],['Money',['biz','stock','crypto','bank','home'],'chart'],['Spend',['garage','shop'],'bag'],['Fun',['chirp','casino'],'dice']];
 const KEYTABS=['dash','life','work','people','school','biz','stock','crypto','home','garage'];
 const TOUR=[
  {tab:'dash',t:'Welcome to The Hustle',x:'Time runs on Auto: a day passes in about 5 seconds while you’re idle, slows to 30 seconds while you’re playing, and slows further while you trade on Markets. Fast skips ahead at a second a day. Time keeps passing while the game is closed, at a day every 15 minutes. The game is paused while this guide is open. The ? button replays it, and holds settings and keyboard shortcuts.',hi:['#guideBtn']},
@@ -1750,6 +1801,11 @@ function selfTest(){ // open with ?test=1 — never touches your real save
   s.biz.cafe={n:5,mgr:0,pend:0,spent:1e5};closeCheck(BM.cafe,s.biz.cafe,1);ok(s.biz.cafe.n===4&&s.biz.cafe.spent===8e4,'competition closes a location');
   for(let y=0;y<30*365;y++){s.day++;ecoDay();marketDay(1)}const E=s.eco;ok([E.g,E.u,E.pi,E.r,E.lr,E.P].every(Number.isFinite)&&E.u>=.03&&E.u<=.14&&E.r>=0&&E.P>1.2&&E.P<6,'thirty years of economy stay sane');
   s.cash=2e5;s.job='crew';relist();s.re.list[0]={...s.re.list[0],t:'studio'};const lu2=s.re.list[0].uid;ACT.pbuy(lu2,'m');const mp=s.props.find(p=>p.loan>0);ok(mp&&Math.abs(mp.rate-mrate())<1e-12,'a mortgage locks in the going rate');
+  newGame('Bank','nerd');s.day=nextTrading(s.day);s.min=600;s.cash=1e6;const bk_F=s.fin;ACT.sdep('100000');const bk_sv0=bk_F.sav;finDay();ok(bk_F.sav>bk_sv0&&s.cash===9e5,'savings earn interest');
+  ACT.fbuy('100000');ok(Math.abs(bk_F.fu*fundPx()-1e5)<1e-6,'index fund buys at a tenth of the index');const bk_nw0=netWorth();ok(bk_nw0>9.9e5&&bk_nw0<1.01e6,'bank money counts in net worth');ACT.fsell('all');ok(!bk_F.fu&&Math.abs(s.cash-9e5)<1,'sell the fund');
+  ACT.bnd('10','100000');const bk_bd0=bk_F.bonds[0];ok(Math.abs(bondVal(bk_bd0)-1e5)<1,'a new bond is worth its price');s.eco.lr+=.02;ok(bondVal(bk_bd0)<9e4,'rising rates cut a long bond\'s price');const bk_cbond=s.cash;ACT.bndsell('0');ok(!bk_F.bonds.length&&s.cash-bk_cbond<9e4,'sell a bond early at the market price');
+  s.job='admin';ACT.irapct('.06');const bk_ira0=bk_F.ira,bk_c0=s.cash;finDay();ok(bk_F.ira>bk_ira0&&Math.abs((bk_c0-s.cash)-jobPay()*.06)<1e-6&&Math.abs(iraVal()-jobPay()*.09)<1e-6,'retirement contributions with a 50% match');
+  const bk_iv=iraVal(),bk_c1=s.cash;ACT.iraw('all');ok(bk_F.ira<1e-12&&Math.abs(s.cash-bk_c1-bk_iv*.9)<1e-6,'early withdrawal pays a 10% penalty');tab='bank';ok(VIEWS.bank().includes('Retirement account'),'bank screen');
   newGame('Goal','street');s.cash=2e6;checkGoals();ok(s.goals.nw1&&s.goals.nw2&&!s.goals.nw3,'goals unlock');const gn=Object.keys(s.goals).length;checkGoals();ok(Object.keys(s.goals).length===gn,'goals unlock once');delete s.goals;upgrade();ok(s.goals.nw2&&s.log[0].t.includes('already reached'),'old saves backfill goals quietly');
   tab='dash';ok(VIEWS.dash().includes('Goals'),'goals on home');goalsModal();
   const sp2=meet('spouse',70),k1=addChild(),k2=addChild(),k3=addChild();k1.b=s.day-40*365;k2.b=s.day-30*365;k3.b=s.day-5*365;k1.rel=90;
