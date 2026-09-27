@@ -1867,6 +1867,7 @@ function selfTest(){ // open with ?test=1 — never touches your real save
   const snap=JSON.parse(JSON.stringify(s));packSave(snap).then(unpackSave).then(x=>console.log(JSON.stringify(x)===JSON.stringify(snap)?'save backup round trip ok':'save backup round trip FAILED'),e=>console.log('save backup round trip FAILED '+e));
 }
 
+if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1'))navigator.serviceWorker.register('sw.js').catch(()=>{}); // makes it installable and offline-capable when served
 (function boot(){
   if(location.search.includes('test')){try{selfTest()}catch(e){console.error('self-test FAILED:',e.message)}s=null;tab='dash';}
   let d=null;if(!wiped)try{d=JSON.parse(localStorage.getItem(SAVE))}catch{}

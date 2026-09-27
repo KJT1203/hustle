@@ -29,5 +29,7 @@ An idle life simulator: `index.html`, `style.css` and `game.js`, no build step. 
 
 **Playing it:** a short guided tour starts with every new life (reopen it with the ? button or the ? key). the Home screen lists everything that needs you. Answer decisions right there, collect full tills, and hire managers when they pay off. Quick actions sit underneath, with your net worth chart and a breakdown of where your money is. The side menu groups the other screens and flags what needs attention; on a phone it becomes a bottom tab bar. Keys 1–0 switch screens, Space pauses, C collects everything.
 
-Play: open `index.html` (keep the three files together). It saves to localStorage automatically.
+Play: open `index.html` (keep the files together). It saves to the browser automatically; use **Back up your save** in the ? menu to keep a copy or move it to another device.
+
+Install as an app: serve the folder over https (for example GitHub Pages) or from `localhost` (`python -m http.server` in the folder, then open http://localhost:8000), and use the install button in Chrome or Edge's address bar. It then opens in its own window and plays offline (`manifest.webmanifest`, `sw.js`, `icon-*.png`).
 Self-check: open with `?test=1` (a query string, so serve the file with a server that keeps queries) and look for `self-test passed` in the console.
