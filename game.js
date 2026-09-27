@@ -820,8 +820,8 @@ function split(k){ // a pricey stock splits so a share costs a few hundred dolla
   const q=s.px[k.t],n=q.p>=5000?20:q.p>=2500?10:q.p>=1500?5:4;
   q.sh=shOf(k.t)*n;for(const x of ['p','o','op','hi','lo','eps'])q[x]/=n;for(let i=0;i<q.h.length;i++){q.h[i]=r6(q.h[i]/n);q.k[i]=q.k[i].map(x=>r6(x/n))}
   if(q.last){q.last.est/=n;q.last.act/=n}
-  const h=s.port[k.t];if(h){h.sh*=n;if(h.tp)h.tp/=n;if(h.sl)h.sl/=n;log(`$${k.t} split ${n}-for-1. You now hold ${big(h.sh)} shares.`,'good')}
-  for(const o of s.orders)if(o.t===k.t){o.n*=n;o.px/=n}
+  const h=s.port[k.t];if(h){h.sh*=n;if(h.tp)h.tp/=n;if(h.sl)h.sl/=n;if(h.hw)h.hw/=n;log(`$${k.t} split ${n}-for-1. You now hold ${big(h.sh)} shares.`,'good')}
+  for(const o of s.orders)if(o.t===k.t){o.n*=n;o.px/=n;if(o.tp)o.tp/=n;if(o.sl)o.sl/=n}
   chirp('@MarketWire','MarketWire',`${nameOf(k.t)} completes a ${n}-for-1 stock split. $${k.t} now trades around ${pfmt(q.p)}`,1);
 }
 
@@ -886,19 +886,21 @@ function fillOrders(bulk){ // live: check against the quote each minute; fast si
     if(!hit)return true;
     const h=s.port[o.t];if(buy?at*o.n>s.cash:!h||h.sh<o.n){log(`Your ${o.type} order for ${big(o.n)} $${o.t} was cancelled: not enough ${buy?'cash':'shares'}.`,'bad');return false}
     if(bulk)execAt(o.t,buy?o.n:-o.n,at);else ACT[o.side](o.t,o.n);
+    const H=s.port[o.t];if(buy&&H){if(o.tp)H.tp=o.tp;if(o.sl)H.sl=o.sl}
     toast(`${o.type==='limit'?'Limit':'Stop'} order filled: ${o.side==='buy'?'bought':'sold'} ${big(o.n)} ${o.t}`);return false});
 }
 // ---------- take profit and stop loss: attached to a whole position, one cancels the other ----------
 // A take profit sells at the bid once it's reached. A stop loss becomes a market sell, so a gap through it fills at the gapped price.
+const stopOf=H=>Math.max(H.sl||0,H.trail?H.hw*(1-H.trail):0); // a trailing stop sits a set distance under the highest price since it was set
 function brackets(bulk){
-  for(const t of Object.keys(s.port)){const h=s.port[t];if(!h||!h.tp&&!h.sl)continue;const q=s.px[t];let why=null,px;
-    if(bulk){const slHit=h.sl&&q.lo<=h.sl,tpHit=h.tp&&q.hi>=h.tp;
-      if(slHit&&(!tpHit||q.op<h.tp)){why='sl';px=Math.min(h.sl,q.op)}else if(tpHit){why='tp';px=Math.max(h.tp,q.op)} // both in one day: assume the stop went first unless it opened past the target
-      if(why)execAt(t,-h.sh,px)}
-    else{const bid=bidAsk(t)[0];why=h.sl&&bid<=h.sl?'sl':h.tp&&bid>=h.tp?'tp':null;if(why){px=fillAt(t,-h.sh).avg;ACT.sell(t,'all')}}
+  for(const t of Object.keys(s.port)){const h=s.port[t];if(!h||!h.tp&&!h.sl&&!h.trail)continue;const q=s.px[t];let why=null,px;
+    if(bulk){const sl=stopOf(h),slHit=sl&&q.lo<=sl,tpHit=h.tp&&q.hi>=h.tp;
+      if(slHit&&(!tpHit||q.op<h.tp)){why='sl';px=Math.min(sl,q.op)}else if(tpHit){why='tp';px=Math.max(h.tp,q.op)} // both in one day: assume the stop went first unless it opened past the target
+      if(why)execAt(t,-h.sh,px);else if(h.trail)h.hw=Math.max(h.hw,q.hi)}
+    else{const bid=bidAsk(t)[0];if(h.trail)h.hw=Math.max(h.hw,bid);const sl=stopOf(h);why=sl&&bid<=sl?'sl':h.tp&&bid>=h.tp?'tp':null;if(why){px=fillAt(t,-h.sh).avg;ACT.sell(t,'all')}}
     if(why)bfired('$'+t,why,px)}
 }
-function cbrackets(){for(const t of Object.keys(s.wallet)){const w=s.wallet[t],c=coin(t);if(!c||!w.tp&&!w.sl)continue;const why=w.sl&&c.p<=w.sl?'sl':w.tp&&c.p>=w.tp?'tp':null;if(why){ACT.xsell(t,'all');bfired('$'+t,why,c.p)}}}
+function cbrackets(){for(const t of Object.keys(s.wallet)){const w=s.wallet[t],c=coin(t);if(!c||!w.tp&&!w.sl&&!w.trail)continue;if(w.trail)w.hw=Math.max(w.hw,c.p);const sl=stopOf(w),why=sl&&c.p<=sl?'sl':w.tp&&c.p>=w.tp?'tp':null;if(why){ACT.xsell(t,'all');bfired('$'+t,why,c.p)}}}
 function bfired(n,why,px){const m=`${why==='sl'?'Stop loss':'Take profit'} hit on ${n}: sold everything at ${qfmt(px)}.`;log(m,why==='sl'?'bad':'good');toast(m)}
 function execAt(t,n,p){const was=controls(t),h=s.port[t]??={sh:0,cost:0};if(n>0){h.d=avgDay(h.d,h.sh,n);h.sh+=n;h.cost+=n*p;s.cash-=n*p}else{const m=-n,basis=h.cost*m/h.sh;h.cost-=basis;h.sh-=m;s.cash+=m*p;capGain(m*p-basis,h.d);if(!h.sh)delete s.port[t]}ctrlCheck(t,was)}
 
@@ -1112,7 +1114,8 @@ const ACT={
     if(tp)H.tp=tp;else delete H.tp;if(sl)H.sl=sl;else delete H.sl;delete bd[key];toast(tp||sl?'Take profit and stop loss saved':'Cleared')},
   bq:(key,y)=>{const[kind,t]=key.split(':'),[w,f]=y.split(':'),H=kind==='coin'?s.wallet[t]:s.port[t];if(!H)return;const now=kind==='coin'?coin(t).p:s.px[t].p,v=+(now*(1+ +f)).toPrecision(5);
     (bd[key]??={})[w]=v;ACT.bset(key)},
-  bclr:key=>{const[kind,t]=key.split(':'),H=kind==='coin'?s.wallet[t]:s.port[t];if(H){delete H.tp;delete H.sl}delete bd[key]},
+  bclr:key=>{const[kind,t]=key.split(':'),H=kind==='coin'?s.wallet[t]:s.port[t];if(H){delete H.tp;delete H.sl;delete H.trail;delete H.hw}delete bd[key]},
+  btrail:(key,y)=>{const[kind,t]=key.split(':'),H=kind==='coin'?s.wallet[t]:s.port[t];if(!H)return;if(!+y){delete H.trail;delete H.hw;return}H.trail=+y;H.hw=kind==='coin'?coin(t).p:bidAsk(t)[0];toast(`Trailing stop set ${+y*100}% under the price`)},
   sdep:x=>{const a=x==='all'?Math.max(0,s.cash):Math.min(+x,s.cash);if(a<=0)return;s.cash-=a;s.fin.sav+=a},
   swd:x=>{const F=s.fin,a=x==='all'?F.sav:Math.min(+x,F.sav);if(a<=0)return;F.sav-=a;s.cash+=a},
   fbuy:x=>{if(!mktOpen())return;const a=x==='all'?Math.max(0,s.cash):Math.min(+x,s.cash);if(a<=0)return;s.cash-=a;s.fin.fd=avgDay(s.fin.fd,s.fin.fu,a/fundPx());s.fin.fu+=a/fundPx();s.fin.fc+=a;log(`Put ${fmt(a)} into the Hustle 500 fund.`)},
@@ -1126,7 +1129,7 @@ const ACT={
   qty:x=>{const st=10**Math.max(0,Math.floor(Math.log10(Math.max(1,ot.qty-(x==='-'?1:0)))));ot.qty=Math.max(1,ot.qty+(x==='+'?st:-st))},
   qset:x=>{const h=s.port[sel];ot.qty=x==='max'?Math.max(1,ot.side==='buy'?maxBuy(sel):h?.sh||1):+x},
   order:()=>{const n=ot.qty,buy=ot.side==='buy';
-    if(ot.type&&ot.type!=='market'){const px=+ot.px;if(!(px>0)||(buy?n*px>s.cash:!(s.port[sel]?.sh>=n)))return;s.orders.push({id:uid(),t:sel,side:ot.side,type:ot.type,px,n,tif:ot.tif||'day',d:s.day});toast(`${ot.type==='limit'?'Limit':'Stop'} ${ot.side} order placed`);return}
+    if(ot.type&&ot.type!=='market'){const px=+ot.px,tp=buy&&+ot.tp>px?+ot.tp:0,sl=buy&&+ot.sl>0&&+ot.sl<px?+ot.sl:0;if(!(px>0)||(buy?n*px>s.cash:!(s.port[sel]?.sh>=n)))return;if(buy&&(ot.tp&&!tp||ot.sl&&!sl))return toast('Set the take profit above your buy price and the stop loss below it.');s.orders.push({id:uid(),t:sel,side:ot.side,type:ot.type,px,n,tif:ot.tif||'day',d:s.day,tp,sl});ot.tp=ot.sl=null;toast(`${ot.type==='limit'?'Limit':'Stop'} ${ot.side} order placed`);return}
     if(!mktOpen())return;const p=fillAt(sel,buy?n:-n).avg;if(ot.side==='buy'){if(n*p>s.cash)return;ACT.buy(sel,n)}else{const h=s.port[sel];if(!h||h.sh<n)return;ACT.sell(sel,n)}toast(`Filled: ${ot.side==='buy'?'bought':'sold'} ${big(n)} ${sel} at ${pfmt(p)}`)},
   deal:()=>{const b=stake();if(!b)return;const z=s.cz;z.bj={p:[drawCard(),drawCard()],d:[drawCard(),drawCard()],bet:b,done:0,msg:''};if(hv(z.bj.p)===21||hv(z.bj.d)===21)bjEnd()},
   hit:()=>{const b=s.cz.bj;if(!b||b.done)return;b.p.push(drawCard());if(hv(b.p)>=21)bjEnd()},
@@ -1285,10 +1288,11 @@ function bizRow(b,i,last){
 function bracketHtml(kind,t,now,avg,f){ // take profit / stop loss panel for a holding
   const key=`${kind}:${t}`,H=kind==='coin'?s.wallet[t]:s.port[t],d=bd[key]||{},val=w=>d[w]!==undefined?d[w]:H[w]??'',vs=v=>v?` <span class="${v>=avg?'up':'dn'}">${pct(v/avg-1)} vs your cost</span>`:'';
   return `<div class="brk"><h4>Take profit and stop loss</h4>
-   <p class="mut sess">${H.tp||H.sl?`Active: ${H.tp?`take profit at <b>${f(H.tp)}</b>${vs(H.tp)}`:''}${H.tp&&H.sl?', ':''}${H.sl?`stop loss at <b>${f(H.sl)}</b>${vs(H.sl)}`:''}. Whichever is hit first sells the whole position and cancels the other.`:'Sell the whole position automatically when the price reaches a target, or falls to a floor.'}</p>
+   <p class="mut sess">${H.tp||H.sl||H.trail?`Active: ${[H.tp?`take profit at <b>${f(H.tp)}</b>${vs(H.tp)}`:'',H.sl?`stop loss at <b>${f(H.sl)}</b>${vs(H.sl)}`:'',H.trail?`trailing stop at <b>${f(H.hw*(1-H.trail))}</b>`:''].filter(Boolean).join(', ')}. Whichever is hit first sells the whole position and cancels the other.`:'Sell the whole position automatically when the price reaches a target, or falls to a floor.'}</p>
    <div class="brow2"><label>Take profit at<input data-bk="${key}" data-w="tp" type="number" inputmode="decimal" step="any" min="0" value="${val('tp')}" placeholder="above ${f(now)}"></label><div class="row">${['.05','.1','.25'].map(x=>`<button data-a="bq" data-x="${key}" data-y="tp:${x}">+${x*100}%</button>`).join('')}</div></div>
    <div class="brow2"><label>Stop loss at<input data-bk="${key}" data-w="sl" type="number" inputmode="decimal" step="any" min="0" value="${val('sl')}" placeholder="below ${f(now)}"></label><div class="row">${['-.03','-.05','-.1'].map(x=>`<button data-a="bq" data-x="${key}" data-y="sl:${x}">${x*100}%</button>`).join('')}</div></div>
-   <div class="row"><button class="pri" data-a="bset" data-x="${key}">Save</button>${H.tp||H.sl?`<button data-a="bclr" data-x="${key}">Remove both</button>`:''}<span class="mut sess">Quick buttons set a level from the current price.</span></div></div>`;
+   <div class="brow2"><span class="mut sess">Trailing stop${H.trail?`: ${H.trail*100}% under the high of ${f(H.hw)}, so it sells at ${f(H.hw*(1-H.trail))}. It rises with the price and never falls.`:', which follows the price up and never down'}</span><div class="row">${[0,.05,.1,.2].map(x=>`<button class="${(H.trail||0)===x?'on':''}" data-a="btrail" data-x="${key}" data-y="${x}">${x?x*100+'%':'Off'}</button>`).join('')}</div></div>
+   <div class="row"><button class="pri" data-a="bset" data-x="${key}">Save</button>${H.tp||H.sl||H.trail?`<button data-a="bclr" data-x="${key}">Remove all</button>`:''}<span class="mut sess">Quick buttons set a level from the current price.</span></div></div>`;
 }
 const ownPct=v=>(v*100).toFixed(v<.001?4:v<.01?3:1)+'%';
 function companyHtml(k,live){
@@ -1467,6 +1471,7 @@ stock(){
     <div class="seg otype">${[['market','Market'],['limit','Limit'],['stop','Stop']].map(([v,l])=>`<button class="${ty===v?'on':''}" data-a="otype" data-x="${v}">${l}</button>`).join('')}</div>
     <dl><dt>Bid / Ask</dt><dd class="num">${qfmt(bid)} / ${qfmt(ask)}</dd></dl>
     ${ty!=='market'?`<label class="opx">${ty==='limit'?`${buy?'Buy at or below':'Sell at or above'}`:`${buy?'Buy if it rises to':'Sell if it falls to'}`}<input id="opx" type="number" inputmode="decimal" step="any" min="0" value="${ot.px??''}"></label>
+    ${buy?`<div class="obrk"><label>Then take profit at<input id="otp" type="number" inputmode="decimal" step="any" min="0" value="${ot.tp??''}" placeholder="optional"></label><label>and stop loss at<input id="osl" type="number" inputmode="decimal" step="any" min="0" value="${ot.sl??''}" placeholder="optional"></label></div>`:''}
     <div class="seg tifs"><button class="${(ot.tif||'day')==='day'?'on':''}" data-a="tif" data-x="day">Today only</button><button class="${ot.tif==='gtc'?'on':''}" data-a="tif" data-x="gtc">Until cancelled</button></div>`:''}
     <div class="qty"><button data-a="qty" data-x="-" aria-label="Fewer shares">−</button><b class="num">${big(ot.qty)}</b><button data-a="qty" data-x="+" aria-label="More shares">+</button></div>
     <div class="presets">${[['10','10'],['1000','1K'],['100000','100K']].map(([v,l])=>`<button data-a="qset" data-x="${v}">${l}</button>`).join('')}<button data-a="qset" data-x="max">Max</button></div>
@@ -1475,7 +1480,7 @@ stock(){
     <p class="mut" style="font-size:var(--text-xs)">${!(+ot.px>0)?'Enter a price.':buy&&ot.qty*ot.px>s.cash?'Not enough cash to cover this order.':!buy&&!okP?"You don't hold that many shares.":ty==='limit'?`Fills only at ${qfmt(+ot.px)} or better${live?'':', once the market opens'}.`:`Becomes a market order if the price ${buy?'rises':'falls'} to ${qfmt(+ot.px)}. It can fill worse than that in a fast market.`}</p>`:`<button class="place ${buy?'buy':'sell'}" data-a="order" ${ok?'':'disabled'}>${buy?'Buy':'Sell'} ${big(ot.qty)} ${k.t}</button>
     ${ok?Math.abs(imp)>=.01?`<p class="mut" style="font-size:var(--text-xs)">An order this size moves the price. Big buys push it up, big sells push it down.</p>`:'':`<p class="mut" style="font-size:var(--text-xs)">${!live?`The market is closed. It opens ${nextOpen()}.`:buy?'Not enough buying power.':"You don't hold that many shares."}</p>`}`}
     ${h?bracketHtml('stock',sel,q.p,h.cost/h.sh,qfmt):''}
-    ${myo.length?`<h4>Open orders</h4>${myo.map(o=>`<div class="oord"><span>${o.type==='limit'?'Limit':'Stop'} ${o.side} ${big(o.n)} ${o.t} at ${qfmt(o.px)}<small class="mut">${o.tif==='day'?'today only':'until cancelled'}</small></span><button data-a="ocancel" data-x="${o.id}">Cancel</button></div>`).join('')}`:''}
+    ${myo.length?`<h4>Open orders</h4>${myo.map(o=>`<div class="oord"><span>${o.type==='limit'?'Limit':'Stop'} ${o.side} ${big(o.n)} ${o.t} at ${qfmt(o.px)}<small class="mut">${o.tif==='day'?'today only':'until cancelled'}${o.tp?` · then take profit at ${qfmt(o.tp)}`:''}${o.sl?` · stop loss at ${qfmt(o.sl)}`:''}</small></span><button data-a="ocancel" data-x="${o.id}">Cancel</button></div>`).join('')}`:''}
    </div>
   </div>
   <h3>Positions</h3>
@@ -1701,7 +1706,7 @@ function drawChart(h,avg,f=fmt){
 
 // ---------- loop, input, save ----------
 document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b||b.disabled)return;ACT[b.dataset.a](b.dataset.x,b.dataset.y);if(s&&!s.dead)checkGoals();if(s&&$('#modal').hidden)render();else hdr()});
-document.addEventListener('input',e=>{if(e.target.id==='opx')ot.px=parseFloat(e.target.value)||null;if(e.target.dataset.bk){const v=e.target.value.trim();(bd[e.target.dataset.bk]??={})[e.target.dataset.w]=v===''?'':parseFloat(v)||''}});
+document.addEventListener('input',e=>{if(e.target.id==='opx')ot.px=parseFloat(e.target.value)||null;if(e.target.id==='otp')ot.tp=parseFloat(e.target.value)||null;if(e.target.id==='osl')ot.sl=parseFloat(e.target.value)||null;if(e.target.dataset.bk){const v=e.target.value.trim();(bd[e.target.dataset.bk]??={})[e.target.dataset.w]=v===''?'':parseFloat(v)||''}});
 document.addEventListener('mousemove',e=>{if(e.target.id==='tchart'){hov=e.offsetX;drawStock()}});
 document.addEventListener('mouseout',e=>{if(e.target.id==='tchart'){hov=null;drawStock()}});
 document.addEventListener('keydown',e=>{ // 1–0 screens, Space pause, C collect
@@ -1841,6 +1846,12 @@ function selfTest(){ // open with ?test=1 — never touches your real save
   const ty0=dateOf(s.day).y,tpaid=s.tax.paid;s.day+=365;taxAdd('ord',1);ok(s.tax.hist[ty0].tax===tpaid&&s.tax.paid===0,'a new tax year starts');
   s.cash=2e5;relist();s.re.list[0]={...s.re.list[0],t:'studio'};ACT.pbuy(s.re.list[0].uid);const hp2=s.props.at(-1);ACT.live(hp2.uid);hp2.paid=pval(hp2)*.5;const tp0=s.tax.paid;ACT.psell(hp2.uid);ok(s.tax.paid===tp0,'no tax on a home sold for under $250K of gain');
   tab='life';ok(VIEWS.life().includes('Taxes this year'),'tax summary');
+  newGame('Trail','street');s.day=nextTrading(s.day);s.min=600;s.cash=1e6;const tq=s.px.APEL;ACT.buy('APEL',10);ACT.btrail('stock:APEL','.1');const tr0=s.port.APEL.hw;
+  shock('APEL',.2,true);brackets();ok(s.port.APEL&&s.port.APEL.hw>tr0*1.15,'a trailing stop follows the price up');shock('APEL',-.12,true);brackets();ok(!s.port.APEL&&s.log[0].t.startsWith('Stop loss'),'and sells on the way down');
+  ACT.buy('APEL',10);ACT.btrail('stock:APEL','.1');const tw=s.port.APEL.hw;tq.op=tw*1.2;tq.hi=tw*1.3;tq.lo=tw*1.2;brackets(1);ok(s.port.APEL&&s.port.APEL.hw===tw*1.3,'fast simulation raises the trail on the day\'s high');tq.op=tw*1.25;tq.hi=tw*1.26;tq.lo=tw*1.1;brackets(1);ok(!s.port.APEL,'and sells when the low breaks it');
+  ACT.xbuy('SATS','1000');ACT.btrail('coin:SATS','.05');const cs2=coin('SATS');cs2.p*=1.3;cbrackets();ok(s.wallet.SATS&&s.wallet.SATS.hw===cs2.p,'crypto trails too');cs2.p*=.9;cbrackets();ok(!s.wallet.SATS,'crypto trailing stop sells');
+  const lp=s.px.MSFY.p;sel='MSFY';s.orders=[];ot={side:'buy',qty:10,type:'limit',px:+(lp*1.2).toPrecision(5),tp:+(lp*1.5).toPrecision(5),sl:+(lp*.8).toPrecision(5),tif:'day'};ACT.order();const ob=s.orders[0];ok(ob&&ob.tp&&ob.sl,'a limit buy can carry a take profit and stop loss');
+  minute();ok(!s.orders.length&&s.port.MSFY?.tp===ob.tp&&s.port.MSFY?.sl===ob.sl,'they switch on when it fills');ot={side:'buy',qty:10,type:'market'};
   newGame('Goal','street');s.cash=2e6;checkGoals();ok(s.goals.nw1&&s.goals.nw2&&!s.goals.nw3,'goals unlock');const gn=Object.keys(s.goals).length;checkGoals();ok(Object.keys(s.goals).length===gn,'goals unlock once');delete s.goals;upgrade();ok(s.goals.nw2&&s.log[0].t.includes('already reached'),'old saves backfill goals quietly');
   tab='dash';ok(VIEWS.dash().includes('Goals'),'goals on home');goalsModal();
   const sp2=meet('spouse',70),k1=addChild(),k2=addChild(),k3=addChild();k1.b=s.day-40*365;k2.b=s.day-30*365;k3.b=s.day-5*365;k1.rel=90;
