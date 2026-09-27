@@ -414,3 +414,4 @@ input:focus-visible{outline:2px solid var(--color-focus);outline-offset:1px}
 .ochain .row{display:flex;flex-wrap:wrap;gap:4px;align-items:center}.ochain .row button{height:2rem;padding:0 .6rem;font-size:var(--text-xs)}.ochain .row button.on{background:var(--color-ink);color:var(--color-paper)}
 .chain td,.chain th{padding-left:.4rem;padding-right:.4rem}.chain .c{text-align:center}.chain td.itm{background:color-mix(in oklch,var(--color-accent) 8%,transparent)}
 .chain .act button{height:1.9rem;padding:0 .6rem;font-size:var(--text-xs)}
+.lboard tr.me td{background:color-mix(in oklch,var(--color-accent) 10%,transparent)}.lboard td:first-child{width:2.5rem;color:var(--color-ink-3)}

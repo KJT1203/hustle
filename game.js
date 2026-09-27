@@ -972,7 +972,7 @@ function newEvent(){
   let r=R()*ok.reduce((t,e)=>t+W(e),0);
   for(const e of ok)if((r-=W(e))<=0){s.inbox.push({id:e.id,d:s.day,a:e.a?e.a(s):0});toast('A new decision is waiting');return}
 }
-function die(){s.dead=1;log(`${esc(s.name)} passed away at ${Math.floor(age())}.`,'bad');save();deathModal()}
+function die(){s.dead=1;log(`${esc(s.name)} passed away at ${Math.floor(age())}.`,'bad');save();lbPost(true);deathModal()}
 
 // ---------- goals: a family trophy case, kept across generations ----------
 const nOwned=()=>BIZ.filter(b=>s.biz[b.id]?.n).length,maxBiz=()=>Math.max(0,...Object.values(s.biz).map(o=>o.n)),has=c=>[c?1:0,1];
@@ -1123,6 +1123,7 @@ const ACT={
     s.cash+=v;const S=s.shorts[t]??={sh:0,px:0,d:s.day};S.px=(S.px*S.sh+v)/(S.sh+n);S.sh+=n;shock(t,p1/q.p-1,true);log(`Shorted ${big(n)} $${t} @ ${qfmt(avg)}.`)},
   cover:(t,x)=>{const S=s.shorts[t];if(!S||!mktOpen())return;const n=x==='all'?S.sh:Math.min(S.sh,+x),{avg,p1}=fillAt(t,n),g=(S.px-avg)*n;coverAt(t,n,avg);shock(t,p1/s.px[t].p-1,true);log(`Bought back ${big(n)} $${t} @ ${qfmt(avg)} (${g>=0?'+':''}${fmt(g)}).`,g>=0?'good':'bad')},
   mgtog:()=>{ot.mg=!ot.mg},
+  lbtog:()=>{s.lbOff=!s.lbOff;if(s.lbOff&&lb&&lbMe)lb.doc('board/'+lbMe).delete().catch(()=>{});else lbPost(true)},
   vm:x=>{vmode=x},oexp:x=>{oxp=+x},oqn:x=>{oq=+x},
   obuy:(key)=>{const[type,K,exp]=key.split('|'),k=SK[sel];if(!mktOpen()||k.pn)return;const q=optQuote(k,type,+K,+exp),c=q.ask*100*oq;if(c>s.cash||q.ask<=0)return;
     s.cash-=c;s.opts.push({id:uid(),t:sel,type,K:+K,exp:+exp,n:oq,cost:c,d:s.day});log(`Bought ${oq} ${optLabel({t:sel,type,K:+K,exp:+exp})} for ${fmt(c)}.`)},
@@ -1455,7 +1456,8 @@ dash(){
   <div class="sec-h"><h2>The economy</h2><span class="${s.eco.rec?'dn':s.eco.g>.15?'up':''}">${ecoLabel()}</span></div>
   <div class="stats4 eco">${[['Unemployment',s.eco.u],['Inflation',s.eco.pi],['Interest rate',s.eco.r],['Mortgage rate',mrate()]].map(([l,v])=>`<div><span>${l}</span><b class="num">${pctA(v)}</b></div>`).join('')}<div><span>Prices since you started</span><b class="num">${pct(s.eco.P-1)}</b></div></div>
   <div class="sec-h"><h2>Goals</h2><span>${Object.keys(s.goals).length} of ${GOALS.length} reached</span><button class="link2" data-a="goals">See all</button></div>
-  <div class="glist">${gl.map(({g,c,t})=>`<div><b>${g.n}</b><span class="mut">${g.d}</span><small>${goalProg(g,c,t)}</small></div>`).join('')||'<p class="mut">Every goal is done. The family legend is complete.</p>'}</div>`;
+  <div class="glist">${gl.map(({g,c,t})=>`<div><b>${g.n}</b><span class="mut">${g.d}</span><small>${goalProg(g,c,t)}</small></div>`).join('')||'<p class="mut">Every goal is done. The family legend is complete.</p>'}</div>
+  ${lbHtml()}`;
 },
 life(){
   const f=flows(),rows=[['Salary and pension',f.job],['Managed businesses',f.biz],['Tills to collect',f.pend],['Sponsorships',f.spon],['Companies you control',f.own],['Rent from tenants',f.rent],['Loan payments',-f.mort],['Income tax, about',-f.tax],[`Living costs${homeP()?'':', rent included'}`,-f.exp]].filter(r=>Math.abs(r[1])>=.01);
@@ -1825,7 +1827,27 @@ setInterval(()=>{
   while(acc>=1){acc--;minute();n++;if(s.dead)break}
   if(n){if(holding||document.activeElement?.matches?.('#view input'))hdr();else render()} // ponytail: skip DOM rebuild mid-click so buttons don't vanish under the cursor
 },100);
-function save(){if(!s||wiped)return;s.lastSeen=Date.now();try{localStorage.setItem(SAVE,JSON.stringify(s))}catch{}}
+function save(){if(!s||wiped)return;s.lastSeen=Date.now();try{localStorage.setItem(SAVE,JSON.stringify(s))}catch{}lbPost()}
+
+// ---------- the leaderboard: only on the published page, where claude.use('db') is served; hidden everywhere else ----------
+// Each player writes one row, board/<their id>; everyone reads the board. Names come from their Claude profile at render time and are never stored.
+let lb=null,lbUser=null,lbMe=null,lbRows=[],lbNames={},lbLast=0,lbSent=null;
+(async()=>{try{if(!window.claude?.use)return;const[db,user]=await Promise.all([claude.use('db'),claude.use('user')]);if(!db)return;
+  lb=db;lbUser=user;lbMe=user?await user.id():null;
+  db.collection('board').orderBy('nw','desc').limit(50).onSnapshot(q=>{lbRows=q.docs.map(d=>({id:d.id,...d.data()}));lbResolve()},()=>{lb=null;lbRows=[];if(s&&tab==='dash')render()});
+  lbPost(true)}catch{lb=null}})();
+async function lbResolve(){if(lbUser)lbNames=await lbUser.profiles(lbRows.map(r=>r.id));if(s&&tab==='dash'&&!holding)render()}
+function lbPost(force){ // at most once a minute, and only when something moved
+  if(!lb||!lbMe||!s||s.lbOff||wiped)return;const nw=Math.round(netWorth()),row={fam:String(s.name).slice(0,20),gen:s.gen,nw,age:Math.floor(age()),yr:dateOf(s.day).y,goals:Object.keys(s.goals).length,dead:!!s.dead,t:Date.now()};
+  if(!force&&(Date.now()-lbLast<60000||lbSent&&row.gen===lbSent.gen&&row.dead===lbSent.dead&&Math.abs(nw-lbSent.nw)<Math.max(1000,Math.abs(lbSent.nw)*.05)))return;
+  lbLast=Date.now();lbSent=row;lb.doc('board/'+lbMe).set(row).catch(e=>{if(e?.code==='invalid_argument')lbMe=null})}
+function lbHtml(){ // rows are other players' input: every field is checked and escaped
+  if(!lb&&!lbRows.length)return '';const rows=lbRows.filter(r=>Number.isFinite(+r.nw)).slice(0,10),mine=lbRows.findIndex(r=>r.id===lbMe);
+  return `<div class="sec-h"><h2>Leaderboard</h2><span>everyone who plays this page</span>${lbMe?`<button class="link2" data-a="lbtog">${s.lbOff?'Show my family':'Hide my family'}</button>`:''}</div>
+  ${rows.length?`<table class="ledger lboard"><tbody>${rows.map((r,i)=>`<tr class="${r.id===lbMe?'me':''}"><td class="num">${i+1}</td><td><b>${esc(String(r.fam||'A family').slice(0,20))}</b> <span class="mut">generation ${Math.max(1,+r.gen|0)}${r.dead?' · passed on':''}</span><div class="sub">${esc(lbNames[r.id]?.name||'A player')}${r.id===lbMe?' (you)':''} · ${Math.max(0,+r.goals|0)} goals</div></td><td class="r num">${fmt(+r.nw)}</td></tr>`).join('')}</tbody></table>
+  ${mine>=10?`<p class="mut sess">You're number ${mine+1}.</p>`:''}`:'<p class="mut">No one is on the board yet.</p>'}
+  <p class="mut sess">${s.lbOff?'Your family is hidden from the board.':'Your family shows here for everyone who opens this page: its name, generation, net worth and goals.'}</p>`;
+}
 setInterval(save,5000);addEventListener('beforeunload',save);
 document.addEventListener('visibilitychange',()=>{if(!s||s.dead)return;if(document.hidden){save();hiddenAt=Date.now()}else if(hiddenAt){offline(Date.now()-hiddenAt);hiddenAt=0;render()}});
 
@@ -1963,6 +1985,8 @@ function selfTest(){ // open with ?test=1 — never touches your real save
   shock('MSFY',.15,true);const ok_c2=s.cash;ACT.osell(String(s.opts[0].id));ok(!s.opts.length&&s.cash-ok_c2>0,'sell a call after a rally');
   ACT.obuy(`call|${ok_K}|${ok_x[0]}`);ACT.obuy(`put|${ok_K}|${ok_x[0]}`);for(const o of s.opts)o.exp=s.day;s.px.MSFY.p=ok_K*1.1;const ok_c3=s.cash;optSettle();ok(!s.opts.length&&Math.abs(s.cash-ok_c3-ok_K*.1*100)<1e-6,'at expiry the call pays its intrinsic value and the put expires worthless');
   tab='stock';vmode='options';ok(VIEWS.stock().includes('Strike'),'options chain');vmode='chart';
+  newGame('Board','street');const lb0=[lb,lbRows,lbMe];lb={};lbMe='u_me';lbRows=[{id:'u_x',fam:'<img src=x onerror=alert(1)>',gen:3,nw:2e6,goals:5},{id:'u_me',fam:'Board',gen:1,nw:1e5,goals:1},{id:'u_bad',fam:'Bad',gen:'x',nw:'NaN'}];
+  const lbh=lbHtml();ok(lbh.includes('&lt;img')&&!lbh.includes('<img src=x')&&lbh.includes('(you)')&&!lbh.includes('Bad</b>'),'leaderboard escapes and filters other players\' rows');[lb,lbRows,lbMe]=lb0;ok(lbHtml()==='','no leaderboard off the published page');
   newGame('Goal','street');s.cash=2e6;checkGoals();ok(s.goals.nw1&&s.goals.nw2&&!s.goals.nw3,'goals unlock');const gn=Object.keys(s.goals).length;checkGoals();ok(Object.keys(s.goals).length===gn,'goals unlock once');delete s.goals;upgrade();ok(s.goals.nw2&&s.log[0].t.includes('already reached'),'old saves backfill goals quietly');
   tab='dash';ok(VIEWS.dash().includes('Goals'),'goals on home');goalsModal();
   const sp2=meet('spouse',70),k1=addChild(),k2=addChild(),k3=addChild();k1.b=s.day-40*365;k2.b=s.day-30*365;k3.b=s.day-5*365;k1.rel=90;
