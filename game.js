@@ -417,7 +417,7 @@ const EVM=EM(EV.map(e=>[e.id,e]));
 
 // ---------- state ----------
 const SAVE='hustle-v1',GROW=1.13,CAP=10,MILES=[10,25,50,100,150,200,300,400,500];
-let helpOpen={},showAll={},openP=null,tour=-1,tourSpeed=1,tourJump=false,enr=null,iv=null,bmode='1',wf='All',lastSpeed=1,lastIn=[],cg=null,tf='3M',cmode='candle',hov=null,ot={side:'buy',qty:10}; // screen state, not saved
+let helpOpen={},showAll={},openP=null,tour=-1,tourSpeed=1,tourJump=false,enr=null,iv=null,bmode='1',wf='All',bd={},lastSpeed=1,lastIn=[],cg=null,tf='3M',cmode='candle',hov=null,ot={side:'buy',qty:10}; // screen state, not saved
 let s=null,tab='dash',sel='NOVA',csel='SATS',speed=1,holding=false,wiped=false,heir={},hiddenAt=0;
 const age=()=>s.startAge+s.day/365;
 const add=(k,v)=>s.st[k]=clamp(s.st[k]+v,0,100);
@@ -529,6 +529,7 @@ function cryptoDay(quiet,live){
     X.coins.push({t:k,n:`${k[0]+k.slice(1).toLowerCase()} ${pick(['Coin','Token','Protocol','Swap'])}`,p,o:p,h:[p],v:.13,mu:.002,b:2.5,meme:1,born:s.day,fate:R()<.22?'moon':'rug',fd:s.day+rint(15,180)});
     X.launched++;chirp('@degen_dan','Degen Dan',`$${k} just launched. still early 👀`);
   }
+  if(!live)cbrackets();
   X.coins=X.coins.filter(c=>!c.dead||s.wallet[c.t]||s.day-c.dead<60);
 }
 const rc=n=>n===0?'g':RED.has(n)?'red':'blk';
@@ -633,7 +634,7 @@ function nextTrading(d){while(!tradingDay(d))d++;return d}
 function nextOpen(){if(tradingDay()&&s.min<OPEN)return `at ${clock(OPEN)}`;const d=nextTrading(s.day+1);return d===s.day+1?`tomorrow at ${clock(OPEN)}`:d-s.day<7?`${WD[wdOf(d)]} at ${clock(OPEN)}`:`${dstr(d)} at ${clock(OPEN)}`}
 function minute(){
   if(++s.min>=1440){s.min=0;day(1);if(s.dead)return}
-  cstep(1/1440);
+  cstep(1/1440);cbrackets();
   if(tradingDay()){const c=closeAt();if(s.min===OPEN)openBell();else if(s.min>OPEN&&s.min<=c){mtick(s.min-OPEN-1,c-OPEN);if(s.min===c)closeBell()}}
 }
 function marketDay(quiet,live){ // once per calendar day; live play moves prices minute by minute instead of here
@@ -674,7 +675,7 @@ function openBell(){ // overnight news lands as a gap, then scheduled earnings a
 }
 function mtick(j,n){ // minute j of an n-minute session
   if(halted())return;mstep((1-GAP)*uw(n)[j]);pennyNews(1/n);if(R()<1/(25*YR*n))crash();else if(R()<.1/n)news();
-  breakers();fillOrders();
+  breakers();if(!halted()){fillOrders();brackets()}
 }
 function closeBell(quiet){ // the session's market move updates volatility; splits, the index and day orders settle
   const M=s.mkt,e=M.eps;M.h=clamp(M.h*G_B+(1-G_A-G_G/2-G_B)*(M.bull?MVOL.bull:MVOL.bear)**2/YR+(G_A+(e<0?G_G:0))*e*e,(.06**2)/YR,(.9**2)/YR);
@@ -694,7 +695,7 @@ function tradeDay(quiet,list=STOCKS){ // a whole session in one step, for price 
   mstep(1-GAP,list);
   for(const k of list){const q=s.px[k.t],sd=par(k).sig/Math.sqrt(YR)*.6;q.hi=Math.max(q.op,q.p)*Math.exp(Math.abs(gauss())*sd);q.lo=Math.min(q.op,q.p)*Math.exp(-Math.abs(gauss())*sd);q.k[q.k.length-1]=[q.op,q.hi,q.lo]}
   if(!full)return;
-  if(!quiet){pennyNews(1);if(R()<1/(25*YR))crash(true);else if(R()<.1)news();fillOrders(1)}
+  if(!quiet){pennyNews(1);if(R()<1/(25*YR))crash(true);else if(R()<.1)news();fillOrders(1);brackets(1)}
   closeBell(quiet);
 }
 function shock(t,p,sess=true){ // outside the session a move only shifts where the next open starts
@@ -745,7 +746,7 @@ function split(k){ // a pricey stock splits so a share costs a few hundred dolla
   const q=s.px[k.t],n=q.p>=5000?20:q.p>=2500?10:q.p>=1500?5:4;
   q.sh=shOf(k.t)*n;for(const x of ['p','o','op','hi','lo','eps'])q[x]/=n;for(let i=0;i<q.h.length;i++){q.h[i]=r6(q.h[i]/n);q.k[i]=q.k[i].map(x=>r6(x/n))}
   if(q.last){q.last.est/=n;q.last.act/=n}
-  const h=s.port[k.t];if(h){h.sh*=n;log(`$${k.t} split ${n}-for-1. You now hold ${big(h.sh)} shares.`,'good')}
+  const h=s.port[k.t];if(h){h.sh*=n;if(h.tp)h.tp/=n;if(h.sl)h.sl/=n;log(`$${k.t} split ${n}-for-1. You now hold ${big(h.sh)} shares.`,'good')}
   for(const o of s.orders)if(o.t===k.t){o.n*=n;o.px/=n}
   chirp('@MarketWire','MarketWire',`${nameOf(k.t)} completes a ${n}-for-1 stock split. $${k.t} now trades around ${pfmt(q.p)}`,1);
 }
@@ -813,6 +814,18 @@ function fillOrders(bulk){ // live: check against the quote each minute; fast si
     if(bulk)execAt(o.t,buy?o.n:-o.n,at);else ACT[o.side](o.t,o.n);
     toast(`${o.type==='limit'?'Limit':'Stop'} order filled: ${o.side==='buy'?'bought':'sold'} ${big(o.n)} ${o.t}`);return false});
 }
+// ---------- take profit and stop loss: attached to a whole position, one cancels the other ----------
+// A take profit sells at the bid once it's reached. A stop loss becomes a market sell, so a gap through it fills at the gapped price.
+function brackets(bulk){
+  for(const t of Object.keys(s.port)){const h=s.port[t];if(!h||!h.tp&&!h.sl)continue;const q=s.px[t];let why=null,px;
+    if(bulk){const slHit=h.sl&&q.lo<=h.sl,tpHit=h.tp&&q.hi>=h.tp;
+      if(slHit&&(!tpHit||q.op<h.tp)){why='sl';px=Math.min(h.sl,q.op)}else if(tpHit){why='tp';px=Math.max(h.tp,q.op)} // both in one day: assume the stop went first unless it opened past the target
+      if(why)execAt(t,-h.sh,px)}
+    else{const bid=bidAsk(t)[0];why=h.sl&&bid<=h.sl?'sl':h.tp&&bid>=h.tp?'tp':null;if(why){px=fillAt(t,-h.sh).avg;ACT.sell(t,'all')}}
+    if(why)bfired('$'+t,why,px)}
+}
+function cbrackets(){for(const t of Object.keys(s.wallet)){const w=s.wallet[t],c=coin(t);if(!c||!w.tp&&!w.sl)continue;const why=w.sl&&c.p<=w.sl?'sl':w.tp&&c.p>=w.tp?'tp':null;if(why){ACT.xsell(t,'all');bfired('$'+t,why,c.p)}}}
+function bfired(n,why,px){const m=`${why==='sl'?'Stop loss':'Take profit'} hit on ${n}: sold everything at ${qfmt(px)}.`;log(m,why==='sl'?'bad':'good');toast(m)}
 function execAt(t,n,p){const was=controls(t),h=s.port[t]??={sh:0,cost:0};if(n>0){h.sh+=n;h.cost+=n*p;s.cash-=n*p}else{const m=-n,basis=h.cost*m/h.sh;h.cost-=basis;h.sh-=m;s.cash+=m*p;if(!h.sh)delete s.port[t]}ctrlCheck(t,was)}
 
 function news(){const k=pick(MAIN),up=R()<.55,p=Math.exp((up?1:-1)*(1.5+R()*2.5)*par(k).sig/Math.sqrt(YR))-1;shock(k.t,p);chirp('@MarketWire','MarketWire',`$${k.t} ${up?'▲':'▼'} ${Math.abs(p*100).toFixed(1)}% — ${pick(up?GOOD:BAD).replace('{n}',nameOf(k.t))}`,1)}
@@ -1003,6 +1016,13 @@ const ACT={
   side:x=>{ot.side=x},
   otype:x=>{ot.type=x;if(x!=='market'&&!(ot.px>0))ot.px=+s.px[sel].p.toPrecision(4)},
   tif:x=>{ot.tif=x},
+  bset:key=>{const[kind,t]=key.split(':'),H=kind==='coin'?s.wallet[t]:s.port[t],d=bd[key]||{};if(!H)return;const now=kind==='coin'?coin(t).p:bidAsk(t)[0];
+    const tp=d.tp===''?null:d.tp??H.tp,sl=d.sl===''?null:d.sl??H.sl;
+    if(tp!=null&&!(tp>now))return toast('A take profit has to be above the current price.');if(sl!=null&&!(sl>0&&sl<now))return toast('A stop loss has to be below the current price.');
+    if(tp)H.tp=tp;else delete H.tp;if(sl)H.sl=sl;else delete H.sl;delete bd[key];toast(tp||sl?'Take profit and stop loss saved':'Cleared')},
+  bq:(key,y)=>{const[kind,t]=key.split(':'),[w,f]=y.split(':'),H=kind==='coin'?s.wallet[t]:s.port[t];if(!H)return;const now=kind==='coin'?coin(t).p:s.px[t].p,v=+(now*(1+ +f)).toPrecision(5);
+    (bd[key]??={})[w]=v;ACT.bset(key)},
+  bclr:key=>{const[kind,t]=key.split(':'),H=kind==='coin'?s.wallet[t]:s.port[t];if(H){delete H.tp;delete H.sl}delete bd[key]},
   ocancel:id=>{s.orders=s.orders.filter(o=>o.id!==+id)},
   qty:x=>{const st=10**Math.max(0,Math.floor(Math.log10(Math.max(1,ot.qty-(x==='-'?1:0)))));ot.qty=Math.max(1,ot.qty+(x==='+'?st:-st))},
   qset:x=>{const h=s.port[sel];ot.qty=x==='max'?Math.max(1,ot.side==='buy'?maxBuy(sel):h?.sh||1):+x},
@@ -1154,6 +1174,14 @@ function bizRow(b,i,last){
    <div class="till">${!n?'<span class="mut">Not open yet</span>':o.mgr?'<span class="mut">Managed, pays itself</span>':`<div class="top2"><span class="${full?'full':'mut'}">${full?'Full':'Filling'}</span><span class="num">${fmt(o.pend)}</span></div>${meter(o.pend/(g*CAP)*100,'warn')}`}</div>
    <div class="acts3">${n&&!o.mgr?`<button data-a="col" data-x="${b.id}" ${o.pend<.01?'disabled':''}>Collect</button><button data-a="mgr" data-x="${b.id}" ${s.cash<mc?'disabled':''}>Manager ${fmt(mc)}</button>`:''}${buy}</div></div>`;
 }
+function bracketHtml(kind,t,now,avg,f){ // take profit / stop loss panel for a holding
+  const key=`${kind}:${t}`,H=kind==='coin'?s.wallet[t]:s.port[t],d=bd[key]||{},val=w=>d[w]!==undefined?d[w]:H[w]??'',vs=v=>v?` <span class="${v>=avg?'up':'dn'}">${pct(v/avg-1)} vs your cost</span>`:'';
+  return `<div class="brk"><h4>Take profit and stop loss</h4>
+   <p class="mut sess">${H.tp||H.sl?`Active: ${H.tp?`take profit at <b>${f(H.tp)}</b>${vs(H.tp)}`:''}${H.tp&&H.sl?', ':''}${H.sl?`stop loss at <b>${f(H.sl)}</b>${vs(H.sl)}`:''}. Whichever is hit first sells the whole position and cancels the other.`:'Sell the whole position automatically when the price reaches a target, or falls to a floor.'}</p>
+   <div class="brow2"><label>Take profit at<input data-bk="${key}" data-w="tp" type="number" inputmode="decimal" step="any" min="0" value="${val('tp')}" placeholder="above ${f(now)}"></label><div class="row">${['.05','.1','.25'].map(x=>`<button data-a="bq" data-x="${key}" data-y="tp:${x}">+${x*100}%</button>`).join('')}</div></div>
+   <div class="brow2"><label>Stop loss at<input data-bk="${key}" data-w="sl" type="number" inputmode="decimal" step="any" min="0" value="${val('sl')}" placeholder="below ${f(now)}"></label><div class="row">${['-.03','-.05','-.1'].map(x=>`<button data-a="bq" data-x="${key}" data-y="sl:${x}">${x*100}%</button>`).join('')}</div></div>
+   <div class="row"><button class="pri" data-a="bset" data-x="${key}">Save</button>${H.tp||H.sl?`<button data-a="bclr" data-x="${key}">Remove both</button>`:''}<span class="mut sess">Quick buttons set a level from the current price.</span></div></div>`;
+}
 const ownPct=v=>(v*100).toFixed(v<.001?4:v<.01?3:1)+'%';
 function companyHtml(k,live){
   const f=fund(k),q=s.px[k.t],H=q.h,me=ownFrac(k.t),c=controls(k.t),n=esc(nameOf(k.t)),st=(l,v)=>`<div><span>${l}</span><b class="num">${v}</b></div>`;
@@ -1300,16 +1328,17 @@ stock(){
     <div class="seg tifs"><button class="${(ot.tif||'day')==='day'?'on':''}" data-a="tif" data-x="day">Today only</button><button class="${ot.tif==='gtc'?'on':''}" data-a="tif" data-x="gtc">Until cancelled</button></div>`:''}
     <div class="qty"><button data-a="qty" data-x="-" aria-label="Fewer shares">−</button><b class="num">${big(ot.qty)}</b><button data-a="qty" data-x="+" aria-label="More shares">+</button></div>
     <div class="presets">${[['10','10'],['1000','1K'],['100000','100K']].map(([v,l])=>`<button data-a="qset" data-x="${v}">${l}</button>`).join('')}<button data-a="qset" data-x="max">Max</button></div>
-    <dl>${Math.abs(imp)>=.001?`<dt>Average fill</dt><dd class="num">${qfmt(fl.avg)} <span class="${buy?'dn':'dn'}">${pct(imp)}</span></dd>`:''}<dt>Estimated ${buy?'cost':'proceeds'}</dt><dd class="num">${fmt(est)}</dd><dt>${buy?'Buying power':'Shares held'}</dt><dd class="num">${buy?fmt(s.cash):big(h?.sh||0)}</dd>${h?`<dt>Your avg cost</dt><dd class="num">${qfmt(h.cost/h.sh)}</dd><dt>Your stake</dt><dd class="num">${ownPct(ownFrac(sel))}</dd>`:''}</dl>
+    <dl>${Math.abs(imp)>=.001?`<dt>Average fill</dt><dd class="num">${qfmt(fl.avg)} <span class="${buy?'dn':'dn'}">${pct(imp)}</span></dd>`:''}<dt>Estimated ${buy?'cost':'proceeds'}</dt><dd class="num">${fmt(est)}</dd><dt>${buy?'Buying power':'Shares held'}</dt><dd class="num">${buy?fmt(s.cash):big(h?.sh||0)}</dd>${h?`<dt>Your avg cost</dt><dd class="num">${qfmt(h.cost/h.sh)}</dd>${ownFrac(sel)>=1e-4?`<dt>Your stake</dt><dd class="num">${ownPct(ownFrac(sel))}</dd>`:''}`:''}</dl>
     ${ty!=='market'?`<button class="place ${buy?'buy':'sell'}" data-a="order" ${okP?'':'disabled'}>Place ${ty} ${buy?'buy':'sell'} · ${big(ot.qty)} ${k.t}</button>
     <p class="mut" style="font-size:var(--text-xs)">${!(+ot.px>0)?'Enter a price.':buy&&ot.qty*ot.px>s.cash?'Not enough cash to cover this order.':!buy&&!okP?"You don't hold that many shares.":ty==='limit'?`Fills only at ${qfmt(+ot.px)} or better${live?'':', once the market opens'}.`:`Becomes a market order if the price ${buy?'rises':'falls'} to ${qfmt(+ot.px)}. It can fill worse than that in a fast market.`}</p>`:`<button class="place ${buy?'buy':'sell'}" data-a="order" ${ok?'':'disabled'}>${buy?'Buy':'Sell'} ${big(ot.qty)} ${k.t}</button>
     ${ok?Math.abs(imp)>=.01?`<p class="mut" style="font-size:var(--text-xs)">An order this size moves the price. Big buys push it up, big sells push it down.</p>`:'':`<p class="mut" style="font-size:var(--text-xs)">${!live?`The market is closed. It opens ${nextOpen()}.`:buy?'Not enough buying power.':"You don't hold that many shares."}</p>`}`}
+    ${h?bracketHtml('stock',sel,q.p,h.cost/h.sh,qfmt):''}
     ${myo.length?`<h4>Open orders</h4>${myo.map(o=>`<div class="oord"><span>${o.type==='limit'?'Limit':'Stop'} ${o.side} ${big(o.n)} ${o.t} at ${qfmt(o.px)}<small class="mut">${o.tif==='day'?'today only':'until cancelled'}</small></span><button data-a="ocancel" data-x="${o.id}">Cancel</button></div>`).join('')}`:''}
    </div>
   </div>
   <h3>Positions</h3>
-  ${Object.keys(s.port).length?`<div class="scroll"><table class="ledger"><thead><tr><th>Symbol</th><th class="r">Qty</th><th class="r">Avg cost</th><th class="r">Last</th><th class="r">Market value</th><th class="r">Day P/L</th><th class="r">Total P/L</th></tr></thead><tbody>
-   ${Object.entries(s.port).map(([x,o])=>{const y=s.px[x],v=o.sh*y.p;return `<tr class="pick ${x===sel?'on':''}" data-a="sel" data-x="${x}" tabindex="0"><td><b>${x}</b>${controls(x)?' <span class="up">·yours</span>':''}</td><td class="r num">${big(o.sh)}</td><td class="r num">${qfmt(o.cost/o.sh)}</td><td class="r num">${qfmt(y.p)}</td><td class="r num">${fmt(v)}</td><td class="r">${pl(o.sh*(y.p-y.o))}</td><td class="r">${pl(v-o.cost)} <span class="num ${v>=o.cost?'up':'dn'}">${pct(v/o.cost-1)}</span></td></tr>`}).join('')}
+  ${Object.keys(s.port).length?`<div class="scroll"><table class="ledger"><thead><tr><th>Symbol</th><th class="r">Qty</th><th class="r">Avg cost</th><th class="r">Last</th><th class="r">Market value</th><th class="r">Day P/L</th><th class="r">Total P/L</th><th class="r">TP / SL</th></tr></thead><tbody>
+   ${Object.entries(s.port).map(([x,o])=>{const y=s.px[x],v=o.sh*y.p;return `<tr class="pick ${x===sel?'on':''}" data-a="sel" data-x="${x}" tabindex="0"><td><b>${x}</b>${controls(x)?' <span class="up">·yours</span>':''}</td><td class="r num">${big(o.sh)}</td><td class="r num">${qfmt(o.cost/o.sh)}</td><td class="r num">${qfmt(y.p)}</td><td class="r num">${fmt(v)}</td><td class="r">${pl(o.sh*(y.p-y.o))}</td><td class="r">${pl(v-o.cost)} <span class="num ${v>=o.cost?'up':'dn'}">${pct(v/o.cost-1)}</span></td><td class="r num">${o.tp?qfmt(o.tp):'—'} / ${o.sl?qfmt(o.sl):'—'}</td></tr>`}).join('')}
   </tbody></table></div>`:'<p class="mut">No positions yet. Pick a stock from the watchlist and place an order.</p>'}`;
 },
 chirp(){
@@ -1332,7 +1361,7 @@ crypto(){
     <div class="side"><p class="mut"><span class="figure">${fmt(s.cash)}</span><br>ready to buy</p></div></section>
   <div class="mkt">
    <div class="scroll"><table class="ledger"><thead><tr><th>Coin</th><th>Name</th><th class="r">Price</th><th class="r">Day</th></tr></thead><tbody>
-   ${X.coins.map(k=>{const d=k.p/k.o-1;return `<tr class="pick ${k.t===c.t?'on':''} ${k.dead?'dim':''}" data-a="xsel" data-x="${k.t}" tabindex="0"><td><b>${k.t}</b>${s.wallet[k.t]?' <span class="mut">·held</span>':''}</td><td class="mut">${k.n}${k.dead?' · rugged':k.born!=null&&s.day-k.born<30?' · new':''}</td><td class="r num">${pfmt(k.p)}</td><td class="r num ${k.stable?'':d>=0?'up':'dn'}">${k.stable?'—':pct(d)}</td></tr>`}).join('')}
+   ${X.coins.map(k=>{const d=k.p/k.o-1;return `<tr class="pick ${k.t===c.t?'on':''} ${k.dead?'dim':''}" data-a="xsel" data-x="${k.t}" tabindex="0"><td><b>${k.t}</b>${s.wallet[k.t]?` <span class="mut">·held${s.wallet[k.t].tp||s.wallet[k.t].sl?' ·TP/SL':''}</span>`:''}</td><td class="mut">${k.n}${k.dead?' · rugged':k.born!=null&&s.day-k.born<30?' · new':''}</td><td class="r num">${pfmt(k.p)}</td><td class="r num ${k.stable?'':d>=0?'up':'dn'}">${k.stable?'—':pct(d)}</td></tr>`}).join('')}
    </tbody></table></div>
    <section>
     <h3 style="margin-top:0">${c.n}</h3>
@@ -1342,6 +1371,7 @@ crypto(){
     <p>${w?`You hold <b class="num">${units(w.u)} ${c.t}</b>, worth <b class="num">${fmt(w.u*c.p)}</b> (<span class="num ${w.u*c.p>=w.c?'up':'dn'}">${pct(w.u*c.p/w.c-1)}</span>).`:'<span class="mut">You hold none of this one.</span>'}</p>
     <div class="trade">${['100','1000','10000'].map(n=>`<button data-a="xbuy" data-x="${c.t}" data-y="${n}" ${c.dead||s.cash<+n?'disabled':''}>Buy ${fmt(+n)}</button>`).join('')}<button class="pri" data-a="xbuy" data-x="${c.t}" data-y="all" ${c.dead||s.cash<1?'disabled':''}>All in</button>
      <button data-a="xsell" data-x="${c.t}" data-y=".25" ${w?'':'disabled'}>Sell 25%</button><button data-a="xsell" data-x="${c.t}" data-y=".5" ${w?'':'disabled'}>Sell 50%</button><button class="bad" data-a="xsell" data-x="${c.t}" data-y="all" ${w?'':'disabled'}>Sell all</button></div>
+    ${w&&!c.stable?bracketHtml('coin',c.t,c.p,w.c/w.u,pfmt):''}
    </section>
   </div>
   ${howto(`Crypto never closes: prices move every minute, day and night, weekends included. Every trade costs a 1% fee. New meme coins launch every few weeks. A few go up a hundredfold; most get rugged. Hustle Dollar holds at $1 and pays interest every day.`)}`;
@@ -1529,7 +1559,7 @@ function drawChart(h,avg,f=fmt){
 
 // ---------- loop, input, save ----------
 document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b||b.disabled)return;ACT[b.dataset.a](b.dataset.x,b.dataset.y);if(s&&!s.dead)checkGoals();if(s&&$('#modal').hidden)render();else hdr()});
-document.addEventListener('input',e=>{if(e.target.id==='opx')ot.px=parseFloat(e.target.value)||null});
+document.addEventListener('input',e=>{if(e.target.id==='opx')ot.px=parseFloat(e.target.value)||null;if(e.target.dataset.bk){const v=e.target.value.trim();(bd[e.target.dataset.bk]??={})[e.target.dataset.w]=v===''?'':parseFloat(v)||''}});
 document.addEventListener('mousemove',e=>{if(e.target.id==='tchart'){hov=e.offsetX;drawStock()}});
 document.addEventListener('mouseout',e=>{if(e.target.id==='tchart'){hov=null;drawStock()}});
 document.addEventListener('keydown',e=>{ // 1–0 screens, Space pause, C collect
@@ -1552,7 +1582,7 @@ setInterval(()=>{
   if(!s||s.dead||!speed||catching||document.hidden||!$('#modal').hidden)return; // decisions & dialogs pause time
   acc=Math.min(acc+dt*PACE[paceNow()]/1000,2880);let n=0;
   while(acc>=1){acc--;minute();n++;if(s.dead)break}
-  if(n){if(holding||document.activeElement?.id==='opx')hdr();else render()} // ponytail: skip DOM rebuild mid-click so buttons don't vanish under the cursor
+  if(n){if(holding||document.activeElement?.matches?.('#view input'))hdr();else render()} // ponytail: skip DOM rebuild mid-click so buttons don't vanish under the cursor
 },100);
 function save(){if(!s||wiped)return;s.lastSeen=Date.now();try{localStorage.setItem(SAVE,JSON.stringify(s))}catch{}}
 setInterval(save,5000);addEventListener('beforeunload',save);
@@ -1643,6 +1673,14 @@ function selfTest(){ // open with ?test=1 — never touches your real save
   s.min=480;const aw0=s.day,mk2=s.px.NOVA.k.at(-1);let sess=0;for(let d=aw0;d<aw0+32;d++)sess+=tradingDay(d)?1:0;let fin=false;catchUp(Math.floor(8*3600*AWAY),null,()=>fin=true);
   ok(fin&&s.day===aw0+32&&s.min===480&&s.px.NOVA.k.length-1-s.px.NOVA.k.indexOf(mk2)===sess,'8 hours away plays out a month, one bar per session');
   offline(8*36e5);ok(!catching&&$('#mbox').innerHTML.includes('While you were away'),'welcome-back summary');closeModal();
+  newGame('Brk','street');s.day=nextTrading(s.day);s.min=600;s.cash=1e6;const bq0=s.px.APEL;ACT.buy('APEL',10);
+  bd['stock:APEL']={tp:bq0.p*.9};ACT.bset('stock:APEL');ok(!s.port.APEL.tp,'a take profit below the price is refused');
+  ACT.bq('stock:APEL','sl:-.05');ACT.bq('stock:APEL','tp:.1');ok(s.port.APEL.sl<bq0.p&&s.port.APEL.tp>bq0.p,'take profit and stop loss set');
+  shock('APEL',-.08,true);brackets();ok(!s.port.APEL&&s.log[0].t.startsWith('Stop loss'),'stop loss sells everything');
+  ACT.buy('APEL',10);ACT.bq('stock:APEL','tp:.05');shock('APEL',.08,true);brackets();ok(!s.port.APEL&&s.log[0].t.startsWith('Take profit'),'take profit sells everything');
+  ACT.buy('APEL',10);const ap=bq0.p;s.port.APEL.sl=ap*.9;s.port.APEL.tp=ap*1.2;bq0.op=ap*.8;bq0.lo=ap*.75;bq0.hi=ap*.85;const cash0=s.cash;brackets(1);ok(!s.port.APEL&&Math.abs(s.cash-cash0-10*ap*.8)<1e-6,'a gap through the stop fills at the open');
+  ACT.xbuy('SATS','1000');const sc=coin('SATS');ACT.bq('coin:SATS','sl:-.05');ok(s.wallet.SATS.sl>0,'crypto stop loss set');sc.p*=.9;cbrackets();ok(!s.wallet.SATS,'crypto stop loss sells');
+  ACT.buy('CSTK',10);s.port.CSTK.sl=500;s.port.CSTK.tp=2000;s.px.CSTK.p=2600;split(SK.CSTK);ok(s.port.CSTK.sl===50&&s.port.CSTK.tp===200,'splits move the levels too');sel='CSTK';tab='stock';ok(VIEWS.stock().includes('Take profit and stop loss'),'panel shows');
   newGame('Goal','street');s.cash=2e6;checkGoals();ok(s.goals.nw1&&s.goals.nw2&&!s.goals.nw3,'goals unlock');const gn=Object.keys(s.goals).length;checkGoals();ok(Object.keys(s.goals).length===gn,'goals unlock once');delete s.goals;upgrade();ok(s.goals.nw2&&s.log[0].t.includes('already reached'),'old saves backfill goals quietly');
   tab='dash';ok(VIEWS.dash().includes('Goals'),'goals on home');goalsModal();
   const sp2=meet('spouse',70),k1=addChild(),k2=addChild(),k3=addChild();k1.b=s.day-40*365;k2.b=s.day-30*365;k3.b=s.day-5*365;k1.rel=90;
