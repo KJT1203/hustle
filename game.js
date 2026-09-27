@@ -567,7 +567,7 @@ function upgrade(){ // bring older saves up to date
   if(!s.people){const r=s.rel,k=s.kids||0;delete s.rel;delete s.kids;s.people=[];makeFamily();if(r)meet(r===2?'spouse':'date',65);for(let i=0;i<k;i++)addChild().b=s.day-rint(1,12)*365;
     s.xp={};if(s.job)s.xp[JM[s.job].fld]=s.jobDays;s.perf=55;s.raise=0;s.pension=0}
   if(!s.goals){s.goals={};checkGoals(1)}
-  s.min??=480;s.eco??=ecoNew();s.fin??=finNew();s.tax??=taxNew();applyPrices();
+  s.min??=480;s.eco??=ecoNew();s.fin??=finNew();s.tax??=taxNew();s.mloan??=0;s.shorts??={};applyPrices();
   const fresh=STOCKS.filter(k=>!s.px[k.t]);if(fresh.length){for(const k of fresh)seedStock(k);for(let i=0;i<239;i++)tradeDay(1,fresh);fresh.forEach(anchor)}
   s.orders??=[];const M=s.mkt;M.h??=MVOL.bull**2/YR;M.eps??=0;M.cb??=0;for(const k of STOCKS)initStock(k);if(!M.rc){M.rc=capSum()*.6;M.div=(capSum()+M.rc)/5000;M.ic=M.ih=5000;M.lab='Bull market'} // stocks added since this save
   for(const k of STOCKS){const q=s.px[k.t];if(q.k)continue; // daily candles used to be drawn from closes alone
@@ -621,7 +621,7 @@ function bjEnd(){const b=s.cz.bj,p=hv(b.p),nat=b.p.length===2&&p===21;
   const ret=p>21?0:nat&&!dnat?b.bet*2.5:dnat&&!nat?0:d>21||p>d?b.bet*2:p===d?b.bet:0;
   b.msg=p>21?'Bust.':nat&&!dnat?'Blackjack! Paid 3 to 2.':dnat&&!nat?'Dealer has blackjack.':ret>b.bet?(d>21?'Dealer busts. You win.':'You win.'):ret===b.bet?'Push. Your bet comes back.':'Dealer wins.';
   b.done=1;settle(b.bet,ret,'blackjack','bj')}
-function netWorth(){let w=s.cash+(s.fin&&s.mkt.div?finVal():0);for(const t in s.port)w+=s.port[t].sh*s.px[t].p;for(const id in s.biz)w+=s.biz[id].spent*.5;for(const id in s.own)w+=SM[id].cost*.6;for(const p of s.props)w+=pval(p)-p.loan;for(const c of s.cars)w+=c.v;return w+walletVal()-(s.debt||0)}
+function netWorth(){let w=s.cash+(s.fin&&s.mkt.div?finVal():0)-(s.mloan||0);for(const t in s.shorts||{})w-=s.shorts[t].sh*s.px[t].p;for(const t in s.port)w+=s.port[t].sh*s.px[t].p;for(const id in s.biz)w+=s.biz[id].spent*.5;for(const id in s.own)w+=SM[id].cost*.6;for(const p of s.props)w+=pval(p)-p.loan;for(const c of s.cars)w+=c.v;return w+walletVal()-(s.debt||0)}
 function log(t,k='info'){s.log.unshift({d:s.day,t,k});if(s.log.length>80)s.log.pop()}
 function chirp(h,n,x,v){s.feed.unshift({h,n,x,v,l:0,tl:rint(3,40)*(v?40:1),d:s.day});if(s.feed.length>60)s.feed.pop()}
 function toast(m){if(catching)return;const t=document.createElement('div');t.className='toast';t.innerHTML=m;$('#toasts').append(t);setTimeout(()=>t.remove(),2800)}
@@ -630,7 +630,7 @@ function newGame(name,bg,h={}){
   const b=BG[bg];
   s={v:1,name,handle:'@'+(name.toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,15)||'you'),day:0,startAge:18,cash:b.cash+(h.inherit||0),st:{...b.st},edu:b.edu||0,study:null,
      job:b.job||null,jobDays:0,rank:0,biz:{},port:{},px:{},mkt:{bull:true,h:MVOL.bull**2/YR,eps:0,cb:0,div:1,ic:1,ih:1,rc:1e13},orders:[],fol:b.fol||0,feed:[],own:{},people:[],degs:b.edu?[{p:'dip',sc:'cc',mj:'Computer science',hon:false}]:[],debt:0,xp:{},perf:50,raise:0,pension:0,wallet:{},cz:{chip:100,net:0,played:0,rh:[],ban:0},props:[],cars:[],home:null,re:{idx:1,list:[],next:0},cd:{},inbox:[],later:[],log:[],pet:0,
-     gen:h.gen||1,boost:0,lastPost:0,dead:0,lastSeen:Date.now(),goals:{...h.goals},min:480,eco:h.eco?{...h.eco}:ecoNew(),fin:finNew(),tax:taxNew()};applyPrices();
+     gen:h.gen||1,boost:0,lastPost:0,dead:0,lastSeen:Date.now(),goals:{...h.goals},min:480,eco:h.eco?{...h.eco}:ecoNew(),fin:finNew(),tax:taxNew(),mloan:0,shorts:{}};applyPrices();
   s.legacy=1+.25*(s.gen-1);
   if(h.gen){s.st.sma=Math.round(s.st.sma*.7+h.sma*.3);s.st.loo=Math.round(s.st.loo*.7+h.loo*.3)} // a little of the family runs in the blood
   if(h.kid){s.startAge=h.age;add('hap',(h.rel-50)*.3)}
@@ -646,7 +646,7 @@ function newGame(name,bg,h={}){
 
 // ---------- simulation ----------
 function day(live){
-  s.day++;ecoDay();finDay();const A=age(),f=flows();
+  s.day++;ecoDay();finDay();shortDay();const A=age(),f=flows();
   s.cash+=f.job+f.biz+f.spon+f.rent+f.own-f.exp-f.mort;taxAdd('ord',f.job+f.biz+f.spon+f.rent*.5);taxAdd('lt',f.own); // half of rent is sheltered by landlord deductions; company profits are taxed like dividends
   if(s.debt>0){s.debt=Math.max(0,s.debt*(1+.06/365)-loanPay());if(s.debt<1){s.debt=0;log('Student loans paid off.','good')}}
   for(const p of s.props)if(p.loan>0){p.loan-=p.pay-p.loan*(p.rate||.055)/365;if(p.loan<=1){p.loan=p.pay=0;log(`Paid off the mortgage on your ${pname(p)}.`,'good')}}
@@ -749,7 +749,7 @@ function openBell(){ // overnight news lands as a gap, then scheduled earnings a
 }
 function mtick(j,n){ // minute j of an n-minute session
   if(halted())return;mstep((1-GAP)*uw(n)[j]);pennyNews(1/n);if(R()<1/(25*YR*n))crash();else if(R()<.1/n)news();
-  breakers();if(!halted()){fillOrders();brackets()}
+  breakers();if(!halted()){fillOrders();brackets();marginCheck()}
 }
 function closeBell(quiet){ // the session's market move updates volatility; splits, the index and day orders settle
   const M=s.mkt,e=M.eps;M.h=clamp(M.h*G_B+(1-G_A-G_G/2-G_B)*(M.bull?MVOL.bull:MVOL.bear)**2/YR+(G_A+(e<0?G_G:0))*e*e,(.06**2)/YR,(.9**2)/YR);
@@ -769,7 +769,7 @@ function tradeDay(quiet,list=STOCKS){ // a whole session in one step, for price 
   mstep(1-GAP,list);
   for(const k of list){const q=s.px[k.t],sd=par(k).sig/Math.sqrt(YR)*.6;q.hi=Math.max(q.op,q.p)*Math.exp(Math.abs(gauss())*sd);q.lo=Math.min(q.op,q.p)*Math.exp(-Math.abs(gauss())*sd);q.k[q.k.length-1]=[q.op,q.hi,q.lo]}
   if(!full)return;
-  if(!quiet){pennyNews(1);if(R()<1/(25*YR))crash(true);else if(R()<.1)news();fillOrders(1);brackets(1)}
+  if(!quiet){pennyNews(1);if(R()<1/(25*YR))crash(true);else if(R()<.1)news();fillOrders(1);brackets(1);marginCheck()}
   closeBell(quiet);
 }
 function shock(t,p,sess=true){ // outside the session a move only shifts where the next open starts
@@ -804,7 +804,7 @@ function events(){
   let dv=0;const got=[];
   for(const k of STOCKS){const q=s.px[k.t];
     if(q.er<=s.day)earnings(k);
-    if(k.div&&q.nd<=s.day){q.nd=sched(k,s.day+1,'d');if(controls(k.t))continue;const a=q.p*k.div/4,h=s.port[k.t];if(h){dv+=a*h.sh;got.push(k.t)}shock(k.t,-k.div/4,true)}}
+    if(k.div&&q.nd<=s.day){q.nd=sched(k,s.day+1,'d');const Sh=s.shorts[k.t];if(Sh){const owe=q.p*k.div/4*Sh.sh;s.cash-=owe;log(`You owe ${fmt(owe)} in dividends on your $${k.t} short.`,'bad')}if(controls(k.t))continue;const a=q.p*k.div/4,h=s.port[k.t];if(h){dv+=a*h.sh;got.push(k.t)}shock(k.t,-k.div/4,true)}}
   if(dv>0){s.cash+=dv;taxAdd('lt',dv);log(`Dividends: ${fmt(dv)} from ${got.map(t=>'$'+t).join(', ')}.`,'good')}
 }
 const epsEst=k=>{const q=s.px[k.t],P=par(k);if(q.eps<=0)return q.eps/4;const g=RF+P.b*.055+P.a-(k.div||0)+(k.pe?.3*Math.log(k.pe/(q.p/q.eps)):0);return q.eps/4*Math.exp(clamp(g,-.3,.5)/4)};
@@ -820,6 +820,7 @@ function split(k){ // a pricey stock splits so a share costs a few hundred dolla
   const q=s.px[k.t],n=q.p>=5000?20:q.p>=2500?10:q.p>=1500?5:4;
   q.sh=shOf(k.t)*n;for(const x of ['p','o','op','hi','lo','eps'])q[x]/=n;for(let i=0;i<q.h.length;i++){q.h[i]=r6(q.h[i]/n);q.k[i]=q.k[i].map(x=>r6(x/n))}
   if(q.last){q.last.est/=n;q.last.act/=n}
+  const Sp=s.shorts[k.t];if(Sp){Sp.sh*=n;Sp.px/=n}
   const h=s.port[k.t];if(h){h.sh*=n;if(h.tp)h.tp/=n;if(h.sl)h.sl/=n;if(h.hw)h.hw/=n;log(`$${k.t} split ${n}-for-1. You now hold ${big(h.sh)} shares.`,'good')}
   for(const o of s.orders)if(o.t===k.t){o.n*=n;o.px/=n;if(o.tp)o.tp/=n;if(o.sl)o.sl/=n}
   chirp('@MarketWire','MarketWire',`${nameOf(k.t)} completes a ${n}-for-1 stock split. $${k.t} now trades around ${pfmt(q.p)}`,1);
@@ -836,6 +837,7 @@ function bankrupt(k){ // below a cent the company goes under; a new one lists in
   const q=s.px[k.t],old=nameOf(k.t),h=s.port[k.t];
   if(h){delete s.port[k.t];capGain(-h.cost,h.d);log(`${esc(old)} went bankrupt. Your ${big(h.sh)} shares are worthless.`,'bad');toast(`${esc(old)} went bankrupt`)}
   s.orders=s.orders.filter(o=>o.t!==k.t);
+  const Sb=s.shorts[k.t];if(Sb){capGain(Sb.px*Sb.sh,s.day);delete s.shorts[k.t];log(`${esc(old)} went bankrupt while you were short. You keep all ${fmt(Sb.px*Sb.sh)}.`,'good')}
   const p=+(.2+R()*2.8).toPrecision(3);q.n=`${pick(PN1)} ${pick(PN2)}`;q.gr=0;q.ipo=s.day;q.p=q.o=q.op=q.hi=q.lo=p;q.h=[p];q.k=[[p,p,p]];q.eps=-p*.1;q.last=null;delete q.sh;
   chirp('@MarketWire','MarketWire',`${old} files for bankruptcy. $${k.t} now belongs to ${q.n}, listing today at ${pfmt(p)}`,1)
 }
@@ -869,13 +871,43 @@ function fillAt(t,n){ // n > 0 buys at the ask, n < 0 sells at the bid; big orde
   const k=SK[t],q=s.px[t],g=n>0?1:-1,x=g*.8*par(k).sig/Math.sqrt(YR)*Math.sqrt(Math.abs(n)/adv(k));
   return {avg:Math.max(1e-4,q.p*Math.exp(x*2/3)+g*halfSpread(k)),p1:q.p*Math.exp(x)}
 }
-function maxBuy(t,cash=s.cash){let lo=0,hi=Math.floor(cash/s.px[t].p);while(lo<hi){const m=Math.ceil((lo+hi)/2);if(m*fillAt(t,m).avg<=cash)lo=m;else hi=m-1}return lo}
+function maxBuy(t,cash=s.cash,mg){let lo=0,hi=Math.floor(Math.max(0,mg?cash*2+acct().lmv:cash)/s.px[t].p)+1;while(lo<hi){const m=Math.ceil((lo+hi)/2);if(mg?canBuy(t,m,true):m*fillAt(t,m).avg<=cash)lo=m;else hi=m-1}return lo}
 const ownFrac=t=>(s.port[t]?.sh||0)/shOf(t),controls=t=>ownFrac(t)>=.5;
 const ctrlNeed=t=>Math.max(0,Math.floor(shOf(t)/2)+1-(s.port[t]?.sh||0));
 function ctrlCheck(t,was){const now=controls(t),n=esc(nameOf(t));if(now===was)return;
   if(now){log(`You now control <b>${n}</b>. Its profits are yours.`,'good');toast(`You control ${n}`);chirp('@MarketWire','MarketWire',`${s.handle} takes control of ${nameOf(t)} ($${t}) with a majority stake`,1)}
   else log(`You no longer control ${n}.`,'bad')}
 const ownInc=()=>Object.keys(s.port).reduce((a,t)=>{if(!controls(t))return a;const f=fund(SK[t]);return a+(f.ni>0?ownFrac(t)*f.ni/365:0)},0);
+
+// ---------- margin and short selling (Reg T style: 50% initial, 25% maintenance on longs, 30% on shorts) ----------
+// Penny stocks can't be bought on margin and need 100% backing when shorted; they can only be shorted above $1.
+const marginable=t=>!SK[t].pn&&s.px[t].p>=5,shortable=t=>!SK[t].pn||s.px[t].p>=1;
+const mRate=()=>s.eco.r+.03,borrowFee=t=>{const k=SK[t];return k.pn?.3+.7*ph(t,50):s.px[t].p*shOf(t)>1e11?.003:.005+.02*ph(t,50)}; // yearly
+function acct(){ // brokerage equity and requirements; cash is shared with the rest of life
+  let lmv=0,lmvM=0,smv=0,sI=0,sM=0;
+  for(const t in s.port){const v=s.port[t].sh*s.px[t].p;lmv+=v;if(marginable(t))lmvM+=v}
+  for(const t in s.shorts){const v=s.shorts[t].sh*s.px[t].p,pn=SK[t].pn;smv+=v;sI+=v*(pn?1:.5);sM+=v*(pn?1:.3)}
+  return {lmv,smv,eq:s.cash+lmv-s.mloan-smv,init:.5*lmvM+(lmv-lmvM)+sI,maint:.25*lmvM+(lmv-lmvM)+sM};
+}
+const onMargin=()=>s.mloan>0||Object.keys(s.shorts).length>0;
+function canBuy(t,n,mg){const c=n*fillAt(t,n).avg;if(c<=s.cash)return true;if(!mg||!marginable(t))return false;const A=acct();return A.eq>=A.init+.5*c} // buying swaps cash for stock, so equity holds and the requirement grows
+function repayLoan(){if(s.mloan>0&&s.cash>0){const r=Math.min(s.mloan,s.cash);s.mloan-=r;s.cash-=r}} // sale proceeds pay down the margin loan first
+function marginCheck(){ // below maintenance, the broker sells for you until you're back above it
+  if(!onMargin())return;let A=acct(),sold=[],guard=0;
+  while(A.eq<A.maint&&guard++<40){
+    const L=Object.keys(s.port).map(t=>['L',t,s.port[t].sh*s.px[t].p]),Sh=Object.keys(s.shorts).map(t=>['S',t,s.shorts[t].sh*s.px[t].p]),all=[...L,...Sh].sort((a,b)=>b[2]-a[2]);if(!all.length)break;
+    const[kind,t]=all[0],need=(A.maint-A.eq)*4+1;
+    if(kind==='L'){const h=s.port[t],n=Math.min(h.sh,Math.ceil(need/s.px[t].p));execAt(t,-n,bidAsk(t)[0]);repayLoan();sold.push(`sold ${big(n)} $${t}`)}
+    else{const S=s.shorts[t],n=Math.min(S.sh,Math.ceil(need/s.px[t].p));coverAt(t,n,bidAsk(t)[1]);sold.push(`bought back ${big(n)} $${t}`)}
+    A=acct()}
+  if(sold.length){const m=`Margin call: your broker ${sold.join(', ')} to bring your account back above the minimum.`;log(m,'bad');toast('Margin call')}
+  if(s.mloan>0&&!Object.keys(s.port).length&&!Object.keys(s.shorts).length){s.cash-=s.mloan;log(`Your account went underwater. You owe your broker ${fmt(s.mloan)}.`,'bad');s.mloan=0} // nothing left to sell: the shortfall becomes plain debt
+}
+function coverAt(t,n,p){const S=s.shorts[t];if(!S)return;n=Math.min(n,S.sh);s.cash-=n*p;capGain((S.px-p)*n,s.day);S.sh-=n;if(S.sh<=0)delete s.shorts[t];if(s.cash<0){s.mloan-=s.cash;s.cash=0}} // short gains are always short-term
+function shortDay(){ // interest on the margin loan and fees to borrow shares
+  if(s.mloan>0)s.mloan*=1+mRate()/365;
+  for(const t in s.shorts){const S=s.shorts[t];s.cash-=S.sh*s.px[t].p*borrowFee(t)/365}
+}
 
 // ---------- limit and stop orders ----------
 function fillOrders(bulk){ // live: check against the quote each minute; fast simulation: against the day's high and low
@@ -1064,10 +1096,16 @@ const ACT={
   mgr:id=>{const b=BM[id],o=s.biz[id],c=b.cost*12;if(!o||o.mgr||s.cash<c)return;s.cash-=c;o.spent+=c;o.mgr=1;s.cash+=o.pend;taxAdd('ord',o.pend);o.pend=0;log(`Hired a manager for your ${b.n}. It runs itself now.`,'good')},
   col:id=>{const o=s.biz[id];s.cash+=o.pend;taxAdd('ord',o.pend);o.pend=0},
   colAll:()=>{for(const id in s.biz){const v=s.biz[id].pend;s.cash+=v;taxAdd('ord',v);s.biz[id].pend=0}},
-  buy:(t,x)=>{const n=x==='max'?maxBuy(t):+x;if(n<1)return;const{avg,p1}=fillAt(t,n);if(n*avg>s.cash)return;const was=controls(t),h=s.port[t]??={sh:0,cost:0};
+  buy:(t,x,mg)=>{const n=x==='max'?maxBuy(t,s.cash,mg):+x;if(n<1)return;const{avg,p1}=fillAt(t,n);if(!canBuy(t,n,mg))return;if(n*avg>s.cash){const need=n*avg-Math.max(0,s.cash);s.mloan+=need;s.cash+=need}const was=controls(t),h=s.port[t]??={sh:0,cost:0};
     h.d=avgDay(h.d,h.sh,n);h.sh+=n;h.cost+=n*avg;s.cash-=n*avg;shock(t,p1/s.px[t].p-1,mktOpen());log(`Bought ${big(n)} $${t} @ ${pfmt(avg)}`);ctrlCheck(t,was)},
+  short:(t,x)=>{const n=+x;if(!mktOpen()||n<1||!shortable(t))return;const q=s.px[t],{avg,p1}=fillAt(t,-n),v=n*avg,A=acct();
+    if(A.eq-n*(q.p-avg)<A.init+v*(SK[t].pn?1:.5))return toast('Not enough equity to short that much.');
+    s.cash+=v;const S=s.shorts[t]??={sh:0,px:0,d:s.day};S.px=(S.px*S.sh+v)/(S.sh+n);S.sh+=n;shock(t,p1/q.p-1,true);log(`Shorted ${big(n)} $${t} @ ${qfmt(avg)}.`)},
+  cover:(t,x)=>{const S=s.shorts[t];if(!S||!mktOpen())return;const n=x==='all'?S.sh:Math.min(S.sh,+x),{avg,p1}=fillAt(t,n),g=(S.px-avg)*n;coverAt(t,n,avg);shock(t,p1/s.px[t].p-1,true);log(`Bought back ${big(n)} $${t} @ ${qfmt(avg)} (${g>=0?'+':''}${fmt(g)}).`,g>=0?'good':'bad')},
+  mgtog:()=>{ot.mg=!ot.mg},
+  repay:x=>{const a=x==='all'?Math.min(s.mloan,s.cash):Math.min(+x,s.mloan,s.cash);if(a>0){s.mloan-=a;s.cash-=a}},
   sell:(t,x)=>{const h=s.port[t];if(!h?.sh)return;const was=controls(t),n=x==='all'?h.sh:Math.min(h.sh,+x),{avg:p,p1}=fillAt(t,-n),basis=h.cost*n/h.sh,g=n*p-basis;
-    h.cost-=basis;h.sh-=n;s.cash+=n*p;capGain(g,h.d);shock(t,p1/s.px[t].p-1,mktOpen());log(`Sold ${big(n)} $${t} @ ${pfmt(p)} (${g>=0?'+':''}${fmt(g)})`,g>=0?'good':'bad');if(!h.sh)delete s.port[t];ctrlCheck(t,was)},
+    h.cost-=basis;h.sh-=n;s.cash+=n*p;capGain(g,h.d);repayLoan();shock(t,p1/s.px[t].p-1,mktOpen());log(`Sold ${big(n)} $${t} @ ${pfmt(p)} (${g>=0?'+':''}${fmt(g)})`,g>=0?'good':'bad');if(!h.sh)delete s.port[t];ctrlCheck(t,was)},
   ctrl:t=>{if(!mktOpen())return;const n=ctrlNeed(t);if(n<1||n*fillAt(t,n).avg>s.cash)return;ACT.buy(t,n)},
   grow:t=>{const q=s.px[t],c=.02*q.p*shOf(t);if(!controls(t)||s.cash<c||cdLeft('grow_'+t))return;s.cash-=c;q.gr=s.day+365;s.cd['grow_'+t]=s.day+180;log(`Invested ${fmt(c)} to grow ${esc(nameOf(t))}. Expect a stronger year.`,'good')},
   sdiv:t=>{const q=s.px[t];if(!controls(t)||cdLeft('sdiv_'+t))return;const v=.1*q.p*shOf(t)*ownFrac(t);s.cash+=v;taxAdd('lt',v);shock(t,-.1,mktOpen());s.cd['sdiv_'+t]=s.day+90;log(`${esc(nameOf(t))} paid a special dividend. Your cut: ${fmt(v)}.`,'good')},
@@ -1105,7 +1143,7 @@ const ACT={
   dice:k=>{const b=stake();if(!b)return;const a=rint(1,6),c=rint(1,6),n=a+c,m=k==='seven'?(n===7?5.8:0):(k==='under'?n<7:n>7)?2.35:0;s.cz.dice={a,b:c,w:b*m};settle(b,b*m,'dice','dice')},
   flip:k=>{const b=stake();if(!b)return;const r=R()<.5?'h':'t',m=r===k?1.96:0;s.cz.flip={r,w:b*m};settle(b,b*m,'the coin flip','coin')},
   tf:x=>{tf=x},cmode:x=>{cmode=x},
-  side:x=>{ot.side=x},
+  side:x=>{ot.side=x;if(x==='short'||x==='cover')ot.type='market'},
   otype:x=>{ot.type=x;if(x!=='market'&&!(ot.px>0))ot.px=+s.px[sel].p.toPrecision(4)},
   tif:x=>{ot.tif=x},
   bset:key=>{const[kind,t]=key.split(':'),H=kind==='coin'?s.wallet[t]:s.port[t],d=bd[key]||{};if(!H)return;const now=kind==='coin'?coin(t).p:bidAsk(t)[0];
@@ -1127,10 +1165,10 @@ const ACT={
   iraw:x=>{const F=s.fin,v=iraVal(),a=x==='all'?v:Math.min(+x,v);if(a<=0)return;const pen=age()<60?a*.1:0;F.ira-=a/fundPx();F.iraC*=v?1-a/v:0;s.cash+=a-pen;taxAdd('ord',a);log(`Took ${fmt(a)} out of your retirement account${pen?`, paying a ${fmt(pen)} early-withdrawal penalty`:''}.`,pen?'bad':'good')},
   ocancel:id=>{s.orders=s.orders.filter(o=>o.id!==+id)},
   qty:x=>{const st=10**Math.max(0,Math.floor(Math.log10(Math.max(1,ot.qty-(x==='-'?1:0)))));ot.qty=Math.max(1,ot.qty+(x==='+'?st:-st))},
-  qset:x=>{const h=s.port[sel];ot.qty=x==='max'?Math.max(1,ot.side==='buy'?maxBuy(sel):h?.sh||1):+x},
+  qset:x=>{const h=s.port[sel],S=s.shorts[sel];ot.qty=x==='max'?Math.max(1,ot.side==='buy'?maxBuy(sel,s.cash,ot.mg):ot.side==='cover'?S?.sh||1:ot.side==='short'?Math.floor(Math.max(0,acct().eq-acct().init)/(s.px[sel].p*(SK[sel].pn?1:.5))):h?.sh||1):+x},
   order:()=>{const n=ot.qty,buy=ot.side==='buy';
     if(ot.type&&ot.type!=='market'){const px=+ot.px,tp=buy&&+ot.tp>px?+ot.tp:0,sl=buy&&+ot.sl>0&&+ot.sl<px?+ot.sl:0;if(!(px>0)||(buy?n*px>s.cash:!(s.port[sel]?.sh>=n)))return;if(buy&&(ot.tp&&!tp||ot.sl&&!sl))return toast('Set the take profit above your buy price and the stop loss below it.');s.orders.push({id:uid(),t:sel,side:ot.side,type:ot.type,px,n,tif:ot.tif||'day',d:s.day,tp,sl});ot.tp=ot.sl=null;toast(`${ot.type==='limit'?'Limit':'Stop'} ${ot.side} order placed`);return}
-    if(!mktOpen())return;const p=fillAt(sel,buy?n:-n).avg;if(ot.side==='buy'){if(n*p>s.cash)return;ACT.buy(sel,n)}else{const h=s.port[sel];if(!h||h.sh<n)return;ACT.sell(sel,n)}toast(`Filled: ${ot.side==='buy'?'bought':'sold'} ${big(n)} ${sel} at ${pfmt(p)}`)},
+    if(!mktOpen())return;if(ot.side==='short'||ot.side==='cover')return ACT[ot.side](sel,n);const p=fillAt(sel,buy?n:-n).avg;if(ot.side==='buy'){if(!canBuy(sel,n,ot.mg))return;ACT.buy(sel,n,ot.mg)}else{const h=s.port[sel];if(!h||h.sh<n)return;ACT.sell(sel,n)}toast(`Filled: ${ot.side==='buy'?'bought':'sold'} ${big(n)} ${sel} at ${qfmt(p)}`)},
   deal:()=>{const b=stake();if(!b)return;const z=s.cz;z.bj={p:[drawCard(),drawCard()],d:[drawCard(),drawCard()],bet:b,done:0,msg:''};if(hv(z.bj.p)===21||hv(z.bj.d)===21)bjEnd()},
   hit:()=>{const b=s.cz.bj;if(!b||b.done)return;b.p.push(drawCard());if(hv(b.p)>=21)bjEnd()},
   stand:()=>{const b=s.cz.bj;if(b&&!b.done)bjEnd()},
@@ -1294,6 +1332,23 @@ function bracketHtml(kind,t,now,avg,f){ // take profit / stop loss panel for a h
    <div class="brow2"><span class="mut sess">Trailing stop${H.trail?`: ${H.trail*100}% under the high of ${f(H.hw)}, so it sells at ${f(H.hw*(1-H.trail))}. It rises with the price and never falls.`:', which follows the price up and never down'}</span><div class="row">${[0,.05,.1,.2].map(x=>`<button class="${(H.trail||0)===x?'on':''}" data-a="btrail" data-x="${key}" data-y="${x}">${x?x*100+'%':'Off'}</button>`).join('')}</div></div>
    <div class="row"><button class="pri" data-a="bset" data-x="${key}">Save</button>${H.tp||H.sl||H.trail?`<button data-a="bclr" data-x="${key}">Remove all</button>`:''}<span class="mut sess">Quick buttons set a level from the current price.</span></div></div>`;
 }
+function shortTicket(k,live){ // sell borrowed shares now, buy them back later
+  const t=k.t,S=s.shorts[t],sh=ot.side==='short',n=ot.qty,f=fillAt(t,sh?-n:n),v=n*f.avg,A=acct(),need=A.init+(sh?v*(k.pn?1:.5):0),okS=live&&(sh?shortable(t)&&A.eq-n*(s.px[t].p-f.avg)>=need:S&&S.sh>=n),[bid,ask]=bidAsk(t);
+  return `<dl><dt>Bid / Ask</dt><dd class="num">${qfmt(bid)} / ${qfmt(ask)}</dd><dt>Borrow fee</dt><dd class="num">${pctA(borrowFee(t))} a year</dd>${S?`<dt>You're short</dt><dd class="num">${big(S.sh)} at ${qfmt(S.px)}</dd>`:''}</dl>
+   <div class="qty"><button data-a="qty" data-x="-" aria-label="Fewer shares">−</button><b class="num">${big(n)}</b><button data-a="qty" data-x="+" aria-label="More shares">+</button></div>
+   <div class="presets">${[['10','10'],['1000','1K'],['100000','100K']].map(([v,l])=>`<button data-a="qset" data-x="${v}">${l}</button>`).join('')}<button data-a="qset" data-x="max">Max</button></div>
+   <dl><dt>Estimated ${sh?'proceeds':'cost'}</dt><dd class="num">${fmt(v)}</dd><dt>Account equity</dt><dd class="num">${fmt(A.eq)}</dd>${sh?`<dt>Equity needed</dt><dd class="num">${fmt(need)}</dd>`:''}</dl>
+   <button class="place ${sh?'sell':'buy'}" data-a="order" ${okS?'':'disabled'}>${sh?'Short':'Buy to cover'} ${big(n)} ${t}</button>
+   <p class="mut" style="font-size:var(--text-xs)">${!live?`The market is closed. It opens ${nextOpen()}.`:sh?!shortable(t)?'Penny stocks under $1 can\'t be shorted.':!okS?`Not enough equity. Shorting needs ${k.pn?'100%':'50%'} of the value in equity.`:`You profit if the price falls. If it rises, your loss has no ceiling. You pay the borrow fee daily and any dividends.`:!S?`You aren't short ${t}.`:!okS?`You're only short ${big(S.sh)}.`:'Buying back closes the short.'}</p>`;
+}
+function marginPanel(){
+  if(!onMargin())return '';const A=acct(),ex=A.eq-A.maint,sh=Object.keys(s.shorts);
+  return `<h3>Margin account</h3><div class="stats4">${[['Equity',fmt(A.eq)],['Margin loan',fmt(s.mloan)],['Loan rate',pctA(mRate())],['Maintenance',fmt(A.maint)],['Cushion',`<span class="${ex<A.maint*.2?'dn':''}">${fmt(ex)}</span>`],['Shorts',fmt(A.smv)]].map(([l,v])=>`<div><span>${l}</span><b class="num">${v}</b></div>`).join('')}</div>
+  ${ex<A.maint*.2?'<p class="dn sess">Close to a margin call. Add cash, repay the loan or cut positions.</p>':''}
+  ${s.mloan>0?`<div class="row" style="margin-top:var(--space-2xs)"><button data-a="repay" data-x="10000" ${s.cash<1?'disabled':''}>Repay ${fmt(Math.min(1e4,s.mloan))}</button><button data-a="repay" data-x="all" ${s.cash<1?'disabled':''}>Repay all you can</button></div>`:''}
+  ${sh.length?`<div class="scroll"><table class="ledger"><thead><tr><th>Short</th><th class="r">Shares</th><th class="r">Sold at</th><th class="r">Last</th><th class="r">P/L</th><th class="r">Fee</th><th></th></tr></thead><tbody>
+   ${sh.map(t=>{const S=s.shorts[t],pl=(S.px-s.px[t].p)*S.sh;return `<tr class="pick ${t===sel?'on':''}" data-a="sel" data-x="${t}"><td><b>${t}</b></td><td class="r num">${big(S.sh)}</td><td class="r num">${qfmt(S.px)}</td><td class="r num">${qfmt(s.px[t].p)}</td><td class="r"><span class="num ${pl>=0?'up':'dn'}">${pl>=0?'+':''}${fmt(pl)}</span></td><td class="r num">${pctA(borrowFee(t))}</td><td class="act"><button data-a="sel" data-x="${t}">Open</button></td></tr>`}).join('')}</tbody></table></div>`:''}`;
+}
 const ownPct=v=>(v*100).toFixed(v<.001?4:v<.01?3:1)+'%';
 function companyHtml(k,live){
   const f=fund(k),q=s.px[k.t],H=q.h,me=ownFrac(k.t),c=controls(k.t),n=esc(nameOf(k.t)),st=(l,v)=>`<div><span>${l}</span><b class="num">${v}</b></div>`;
@@ -1437,11 +1492,11 @@ biz(){
   ${howto(`The buy button follows the switch above and shrinks to what you can afford. Milestones at ${MILES.slice(0,5).join(', ')} and on double a business's income. Small businesses return far more on the money you put in, but big ones earn far more in total. Profits follow the economy: a lemonade stand barely notices a recession, while a hotel can run at a loss. Competition closes a location now and then, more often in a recession and less often with a manager. Managers keep earning while you're away.`)}`;
 },
 stock(){
-  const k=SK[sel],q=s.px[sel],h=s.port[sel],M=s.mkt,d=q.p/q.o-1,H=q.h,buy=ot.side==='buy',wl=BYCAP.filter(k=>wf==='All'||(wf==='Held'?s.port[k.t]:wf==='Penny'?k.pn:k.sec===wf&&!k.pn));
+  const k=SK[sel],q=s.px[sel],h=s.port[sel],M=s.mkt,d=q.p/q.o-1,H=q.h,buy=ot.side==='buy'||!ot.side,ext=ot.side==='short'||ot.side==='cover',wl=BYCAP.filter(k=>wf==='All'||(wf==='Held'?s.port[k.t]:wf==='Penny'?k.pn:k.sec===wf&&!k.pn));
   let val=0,cost=0,dpl=0;for(const x in s.port){const o=s.port[x],y=s.px[x];val+=o.sh*y.p;cost+=o.cost;dpl+=o.sh*(y.p-y.o)}
   const ix=idx(),idxd=idxDay(),lab=mktLabel(),[bid,ask]=bidAsk(sel);
   const live=mktOpen();
-  const ty=ot.type||'market',okP=+ot.px>0&&(buy?ot.qty*ot.px<=s.cash:h&&h.sh>=ot.qty),myo=s.orders.filter(o=>o.t===sel),fl=fillAt(sel,buy?ot.qty:-ot.qty),est=ot.qty*fl.avg,imp=fl.avg/q.p-1,ok=live&&(buy?est<=s.cash:h&&h.sh>=ot.qty),news=s.feed.filter(p=>p.h==='@MarketWire'&&p.x.includes('$'+sel)).slice(0,5);
+  const ty=ot.type||'market',okP=+ot.px>0&&(buy?ot.qty*ot.px<=s.cash:h&&h.sh>=ot.qty),myo=s.orders.filter(o=>o.t===sel),fl=fillAt(sel,buy?ot.qty:-ot.qty),est=ot.qty*fl.avg,imp=fl.avg/q.p-1,ok=live&&(buy?canBuy(sel,ot.qty,ot.mg):h&&h.sh>=ot.qty),news=s.feed.filter(p=>p.h==='@MarketWire'&&p.x.includes('$'+sel)).slice(0,5);
   const st=(l,v)=>`<div><span>${l}</span><b class="num">${v}</b></div>`,pl=(n)=>`<span class="num ${n>=0?'up':'dn'}">${n>=0?'+':''}${fmt(n)}</span>`;
   return `<div class="tbar">
     <div><small>Hustle 500</small><b class="num">${ix.toFixed(2)}</b> <span class="num ${idxd>=0?'up':'dn'}">${pct(idxd)}</span></div>
@@ -1467,22 +1522,25 @@ stock(){
     ${news.length?`<ul class="news">${news.map(p=>`<li><small>${s.day-p.d?`${s.day-p.d}d ago`:'today'}</small>${esc(p.x)}</li>`).join('')}</ul>`:`<p class="mut">No headlines about ${k.t} lately.</p>`}
    </section>
    <div class="ticket">
-    <div class="seg"><button class="${buy?'on buy':''}" data-a="side" data-x="buy">Buy</button><button class="${buy?'':'on sell'}" data-a="side" data-x="sell">Sell</button></div>
-    <div class="seg otype">${[['market','Market'],['limit','Limit'],['stop','Stop']].map(([v,l])=>`<button class="${ty===v?'on':''}" data-a="otype" data-x="${v}">${l}</button>`).join('')}</div>
+    <div class="seg seg4">${[['buy','Buy','buy'],['sell','Sell','sell'],['short','Short','sell'],['cover','Cover','buy']].map(([v,l,c])=>`<button class="${(ot.side||'buy')===v?'on '+c:''}" data-a="side" data-x="${v}">${l}</button>`).join('')}</div>
+    ${ext?shortTicket(k,live):`<div class="seg otype">${[['market','Market'],['limit','Limit'],['stop','Stop']].map(([v,l])=>`<button class="${ty===v?'on':''}" data-a="otype" data-x="${v}">${l}</button>`).join('')}</div>
     <dl><dt>Bid / Ask</dt><dd class="num">${qfmt(bid)} / ${qfmt(ask)}</dd></dl>
     ${ty!=='market'?`<label class="opx">${ty==='limit'?`${buy?'Buy at or below':'Sell at or above'}`:`${buy?'Buy if it rises to':'Sell if it falls to'}`}<input id="opx" type="number" inputmode="decimal" step="any" min="0" value="${ot.px??''}"></label>
     ${buy?`<div class="obrk"><label>Then take profit at<input id="otp" type="number" inputmode="decimal" step="any" min="0" value="${ot.tp??''}" placeholder="optional"></label><label>and stop loss at<input id="osl" type="number" inputmode="decimal" step="any" min="0" value="${ot.sl??''}" placeholder="optional"></label></div>`:''}
     <div class="seg tifs"><button class="${(ot.tif||'day')==='day'?'on':''}" data-a="tif" data-x="day">Today only</button><button class="${ot.tif==='gtc'?'on':''}" data-a="tif" data-x="gtc">Until cancelled</button></div>`:''}
+    ${buy&&ty==='market'?marginable(sel)?`<label class="mg"><input type="checkbox" data-a="mgtog" ${ot.mg?'checked':''}> Borrow on margin, up to half, at ${pctA(mRate())} a year</label>`:`<p class="mut sess">${k.pn?'Penny stocks':'Stocks under $5'} can't be bought on margin.</p>`:''}
     <div class="qty"><button data-a="qty" data-x="-" aria-label="Fewer shares">−</button><b class="num">${big(ot.qty)}</b><button data-a="qty" data-x="+" aria-label="More shares">+</button></div>
     <div class="presets">${[['10','10'],['1000','1K'],['100000','100K']].map(([v,l])=>`<button data-a="qset" data-x="${v}">${l}</button>`).join('')}<button data-a="qset" data-x="max">Max</button></div>
-    <dl>${Math.abs(imp)>=.001?`<dt>Average fill</dt><dd class="num">${qfmt(fl.avg)} <span class="${buy?'dn':'dn'}">${pct(imp)}</span></dd>`:''}<dt>Estimated ${buy?'cost':'proceeds'}</dt><dd class="num">${fmt(est)}</dd><dt>${buy?'Buying power':'Shares held'}</dt><dd class="num">${buy?fmt(s.cash):big(h?.sh||0)}</dd>${h?`<dt>Your avg cost</dt><dd class="num">${qfmt(h.cost/h.sh)}</dd>${ownFrac(sel)>=1e-4?`<dt>Your stake</dt><dd class="num">${ownPct(ownFrac(sel))}</dd>`:''}`:''}</dl>
+    <dl>${Math.abs(imp)>=.001?`<dt>Average fill</dt><dd class="num">${qfmt(fl.avg)} <span class="${buy?'dn':'dn'}">${pct(imp)}</span></dd>`:''}<dt>Estimated ${buy?'cost':'proceeds'}</dt><dd class="num">${fmt(est)}</dd><dt>${buy?'Buying power':'Shares held'}</dt><dd class="num">${buy?fmt(ot.mg&&marginable(sel)?Math.max(s.cash,2*Math.max(0,acct().eq-acct().init)):s.cash):big(h?.sh||0)}</dd>${h?`<dt>Your avg cost</dt><dd class="num">${qfmt(h.cost/h.sh)}</dd>${ownFrac(sel)>=1e-4?`<dt>Your stake</dt><dd class="num">${ownPct(ownFrac(sel))}</dd>`:''}`:''}</dl>
     ${ty!=='market'?`<button class="place ${buy?'buy':'sell'}" data-a="order" ${okP?'':'disabled'}>Place ${ty} ${buy?'buy':'sell'} · ${big(ot.qty)} ${k.t}</button>
     <p class="mut" style="font-size:var(--text-xs)">${!(+ot.px>0)?'Enter a price.':buy&&ot.qty*ot.px>s.cash?'Not enough cash to cover this order.':!buy&&!okP?"You don't hold that many shares.":ty==='limit'?`Fills only at ${qfmt(+ot.px)} or better${live?'':', once the market opens'}.`:`Becomes a market order if the price ${buy?'rises':'falls'} to ${qfmt(+ot.px)}. It can fill worse than that in a fast market.`}</p>`:`<button class="place ${buy?'buy':'sell'}" data-a="order" ${ok?'':'disabled'}>${buy?'Buy':'Sell'} ${big(ot.qty)} ${k.t}</button>
-    ${ok?Math.abs(imp)>=.01?`<p class="mut" style="font-size:var(--text-xs)">An order this size moves the price. Big buys push it up, big sells push it down.</p>`:'':`<p class="mut" style="font-size:var(--text-xs)">${!live?`The market is closed. It opens ${nextOpen()}.`:buy?'Not enough buying power.':"You don't hold that many shares."}</p>`}`}
+    ${ok?Math.abs(imp)>=.01?`<p class="mut" style="font-size:var(--text-xs)">An order this size moves the price. Big buys push it up, big sells push it down.</p>`:'':`<p class="mut" style="font-size:var(--text-xs)">${!live?`The market is closed. It opens ${nextOpen()}.`:buy?'Not enough buying power.':"You don't hold that many shares."}</p>`}`}${buy&&ot.mg&&est>s.cash&&ok?`<p class="mut" style="font-size:var(--text-xs)">You'll borrow ${fmt(est-Math.max(0,s.cash))} at ${pctA(mRate())}. If your equity drops below 25% of what you hold, your broker sells to cover the loan.</p>`:''}
+    `}
     ${h?bracketHtml('stock',sel,q.p,h.cost/h.sh,qfmt):''}
     ${myo.length?`<h4>Open orders</h4>${myo.map(o=>`<div class="oord"><span>${o.type==='limit'?'Limit':'Stop'} ${o.side} ${big(o.n)} ${o.t} at ${qfmt(o.px)}<small class="mut">${o.tif==='day'?'today only':'until cancelled'}${o.tp?` · then take profit at ${qfmt(o.tp)}`:''}${o.sl?` · stop loss at ${qfmt(o.sl)}`:''}</small></span><button data-a="ocancel" data-x="${o.id}">Cancel</button></div>`).join('')}`:''}
    </div>
   </div>
+  ${marginPanel()}
   <h3>Positions</h3>
   ${Object.keys(s.port).length?`<div class="scroll"><table class="ledger"><thead><tr><th>Symbol</th><th class="r">Qty</th><th class="r">Avg cost</th><th class="r">Last</th><th class="r">Market value</th><th class="r">Day P/L</th><th class="r">Total P/L</th><th class="r">TP / SL</th></tr></thead><tbody>
    ${Object.entries(s.port).map(([x,o])=>{const y=s.px[x],v=o.sh*y.p;return `<tr class="pick ${x===sel?'on':''}" data-a="sel" data-x="${x}" tabindex="0"><td><b>${x}</b>${controls(x)?' <span class="up">·yours</span>':''}</td><td class="r num">${big(o.sh)}</td><td class="r num">${qfmt(o.cost/o.sh)}</td><td class="r num">${qfmt(y.p)}</td><td class="r num">${fmt(v)}</td><td class="r">${pl(o.sh*(y.p-y.o))}</td><td class="r">${pl(v-o.cost)} <span class="num ${v>=o.cost?'up':'dn'}">${pct(v/o.cost-1)}</span></td><td class="r num">${o.tp?qfmt(o.tp):'—'} / ${o.sl?qfmt(o.sl):'—'}</td></tr>`}).join('')}
@@ -1852,6 +1910,15 @@ function selfTest(){ // open with ?test=1 — never touches your real save
   ACT.xbuy('SATS','1000');ACT.btrail('coin:SATS','.05');const cs2=coin('SATS');cs2.p*=1.3;cbrackets();ok(s.wallet.SATS&&s.wallet.SATS.hw===cs2.p,'crypto trails too');cs2.p*=.9;cbrackets();ok(!s.wallet.SATS,'crypto trailing stop sells');
   const lp=s.px.MSFY.p;sel='MSFY';s.orders=[];ot={side:'buy',qty:10,type:'limit',px:+(lp*1.2).toPrecision(5),tp:+(lp*1.5).toPrecision(5),sl:+(lp*.8).toPrecision(5),tif:'day'};ACT.order();const ob=s.orders[0];ok(ob&&ob.tp&&ob.sl,'a limit buy can carry a take profit and stop loss');
   minute();ok(!s.orders.length&&s.port.MSFY?.tp===ob.tp&&s.port.MSFY?.sl===ob.sl,'they switch on when it fills');ot={side:'buy',qty:10,type:'market'};
+  newGame('Mar','street');s.day=nextTrading(s.day);s.min=600;s.cash=1e4;const mg_n=Math.floor(1.8e4/s.px.APEL.p);ok(!canBuy('APEL',mg_n,false)&&canBuy('APEL',mg_n,true)&&!canBuy('APEL',mg_n*2,true),'margin doubles buying power, and no more');
+  ACT.buy('APEL',mg_n,true);ok(s.port.APEL.sh===mg_n&&s.mloan>7e3&&s.cash<1,'bought on margin');const mg_l=s.mloan;shortDay();ok(s.mloan>mg_l,'margin interest');
+  shock('APEL',-.6,true);marginCheck();const mg_a=acct();ok((mg_a.eq>=mg_a.maint-1e-6||!s.port.APEL&&s.mloan===0)&&s.log.some(l=>l.t.startsWith('Margin call')),'a margin call sells you back above the minimum, or out entirely');
+  newGame('Short','street');s.day=nextTrading(s.day);s.min=600;s.cash=1e5;const nw_s=netWorth();ACT.short('NVBA','100');ok(s.shorts.NVBA?.sh===100&&s.cash>1e5&&Math.abs(netWorth()-nw_s)<nw_s*.01,'shorting adds cash and an equal debt');
+  shock('NVBA',-.1,true);const cs_s=s.cash;ACT.cover('NVBA','all');ok(!s.shorts.NVBA&&s.cash>1e5,'a short profits when the price falls');
+  ACT.short('NVBA','10000');ok(!s.shorts.NVBA,'too big a short is refused');const pz2=PENNIES[3];s.px[pz2.t].p=.5;ACT.short(pz2.t,'100');ok(!s.shorts[pz2.t],'no shorting penny stocks under $1');
+  const dk2=STOCKS.find(k=>k.div&&!k.pn);ACT.short(dk2.t,'10');const cd2=s.cash;s.px[dk2.t].nd=s.day;events();ok(s.cash<cd2,'shorts owe the dividend');ACT.cover(dk2.t,'all');
+  const pz3=PENNIES[4];s.px[pz3.t].p=2;ACT.short(pz3.t,'100');ok(s.shorts[pz3.t],'penny short above $1');const cs3=s.cash;bankrupt(pz3);ok(!s.shorts[pz3.t]&&s.cash<=cs3,'bankruptcy closes a short at a profit');
+  sel='NVBA';ot={side:'short',qty:10};tab='stock';ok(VIEWS.stock().includes('Short'),'short ticket');ot={side:'buy',qty:10,type:'market'};
   newGame('Goal','street');s.cash=2e6;checkGoals();ok(s.goals.nw1&&s.goals.nw2&&!s.goals.nw3,'goals unlock');const gn=Object.keys(s.goals).length;checkGoals();ok(Object.keys(s.goals).length===gn,'goals unlock once');delete s.goals;upgrade();ok(s.goals.nw2&&s.log[0].t.includes('already reached'),'old saves backfill goals quietly');
   tab='dash';ok(VIEWS.dash().includes('Goals'),'goals on home');goalsModal();
   const sp2=meet('spouse',70),k1=addChild(),k2=addChild(),k3=addChild();k1.b=s.day-40*365;k2.b=s.day-30*365;k3.b=s.day-5*365;k1.rel=90;

@@ -407,3 +407,5 @@ input:focus-visible{outline:2px solid var(--color-focus);outline-offset:1px}
 .ticket .obrk{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-2xs);margin-top:var(--space-2xs)}
 .ticket .obrk label{display:flex;flex-direction:column;gap:4px;font-size:var(--text-xs);color:var(--color-ink-3)}.ticket .obrk input{font-size:var(--text-base);min-width:0}
 .brk .row button.on{background:var(--color-ink);color:var(--color-paper)}
+.seg.seg4{grid-template-columns:repeat(4,1fr)}.seg.seg4 button{font-size:var(--text-sm);padding:.55rem .3rem}
+.ticket .mg{display:flex;gap:.5rem;align-items:center;font-size:var(--text-xs);color:var(--color-ink-2);margin-top:var(--space-2xs)}
