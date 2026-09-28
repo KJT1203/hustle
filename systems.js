@@ -107,7 +107,7 @@ function hobShow(id){const k=hobSk(id),P=s.eco.P,rn=.5+R();
   if(id==='cook'){for(const p of s.people)if(p.role==='friend'||p.role==='spouse'||p.role==='date')prel(p,4+k/20);add('hap',5);return 'Everyone raved about the food. Your friends feel closer.'}
   if(id==='code'){const v=Math.round(k*k*P*rn);s.cash+=v;taxAdd('ord',v);return `Freelance project done: ${fmt(v)}.`}
   if(id==='photo'){const v=Math.round(k**2*.35*P*rn*(1+s.fol/2e5)),f=Math.round(k*6*rn);s.cash+=v;taxAdd('ord',v);s.fol+=f;return `Prints sold for ${fmt(v)}, and +${f} followers.`}
-  const win=R()<k/130,v=win?Math.round(500*(k/50)**3*P):0;s.cash+=v;taxAdd('ord',v);add('hap',win?6:1);if(id==='sport')add('hea',1);return win?`You won the tournament! ${fmt(v)}.`:'Knocked out early. Still fun.'}
+  const win=R()<k/130,v=win?Math.round(500*(k/50)**3*P):0;s.cash+=v;taxAdd('ord',v);add('hap',win?6:1);if(id==='sport')add('hea',1);return win?`${id==='garden'?'Blue ribbon at the county fair!':id==='dance'?'First place!':'You won the tournament!'} ${fmt(v)}.`:id==='garden'?'An honorable mention for your tomatoes.':'Knocked out early. Still fun.'}
 
 // ---------- pets ----------
 const PETS=[
