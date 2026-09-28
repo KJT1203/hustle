@@ -1943,8 +1943,10 @@ function badge(k){
   if(k==='stock'){const d=idxDay();return `<span class="tag ${d>=0?'up':'dn'}">${pct(d)}</span>`}
   if(k==='crypto'){const c=coin('SATS'),d=c?c.p/c.o-1:0;return `<span class="tag ${d>=0?'up':'dn'}">${pct(d)}</span>`}
   if(k==='chirp')return cdLeft('post')?'':'<span class="tag mut">ready</span>';
-  if(k==='life')return ['hea','hap'].some(x=>s.st[x]<25)?'<span class="tag dn">low</span>':'';
-  if(k==='work')return s.job&&s.perf<25?'<span class="tag dn">at risk</span>':'';
+  if(k==='life')return s.legal.cases.length?'<span class="tag dn">court</span>':jailed()?'<span class="tag dn">jail</span>':['hea','hap'].some(x=>s.st[x]<25)?'<span class="tag dn">low</span>':'';
+  if(k==='health')return s.conds.some(c=>!c.hid&&!c.tx&&(c.id==='cancer'||c.id==='heart'))?'<span class="tag dn">see a doctor</span>':s.conds.some(c=>!c.hid&&!CONDS[c.id].acute&&!c.tx)?'<span class="tag gold">untreated</span>':'';
+  if(k==='office')return s.pol?.camp?`<span class="tag gold">${s.pol.camp.end-s.day}d</span>`:s.pol?.cur?`<span class="tag ${s.pol.app<40?'dn':'mut'}">${Math.round(s.pol.app)}%</span>`:'';
+  if(k==='work')return s.su?.offer||s.su?.acq?'<span class="tag gold">offer</span>':s.su&&suRunway(s.su)<60?'<span class="tag dn">runway</span>':s.job&&s.perf<25?'<span class="tag dn">at risk</span>':s.fl?.jobs.length?`<span class="tag mut">${s.fl.jobs.length} contract${s.fl.jobs.length>1?'s':''}</span>`:'';
   if(k==='school')return s.study?`<span class="tag gold">${Math.round((1-s.study.left/s.study.days)*100)}%</span>`:'';
   if(k==='people')return partner()?.rel<30?'<span class="tag dn">low</span>':'';
   if(k==='casino')return s.cz.bj&&!s.cz.bj.done?'<span class="tag gold">hand open</span>':'';
