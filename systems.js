@@ -782,3 +782,34 @@ function statsDay(){const w=netWorth();if(w>(s.peak||0))s.peak=w}
 function lifeStatsHtml(){const T=s.tax,paid=Object.values(T.hist||{}).reduce((a,h)=>a+(h.tax||0),0)+(T.paid||0),trips=Object.keys(s.cd).filter(k=>k.startsWith('t_')).length,ops=BIZ.filter(b=>s.biz[b.id]).length;
   const rows=[['Peak net worth',fmt(s.peak||netWorth())],['Salary earned',fmt(s.wage||0)],['Income tax paid',fmt(paid)],['Gigs worked',big(s.gigs||0)],['Casino',`${(s.cz?.net||0)>=0?'+':''}${fmt(s.cz?.net||0)} over ${big(s.cz?.played||0)} bets`],['Kinds of business run',ops],['Places visited',trips],['Followers',big(s.fol)],['Given to charity',fmt(s.given||0)],['Goals reached this life',Object.values(s.goals).filter(g=>g.gen===s.gen).length]];
   return `<div class="sec-h"><h2>Lifetime stats</h2><span>${esc(s.name)}</span></div><div class="stats4 eco">${rows.map(([l,v])=>`<div><span>${l}</span><b class="num">${v}</b></div>`).join('')}</div>`}
+
+// ---------- more moments, across a life ----------
+const EV15=[
+{id:'roommate',w:s=>s.study&&s.study.sc!=='online'?1.2:0,c:s=>!!s.study&&s.study.sc!=='online',t:'Roommate from hell',d:()=>'Your roommate plays drums at 3 AM and eats your food.',def:1,ch:[
+ ['Move into a single room',()=>{const v=Math.round(1500*s.eco.P);s.cash-=v;add('hap',4);if(s.study)s.study.g=clamp(s.study.g+3,0,100);return `Peace and quiet for ${fmt(v)}.`}],
+ ['Tough it out',()=>{add('hap',-4);if(s.study)s.study.g=clamp(s.study.g-3,0,100);return 'You buy earplugs. Lots of earplugs.'}]]},
+{id:'cheat',w:s=>s.study?.8:0,c:s=>!!s.study,t:'Answers for sale',d:()=>'Someone in your class is selling the answers to next week\'s final.',def:1,ch:[
+ ['Buy them',()=>{const v=Math.round(300*s.eco.P);s.cash-=v;if(!s.study)return 'The moment has passed.';if(R()<.2){s.study.g=clamp(s.study.g-25,0,100);add('hap',-8);return 'The school found out. Academic probation, and your grade is in ruins.'}s.study.g=clamp(s.study.g+12,0,100);return 'An easy A. You feel a bit sick about it.'}],
+ ['Study the honest way',()=>{if(s.study)s.study.g=clamp(s.study.g+3,0,100);add('sma',.5);return 'Late nights in the library. You earned it.'}]]},
+{id:'scam',w:.8,t:'A worrying call',d:()=>'"This is the tax office. You owe back taxes and will be arrested today unless you pay in gift cards."',def:1,ch:[
+ ['Pay them, just in case',()=>{const v=Math.round(Math.min(s.cash*.1,5000*s.eco.P));s.cash-=v;add('hap',-6);return `You lost ${fmt(v)} to scammers. The real tax office never calls like that.`}],
+ ['Hang up',()=>'Obviously a scam. You report the number.']]},
+{id:'exwed',w:s=>s.people.some(p=>p.role==='ex')?.8:0,c:s=>s.people.some(p=>p.role==='ex'),a:s=>pick(s.people.filter(p=>p.role==='ex'))?.uid,t:'A wedding invitation',d:(s,a)=>`${esc(per(a)?.n||'Your ex')} is getting married, and you're invited.`,def:1,ch:[
+ ['Go, and be gracious',(s,a)=>{const p=per(a);if(p)prel(p,15);add('hap',R()<.5?4:-4);return 'You danced, you smiled, you left early.'}],
+ ['Send a gift and stay home',(s,a)=>{const v=Math.round(100*s.eco.P);s.cash-=v;return 'A nice card and a toaster. Closure, of a sort.'}]]},
+{id:'memoir',w:s=>age()>=55&&(s.fol>1e5||netWorth()>1e7*s.eco.P)&&!s.memoir?.9:0,c:s=>age()>=55&&(s.fol>1e5||netWorth()>1e7*s.eco.P)&&!s.memoir,a:s=>Math.round((2e5+s.fol*.5+Math.sqrt(netWorth())*20)*s.eco.P),t:'Your life story',d:(s,a)=>`A publisher wants your memoir. The advance: <b>${fmt(a)}</b>.`,def:0,ch:[
+ ['Write it',(s,a)=>{s.memoir=1;s.cash+=a;taxAdd('ord',a);s.fol+=Math.round(a/40);add('hap',8);mile('Published a memoir.');return `A bestseller. ${fmt(a)} up front, and people finally understand you.`}],
+ ['Some things stay private',()=>{s.memoir=1;return 'You keep your stories to yourself.'}]]},
+{id:'bonus',w:s=>s.job&&s.perf>70&&dateOf(s.day).m===11?4:0,c:s=>s.job&&s.perf>70,a:()=>Math.round(jobPay()*rint(10,40)),t:'Year-end bonus',d:(s,a)=>`Your boss hands you an envelope: a <b>${fmt(a)}</b> bonus for a great year.`,def:0,ch:[
+ ['Put it in the bank',(s,a)=>{s.cash+=a;taxAdd('ord',a);s.fin.sav+=a*.5;s.cash-=a*.5;add('hap',4);return `Half of it straight into savings. Sensible.`}],
+ ['Treat yourself',(s,a)=>{/* keep 40%, spend the rest */s.cash+=a*.4;taxAdd('ord',a);add('hap',10);return `You spent most of it on something shiny. Worth it.`}]]},
+{id:'gala',w:s=>netWorth()>5e6*s.eco.P?1:0,c:s=>netWorth()>5e6*s.eco.P,a:()=>Math.round(netWorth()*.005),t:'The charity gala',d:(s,a)=>`You're invited to the city's biggest charity gala. Guests are expected to pledge around <b>${fmt(a)}</b>.`,def:1,ch:[
+ ['Attend and pledge',(s,a)=>{donate(a);s.fol+=Math.round(Math.sqrt(a));if(friendsN()<10&&R()<.5){const p=meet('friend',50);return `Black tie, big pledges. You hit it off with ${p.n}.`}return 'Black tie, big pledges, and your name in the program.'}],
+ ['Send regrets',()=>'You watch the photos online from your couch.']]},
+{id:'block',w:.7,t:'Block party',d:()=>'The neighbors are throwing a block party this weekend.',def:0,ch:[
+ ['Bring a dish',()=>{add('hap',4);if(friendsN()<10&&R()<.4){const p=meet('friend',40);return `Good food, good people. You got to know ${p.n}.`}return 'Good food, good people.'}],
+ ['Keep to yourself',()=>'You watch through the blinds.']]},
+{id:'lostpet',w:s=>s.pets.some(p=>p.t==='dog'||p.t==='cat')?.8:0,c:s=>s.pets.some(p=>p.t==='dog'||p.t==='cat'),a:s=>pick(s.pets.filter(p=>p.t==='dog'||p.t==='cat'))?.uid,t:'Missing!',d:(s,a)=>`${esc(s.pets.find(p=>p.uid===a)?.n||'Your pet')} slipped out and hasn't come back.`,def:1,ch:[
+ ['Search all night',(s,a)=>{const p=s.pets.find(x=>x.uid===a);if(!p)return 'The moment has passed.';add('hea',-2);if(R()<.85){add('hap',6);return `You found ${p.n} at 4 AM under a neighbor's porch.`}s.pets.splice(s.pets.indexOf(p),1);add('hap',-12);return `No sign of ${p.n}. You keep the light on.`}],
+ ['Put up posters',(s,a)=>{const p=s.pets.find(x=>x.uid===a);if(!p)return 'The moment has passed.';if(R()<.6){add('hap',4);return `A kid down the street brought ${p.n} home.`}s.pets.splice(s.pets.indexOf(p),1);add('hap',-12);return `${p.n} never came home.`}]]},
+];

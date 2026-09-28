@@ -438,7 +438,7 @@ const EV=[
  ['Take it to a shelter',()=>'It will find a good home.']]},
 ];
 
-EV.push(...EV2,...EV3,...EV4,...EV5,...EV6,...EV7,...EV8,...EV9,...EV10,...EV11,...EV12,...EV13,...EV14);
+EV.push(...EV2,...EV3,...EV4,...EV5,...EV6,...EV7,...EV8,...EV9,...EV10,...EV11,...EV12,...EV13,...EV14,...EV15);
 const EVM=EM(EV.map(e=>[e.id,e]));
 
 // ---------- businesses: realistic returns, and profits that ride the economy ----------
