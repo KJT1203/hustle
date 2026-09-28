@@ -271,6 +271,7 @@ function selfTest(){ // open with ?test=1 — never touches your real save
   const pl_s0=s;newGame('Pol2','nerd');s.pol.cur='gov';s.pol.app=50;const pl_g=s.eco.g;const pl_m=enact('stim');ok(pl_m&&s.eco.g>pl_g&&!enact('stim'),'a stimulus, then a wait');ok(!enact('trade'),'trade deals are for presidents');tab='office';ok(VIEWS.office().includes('Policies'),'policies on Politics');ok(NEWS.every((n,i)=>!i||n.v>NEWS[i-1].v),'news in order');s=pl_s0;
   const hb2_s0=s;newGame('Hob2','nerd');s.cash=1e5;for(const id of ['photo','garden','dance']){s.cd['h_'+id]=0;ACT.hob(id);ok(hobSk(id)>0,'practice '+id);s.hob[id].sk=60;s.cd['hs_'+id]=0;ACT.hshow(id)}ok(s.fol>0,'prints bring followers');s=hb2_s0;
   const nn_s0=s;newGame('Nanny','nerd');const nn_k=addChild();nn_k.b=s.day-5*365;ACT.staff('nanny');const nn_h=nn_k.k.hea;s.day=Math.ceil((s.day+1)/7)*7;staffDay();ok(s.staff.nanny&&nn_k.k.hea>nn_h&&lifeCost()>=nannyCost(),'a nanny helps raise the kids');s=nn_s0;
+  const sp_s0=s;newGame('Widow','nerd');const sp_p=meet('spouse',80);sp_p.b=s.day-110*365;for(let i=0;i<8000&&partner();i++)othersDay();ok(!partner()&&s.mile.some(m=>m.t.includes('Lost')),'spouses grow old too');s=sp_s0;
   tab='dash';ok(VIEWS.dash().includes('Goals'),'goals on home');goalsModal();
   const sp2=meet('spouse',70),k1=addChild(),k2=addChild(),k3=addChild();k1.b=s.day-40*365;k2.b=s.day-30*365;k3.b=s.day-5*365;k1.rel=90;
   deathModal();ok($('#mbox').innerHTML.includes('Continue as '+k1.n),'death lists the kids');ACT.heir(String(k1.uid));

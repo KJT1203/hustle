@@ -699,7 +699,7 @@ const NEWS=[
  {v:13,t:['New careers: pro athlete, fashion model and actor']},
  {v:14,t:['Five new starting lives: lottery winner, young parent, sporty kid, new arrival and art school dropout','Lifetime stats on the family tree','Nine more life moments, from roommates to a memoir']},
  {v:15,t:['Unemployment benefits after a layoff, and Medicare from 65','A portrait for every character, who ages and shows your mood','Three save slots for separate families (? menu)','Gentle mode: illness never kills you (? menu)','Menu badges for court, illness, campaigns and startup offers']},
- {v:16,t:['Enact policies once you hold office','Three new hobbies: photography, gardening and dance','Hire a nanny (Lifestyle)']},
+ {v:16,t:['Enact policies once you hold office','Three new hobbies: photography, gardening and dance','Hire a nanny (Lifestyle)','Spouses grow old too']},
 ];
 const NEWSV=NEWS.at(-1).v;
 function newsHtml(){const seen=s.seenV||1,L=NEWS.filter(n=>n.v>seen);if(!L.length)return '';s.seenV=NEWSV;
@@ -764,6 +764,7 @@ function staffHtml(){const S=s.staff||{};
 
 // ---------- other people's lives: parents who need care, friends and siblings who move on ----------
 function othersDay(){for(const p of [...s.people]){const a=ageOf(p);
+  if(p.role==='spouse'&&a>70&&R()<Math.min(.5,((a-70)/24)**3*2.2)/365){s.people.splice(s.people.indexOf(p),1);add('hap',-30);mile(`Lost ${esc(p.n)}, after ${Math.round((s.day-(p.wed||p.met||0))/365)} years married.`);log(`${esc(p.n)}, your spouse, passed away at ${Math.floor(a)}. The house is very quiet now.`,'bad');toast(`${esc(p.n)} passed away`);continue}
   if(p.role==='parent'&&a>=78&&!p.care&&!p.askedCare&&R()<1/900){p.askedCare=1;s.inbox.push({id:'pcare',d:s.day,a:p.uid})}
   if(p.role==='parent'&&p.care==='home')s.cash-=180*s.eco.P; // a care home, every day
   if(p.role==='friend'||p.role==='sibling'){
