@@ -433,3 +433,4 @@ details summary{cursor:pointer;color:var(--color-accent);font-size:var(--text-sm
 .brow .bx{font-size:var(--text-xs);margin-top:.2rem}.brow .bx .link2{font-size:var(--text-xs)}
 .styles{display:grid;grid-template-columns:repeat(auto-fit,minmax(18rem,1fr));gap:var(--space-sm)}.styles .sm{font-size:var(--text-xs);margin-top:var(--space-3xs)}
 .seg2.wrap{flex-wrap:wrap}
+.news{margin:var(--space-2xs) 0 0;padding-left:1.1rem;display:grid;gap:.2rem;font-size:var(--text-sm)}

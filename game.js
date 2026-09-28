@@ -658,7 +658,7 @@ function toast(m){if(catching||opt('quiet'))return;const t=document.createElemen
 function newGame(name,bg,h={}){
   const b=BG[bg]||{cash:0,st:{hea:75,hap:60,sma:40,loo:50}};
   s={v:1,name,handle:'@'+(name.toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,15)||'you'),day:0,startAge:18,cash:b.cash+(h.inherit||0),st:{...b.st},edu:b.edu||0,study:null,
-     job:b.job||null,jobDays:0,rank:0,biz:{},port:{},px:{},mkt:{bull:true,h:MVOL.bull**2/YR,eps:0,cb:0,div:1,ic:1,ih:1,rc:1e13},orders:[],fol:b.fol||0,feed:[],own:{},people:[],degs:b.edu?[{p:'dip',sc:'cc',mj:'Computer science',hon:false}]:[],debt:0,xp:{},perf:50,raise:0,pension:0,wallet:{},cz:{chip:100,net:0,played:0,rh:[],ban:0},props:[],cars:[],home:null,re:{idx:1,list:[],next:0},cd:{},inbox:[],later:[],log:[],fl:flNew(),su:null,pol:polNew(),club:null,credit:650,vice:{alc:0,gam:0},pets:[],conds:[],ins:'basic',legal:{rec:[],cases:[],jail:0},hob:{},
+     job:b.job||null,jobDays:0,rank:0,biz:{},port:{},px:{},mkt:{bull:true,h:MVOL.bull**2/YR,eps:0,cb:0,div:1,ic:1,ih:1,rc:1e13},orders:[],fol:b.fol||0,feed:[],own:{},people:[],degs:b.edu?[{p:'dip',sc:'cc',mj:'Computer science',hon:false}]:[],debt:0,xp:{},perf:50,raise:0,pension:0,wallet:{},cz:{chip:100,net:0,played:0,rh:[],ban:0},props:[],cars:[],home:null,re:{idx:1,list:[],next:0},cd:{},inbox:[],later:[],log:[],seenV:NEWSV,fl:flNew(),su:null,pol:polNew(),club:null,credit:650,vice:{alc:0,gam:0},pets:[],conds:[],ins:'basic',legal:{rec:[],cases:[],jail:0},hob:{},
      gen:h.gen||1,boost:0,lastPost:0,dead:0,lastSeen:Date.now(),goals:{...h.goals},min:480,eco:h.eco?{...h.eco}:ecoNew(),fin:finNew(),tax:taxNew(),mloan:0,shorts:{},opts:[]};applyPrices();
   s.legacy=1+.25*(s.gen-1);
   s.tr=h.tr||rollTraits().slice(0,1);s.tree=h.tree||[];s.fdn=h.fdn||0;s.city=h.city||'suburb';
@@ -1105,6 +1105,7 @@ function offline(ms){ // time keeps passing while the game is closed, at a day p
     modal(`<p class="kicker">Welcome back</p><h2>While you were away</h2><p>You were gone for <b>${dur(sec)}</b>, and <b>${plainDays(s.day-day0)}</b> passed. ${esc(s.name)} is now ${Math.floor(age())}${Math.floor(age())>age0?` (was ${age0})`:''}.</p>
     <table class="ledger"><tr><td>Net worth</td><td class="r num">${fmt(before)} → ${fmt(after)} ${sign(dn)}</td></tr><tr><td>Cash</td><td class="r num">${fmt(s.cash)}</td></tr><tr><td>Hustle 500</td><td class="r num">${idx().toFixed(0)} · ${mktLabel().toLowerCase()}</td></tr><tr><td>Health</td><td class="r">${Math.round(s.st.hea)}${s.conds.filter(c=>!c.hid&&!c.tx&&!CONDS[c.id].acute).length?` · <span class="dn">${s.conds.filter(c=>!c.hid&&!c.tx&&!CONDS[c.id].acute).map(c=>condName(c).toLowerCase()).join(', ')} untreated</span>`:''}</td></tr>${s.su?`<tr><td>${esc(s.su.n)}</td><td class="r">${SUST[s.su.st].n} · ${suRunway(s.su)} days of runway</td></tr>`:''}${needs().length?`<tr><td>Waiting for you</td><td class="r">${needs().length} thing${needs().length>1?'s':''} on Home</td></tr>`:''}</table>
     ${news.length?`<h3 style="margin-top:var(--space-sm)">What happened</h3><div class="awaylog">${news.map(l=>`<div class="aw ${l.k}">${l.t}</div>`).join('')}</div>`:''}
+    ${newsHtml()}
     <button class="pri" data-a="close" style="margin-top:var(--space-sm)">Back to it</button>`);render()});
 }
 const plainDays=d=>d<60?`${d} day${d===1?'':'s'}`:d<730?`${Math.round(d/30.4)} months`:`${(d/365).toFixed(1)} years`;
@@ -2040,7 +2041,7 @@ document.addEventListener('visibilitychange',()=>{if(!s||s.dead)return;if(docume
 if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1'))navigator.serviceWorker.register('sw.js').catch(()=>{}); // makes it installable and offline-capable when served
 (function boot(){
   const go=()=>{let d=null;if(!wiped)try{d=JSON.parse(localStorage.getItem(SAVE))}catch{}
-    if(d?.v===1){s=d;upgrade();render();if(s.dead)deathModal();else offline(Date.now()-s.lastSeen)}
+    if(d?.v===1){s=d;upgrade();render();if(s.dead)deathModal();else{offline(Date.now()-s.lastSeen);if($('#modal').hidden&&(s.seenV||1)<NEWSV)modal(`<p class="kicker">Welcome back</p><h2>The game has been updated</h2>${newsHtml()}<button class="pri" data-a="close" style="margin-top:var(--space-sm)">Back to it</button>`)}}
     else startModal()};
   if(!location.search.includes('test'))return go();
   const sc=document.createElement('script');sc.src='test.js'; // the self-test only loads when asked for

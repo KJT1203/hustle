@@ -672,3 +672,16 @@ const EV12=[
  ['Spoil them rotten',(s,a)=>{const k=per(a);if(!k)return 'The moment has passed.';const v=Math.round(300*s.eco.P*k.k.gk.length);s.cash-=v;prel(k,6);add('hap',9);return `Ice cream, toys and zero bedtimes. ${fmt(v)} well spent.`}],
  ['A quiet weekend in',(s,a)=>{const k=per(a);if(k)prel(k,3);add('hap',5);return 'Board games and stories. Lovely.'}]]},
 ];
+
+// ---------- what's new: shown once after an update, listing what changed since you last played ----------
+const NEWS=[
+ {v:2,t:['Health: illnesses, check-ups and insurance','The law: lawsuits, trials, jail and a record','Hobbies and pets','Decisions whose consequences arrive later']},
+ {v:3,t:['Kids are born with traits and shaped by how you raise them','Your heir starts as the person they became','Estate tax replaces the flat 50% cut']},
+ {v:4,t:['A boss and coworkers at every job','Freelance contracts','Found a startup and take it to an exit']},
+ {v:5,t:['A family tree of every generation','Fixer-uppers, renovations and tenants','Giving and a family foundation','Pandemics, tech booms and storms','Partners with personalities, weddings and prenups','Five cities with their own pay, costs and taxes','Social Security']},
+ {v:6,t:['Politics: from city council to president','Own a sports team','Credit scores and bankruptcy','Habits, addiction and rehab','Travel, up to a flight to space','Military service and the GI Bill','A life story timeline','Next steps suggestions on Home']},
+ {v:7,t:['Businesses valued at a multiple of profit: sell or franchise a chain','Work hours and diet','Settings in the ? menu','A housing boom and bust','Walk your dog, and vet decisions','A family trust, a best friend, and retirement communities']},
+];
+const NEWSV=NEWS.at(-1).v;
+function newsHtml(){const seen=s.seenV||1,L=NEWS.filter(n=>n.v>seen);if(!L.length)return '';s.seenV=NEWSV;
+  return `<h3 style="margin-top:var(--space-sm)">What's new since you last played</h3><ul class="news">${L.flatMap(n=>n.t).map(t=>`<li>${t}</li>`).join('')}</ul>`}
