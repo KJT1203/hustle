@@ -673,7 +673,7 @@ function newGame(name,bg,h={}){
      job:b.job||null,jobDays:0,rank:0,biz:{},port:{},px:{},mkt:{bull:true,h:MVOL.bull**2/YR,eps:0,cb:0,div:1,ic:1,ih:1,rc:1e13},orders:[],fol:b.fol||0,feed:[],own:{},people:[],degs:b.edu?[{p:'dip',sc:'cc',mj:'Computer science',hon:false}]:[],debt:0,xp:{},perf:50,raise:0,pension:0,wallet:{},cz:{chip:100,net:0,played:0,rh:[],ban:0},props:[],cars:[],home:null,re:{idx:1,list:[],next:0},cd:{},inbox:[],later:[],log:[],seenV:NEWSV,fl:flNew(),su:null,pol:polNew(),club:null,credit:650,vice:{alc:0,gam:0},pets:[],conds:[],ins:'basic',legal:{rec:[],cases:[],jail:0},hob:{},
      gen:h.gen||1,boost:0,lastPost:0,dead:0,lastSeen:Date.now(),goals:{...h.goals},min:480,eco:h.eco?{...h.eco}:ecoNew(),fin:finNew(),tax:taxNew(),mloan:0,shorts:{},opts:[]};applyPrices();
   s.legacy=1+.25*(s.gen-1);
-  s.tr=h.tr||rollTraits().slice(0,1);if(!h.gen&&b.fx)b.fx();s.tree=h.tree||[];s.fdn=h.fdn||0;s.city=h.city||'suburb';
+  s.surname=h.surname||pick(SURN);s.tr=h.tr||rollTraits().slice(0,1);if(!h.gen&&b.fx)b.fx();s.tree=h.tree||[];s.fdn=h.fdn||0;s.city=h.city||'suburb';
   if(h.ks){for(const k in h.ks)s.st[k]=Math.round(clamp(h.ks[k],0,100));s.cash+=h.fund||0;s.debt=h.loan||0;if(h.degs){s.degs=h.degs;s.edu=h.edu}if(h.job){s.job=h.job;s.xp=h.xp||{}}if(h.study)s.study=h.study} // the heir is the person their childhood made
   else if(h.gen){s.st.sma=Math.round(s.st.sma*.7+h.sma*.3);s.st.loo=Math.round(s.st.loo*.7+h.loo*.3)} // a little of the family runs in the blood
   if(h.pets)s.pets=h.pets.map(p=>({...p,uid:uid()}));
@@ -1088,7 +1088,7 @@ const goalAmt=(g,v)=>g.m?fmt(v):g.id==='old'||g.id==='peak'||g.id==='gen3'?Math.
 
 // ---------- the heir: one of your kids, or a relative if you had none ----------
 function heirOf(k){
-  const w=Math.max(0,netWorth()),tax=estateTax(w),h={tree:s.tree,fdn:s.fdn||0,city:s.city,inherit:(w-tax)*(k?1:.5)+(s.trust?.v||0),trust:s.trust?.v||0,tax,gen:s.gen+1,last:s.name,goals:s.goals,sma:s.st.sma,loo:s.st.loo,eco:s.eco};
+  const w=Math.max(0,netWorth()),tax=estateTax(w),h={surname:s.surname,tree:s.tree,fdn:s.fdn||0,city:s.city,inherit:(w-tax)*(k?1:.5)+(s.trust?.v||0),trust:s.trust?.v||0,tax,gen:s.gen+1,last:s.name,goals:s.goals,sma:s.st.sma,loo:s.st.loo,eco:s.eco};
   if(!k)return h;
   const skip=Math.max(0,18*365-(s.day-k.b)),carry=p=>({n:p.n,b:p.b-s.day-skip,rel:(p.rel+k.rel)/2});
   const K=k.k,x={};if(K){const age18=k.b+18*365;if(!K.path&&s.day+skip>=age18){const d=s.day;s.day+=skip;kidLaunch(k,1);s.day=d}
@@ -1338,7 +1338,7 @@ const ACT={
   slot:n=>{n=+n;if(![1,2,3].includes(n)||n===slot)return;save();slot=n;try{localStorage.setItem('hustle-slot',n)}catch{}wiped=true;location.reload()},
   heir:u=>startModal(heirOf(u&&per(+u))),
   goals:()=>goalsModal(),
-  begin:bg=>{newGame(($('#nm').value.trim()||pick(NAMES)).slice(0,20),bg,heir);closeModal();save();if(heir.gen)s.tour=1;else ACT.guide()},
+  begin:bg=>{const fn=$('#fn')?.value.trim().slice(0,20);newGame(($('#nm').value.trim()||pick(NAMES)).slice(0,20),bg,fn?{...heir,surname:fn}:heir);closeModal();save();if(heir.gen)s.tour=1;else ACT.guide()},
 };
 const gigsLeft=()=>3-(s.gd===s.day?s.gn||0:0); // a gig takes a few hours: three a day at most
 const gig=()=>(4+s.st.sma*.15+(s.cars.length?12:0))*s.eco.P+(s.job?jobPay()*.02:0); // with a car, the gig is rideshare driving and pays more
@@ -1387,6 +1387,7 @@ function startModal(h={}){
   modal(`<p class="kicker">${h.gen?`Generation ${h.gen}`:'The Hustle'}</p><h2>${h.kid?`${esc(h.kid)} takes over`:h.gen?'The family business continues':'You just turned eighteen'}</h2>
   <p>${h.kid?`You are ${esc(h.last)}'s kid, starting at ${Math.floor(h.age)}. You inherit <b class="num">${fmt(h.inherit)}</b>${h.fund>=1?` plus your ${fmt(h.fund)} college fund`:''} and a permanent <b>+${(h.gen-1)*25}%</b> business income bonus.${fam}`:h.gen?`With no children, a relative inherits <b class="num">${fmt(h.inherit)}</b> and a permanent <b>+${(h.gen-1)*25}%</b> business income bonus.`:'Work your way up or start a company, invest, fall in love, raise kids, stay healthy, maybe run for office. Decisions will land on your desk along the way, and some come back years later. When you die, one of your kids carries on the family. Time flies while you’re idle, slows down while you play, and keeps passing when you’re away.'}</p>
   <label>Your name<input id="nm" maxlength="20" value="${h.kid?esc(h.kid):h.last?esc(h.last.split(' ')[0])+' Jr.':pick(NAMES)}"></label>
+  ${h.gen?'':`<label>Family name<input id="fn" maxlength="20" value="${pick(SURN)}"></label>`}
   ${h.ks?`<table class="ledger"><tr><td>Grew up</td><td>${trTxt(h.tr)||'Ordinary'}${h.tr?.length?` <span class="mut">(${h.tr.map(t=>TRAITS[t].d).join('; ')})</span>`:''}</td></tr><tr><td>Stats</td><td>Health ${Math.round(h.ks.hea)} · Happiness ${Math.round(h.ks.hap)} · Smarts ${Math.round(h.ks.sma)} · Looks ${Math.round(h.ks.loo)}</td></tr><tr><td>Path</td><td>${h.job?`Working as ${art(JM[h.job].n.toLowerCase())}`:h.study?'At college':'No job yet'}${h.degs?`, ${h.degs.map(degName).join(', ')}`:''}${h.loan?`, ${fmt(h.loan)} in student loans`:''}</td></tr></table>
   <button class="pri big" data-a="begin" data-x="heir" style="margin-top:var(--space-sm)">Begin</button>`:`<label>Pick your start</label>
   <div class="bgs">${Object.entries(BG).map(([k,b])=>`<button data-a="begin" data-x="${k}"><b>${b.n}</b><small>${b.d}</small></button>`).join('')}</div>`}`);
@@ -1646,7 +1647,7 @@ dash(){
   const f=flows(),N=needs(),net=f.job+f.biz+f.pend+f.spon+f.rent+f.own-f.exp-f.mort-f.tax,h=s.nwh||[];
   const parts=[['Cash',Math.max(0,s.cash)],['Businesses',bizWorth()],['Stocks',Object.entries(s.port).reduce((a,[k,o])=>a+o.sh*s.px[k].p,0)+optVal()],['Crypto',walletVal()],['Bank',s.fin.sav+s.fin.fu*fundPx()+s.fin.bonds.reduce((a,b)=>a+bondVal(b),0)],['Retirement',iraVal()],['Property',s.props.reduce((a,p)=>a+Math.max(0,pval(p)-p.loan),0)],['Cars',s.cars.reduce((a,c)=>a+c.v,0)],['Lifestyle',Object.keys(s.own).reduce((a,k)=>a+SM[k].cost*.6,0)]].map((x,i)=>[...x,`var(--cat-${i+1})`]).filter(x=>x[1]>=1);
   const tot=parts.reduce((a,x)=>a+x[1],0)||1,gl=goalsLeft().slice(0,3);
-  return `<section class="lede solo"><div class="who2">${avatar(s.name+s.gen,age(),s.st.hap,64)}<div><h2 class="headline">${esc(s.name)}, ${Math.floor(age())}</h2><p class="dek">${esc(s.name)} ${lifeLine()}</p></div></div></section>
+  return `<section class="lede solo"><div class="who2">${avatar(s.name+s.gen,age(),s.st.hap,64)}<div><h2 class="headline">${esc(s.name)}${s.surname?` ${esc(s.surname)}`:''}, ${Math.floor(age())}</h2><p class="dek">${esc(s.name)} ${lifeLine()}</p></div></div></section>
   <div class="sec-h"><h2>Needs you</h2><span>${N.length?`${N.length} thing${N.length>1?'s':''}`:'all clear'}</span></div>
   <div class="needs">${N.length?N.map(needHtml).join(''):'<p class="mut" style="padding:var(--space-sm) 0">Nothing needs you right now. Your money is working.</p>'}</div>
   ${(T=>T.length?`<div class="sec-h"><h2>Next steps</h2><span>suggestions</span></div><div class="needs">${T.map(tipHtml).join('')}</div>`:'')(tips())}
@@ -1667,7 +1668,7 @@ dash(){
 },
 life(){
   const f=flows(),rows=[[spouseInc()?'Salary, pension and your spouse':'Salary and pension',f.job],['Managed businesses',f.biz],['Tills to collect',f.pend],['Sponsors, ads and royalties',f.spon],['Companies you control',f.own],['Rent from tenants',f.rent],['Loan payments',-f.mort],['Income tax, about',-f.tax],[`Living costs${homeP()?'':', rent included'}`,-f.exp]].filter(r=>Math.abs(r[1])>=.01);
-  return `<section class="lede solo"><div class="who2">${avatar(s.name+s.gen,age(),s.st.hap,64)}<div><h2 class="headline">${esc(s.name)}, ${Math.floor(age())}</h2><p class="dek">${esc(s.name)} ${lifeLine()}</p>${s.tr?.length?`<p class="mut">${s.tr.map(t=>`<b>${TRAITS[t].n}</b>: ${TRAITS[t].d}`).join(' · ')}</p>`:''}</div></div></section>
+  return `<section class="lede solo"><div class="who2">${avatar(s.name+s.gen,age(),s.st.hap,64)}<div><h2 class="headline">${esc(s.name)}${s.surname?` ${esc(s.surname)}`:''}, ${Math.floor(age())}</h2><p class="dek">${esc(s.name)} ${lifeLine()}</p>${s.tr?.length?`<p class="mut">${s.tr.map(t=>`<b>${TRAITS[t].n}</b>: ${TRAITS[t].d}`).join(' · ')}</p>`:''}</div></div></section>
   ${storyHtml()}
   <div class="sec-h"><h2>Activities</h2><span>each one has a cooldown</span></div>
   <div class="acards">${ACTS.filter(a=>!a.show||a.show()).map(a=>{const w=cdLeft(a.id);return `<button class="acard" data-a="act" data-x="${a.id}" ${w||s.cash<a.c?'disabled':''}><b>${a.n}</b><span>${a.d}</span><small>${a.c?fmt(a.c):'Free'}${w?` · ready in ${w}d`:''}</small></button>`}).join('')}</div>

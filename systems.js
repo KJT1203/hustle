@@ -331,7 +331,7 @@ function lifeRec(){const w=netWorth(),pt=partner();return {gen:s.gen,n:s.name,ag
   job:s.job?jobTitle():s.su?`Founder of ${s.su.n}`:s.pension?'Retired':'Out of work',kids:kids().length,sp:pt?.role==='spouse'?pt.n:null,tr:s.tr||[],edu:EDU[s.edu].n,
   exits:(s.car2?.acq||0)+(s.car2?.ipo||0),rec:s.legal.rec.length,mile:(s.mile||[]).slice(-40),given:Math.round(s.given||0),goals:Object.values(s.goals).filter(g=>g.gen===s.gen).length}}
 function legacyHtml(){const T=[...(s.tree||[]),lifeRec()],top=Math.max(1,...T.map(r=>r.real)),founder=T[0].n,tot=T.reduce((a,r)=>a+r.real,0);
-  return `<section class="lede solo"><div><h2 class="headline">The family of ${esc(founder)}</h2><p class="dek">${T.length===1?`The first generation. Everything starts with ${esc(s.name)}.`:`${T.length} generations so far. Together they built <b class="num">${fmt(tot)}</b> in today's money, and reached ${Object.keys(s.goals).length} of ${GOALS.length} family goals.`}${s.given?` They have given away <b class="num">${fmt(T.reduce((a,r)=>a+r.given,0))}</b>.`:''}</p></div></section>
+  return `<section class="lede solo"><div><h2 class="headline">${s.surname?`The ${esc(s.surname)} family`:`The family of ${esc(founder)}`}</h2><p class="dek">${T.length===1?`The first generation. Everything starts with ${esc(s.name)}.`:`${T.length} generations so far. Together they built <b class="num">${fmt(tot)}</b> in today's money, and reached ${Object.keys(s.goals).length} of ${GOALS.length} family goals.`}${s.given?` They have given away <b class="num">${fmt(T.reduce((a,r)=>a+r.given,0))}</b>.`:''}</p></div></section>
   <div class="sec-h"><h2>Fortune by generation</h2><span>net worth in today's money${T.length>1?', at death':''}</span></div>
   <div class="gbars">${T.map(r=>`<div><span class="mut">${r.gen}</span><i style="width:${Math.max(1,Math.sqrt(Math.max(0,r.real)/top)*100)}%"></i><b class="num">${fmt(r.real)}</b></div>`).join('')}</div>
   <div class="sec-h"><h2>Every generation</h2></div>
@@ -691,7 +691,7 @@ const NEWS=[
  {v:12,t:['Aging parents who need care','Friends and siblings marry, have kids, move away and grow old']},
  {v:13,t:['New careers: pro athlete, fashion model and actor']},
  {v:14,t:['Five new starting lives: lottery winner, young parent, sporty kid, new arrival and art school dropout','Lifetime stats on the family tree','Nine more life moments, from roommates to a memoir']},
- {v:15,t:['Unemployment benefits after a layoff, and Medicare from 65','A portrait for every character, who ages and shows your mood','Three save slots for separate families (? menu)','Gentle mode: illness never kills you (? menu)']},
+ {v:15,t:['Unemployment benefits after a layoff, and Medicare from 65','A portrait for every character, who ages and shows your mood','Three save slots for separate families (? menu)','Gentle mode: illness never kills you (? menu)','Menu badges for court, illness, campaigns and startup offers']},
 ];
 const NEWSV=NEWS.at(-1).v;
 function newsHtml(){const seen=s.seenV||1,L=NEWS.filter(n=>n.v>seen);if(!L.length)return '';s.seenV=NEWSV;
@@ -828,3 +828,4 @@ function uiStart(pay){s.ui={v:Math.min(pay*.45,90*s.eco.P),until:s.day+UIW};log(
 const uiPay=()=>s.ui&&!s.job&&s.day<s.ui.until?s.ui.v:0;
 function uiDay(){if(s.ui&&(s.job||s.day>=s.ui.until))s.ui=null}
 const medicare=()=>age()>=65;
+

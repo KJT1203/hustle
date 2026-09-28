@@ -197,9 +197,9 @@ function selfTest(){ // open with ?test=1 — never touches your real save
   ACT.found('app','yes');ACT.sukill('yes');ok(!s.su,'shut it down');
   s.job='crew';day();s.cash=1e6;for(const e of EV4)if(!e.c||e.c(s))for(const c of e.ch){const a=e.a?e.a(s):0;e.d(s,a);ok(typeof c[1](s,a)==='string','event '+e.id)}
   LATER.ethics();s=cq_s0;
-  const lg_s0=s;newGame('Tree','nerd');tab='legacy';ok(VIEWS.legacy().includes('The family of Tree'),'family tree');
+  const lg_s0=s;newGame('Tree','nerd');tab='legacy';ok(VIEWS.legacy().includes(`The ${s.surname} family`),'family tree, named for the family');const lg_sn=s.surname;
   die();ok(s.tree.length===1&&s.tree[0].cause,'a death is recorded');$('#modal').hidden=true;
-  newGame('Tree Jr.','street',heirOf(null));ok(s.tree.length===1&&VIEWS.legacy().includes('Tree Jr.')&&VIEWS.legacy().includes('2 generations'),'the tree carries over');
+  newGame('Tree Jr.','street',heirOf(null));ok(s.surname===lg_sn,'heirs keep the family name');ok(s.tree.length===1&&VIEWS.legacy().includes('Tree Jr.')&&VIEWS.legacy().includes('2 generations'),'the tree carries over');
   taxRoll();s.tax.ord=1e5;s.cash=1e5;const lg_c=s.cash,lg_d=donate(1e4);ok(lg_d===1e4&&s.given===1e4&&s.cash>lg_c-1e4,'donations are deductible');
   s.cash=1e6;ok(Math.abs(donate(1e5)-5e4)<1e-6,'the deduction caps at 60% of income');
   s.cash=2e6;ACT.give(String(1e6),'fdn');ok(s.fdn===1e6,'a foundation');const lg_g=s.given;fdnDay();ok(s.given>lg_g&&heirOf(null).fdn>0,'the foundation grants, and passes on');
