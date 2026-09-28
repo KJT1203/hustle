@@ -38,18 +38,18 @@ const JOBS=[
 // education: lvl = level it gives (jobs ask for a level or a specific program), need = level required to start
 const MAJORS={Business:'office','Computer science':'tech',Finance:'finance',Nursing:'health',Biology:'health',Design:'creative',Engineering:'trade',Psychology:'public',Education:'public',Hospitality:'food'};
 const PROGS=[
- {id:'cert',n:'Trade certificate',at:'City Trade Institute',lvl:1,need:0,days:180,cost:5000,sma:4,min:20},
- {id:'academy',n:'Police academy',at:'Metro Police Academy',lvl:1,need:0,days:120,cost:2000,sma:3,min:25,hea:55},
+ {id:'cert',n:'Trade certificate',at:'City Trade Institute',lvl:1,need:0,days:365,cost:5000,sma:4,min:20},
+ {id:'academy',n:'Police academy',at:'Metro Police Academy',lvl:1,need:0,days:180,cost:2000,sma:3,min:25,hea:55},
  {id:'camp',n:'Coding bootcamp',at:'ByteForge Bootcamp',lvl:1,need:0,days:90,cost:12000,sma:6,min:35,xp:'tech'},
  {id:'dip',n:'Diploma',lvl:1,need:0,days:180,cost:6000,sma:10,min:0,mj:1,sch:['online','cc']},
- {id:'ba',n:"Bachelor's degree",lvl:2,need:0,days:360,cost:35000,sma:12,min:35,mj:1,sch:['online','state','priv','elite']},
- {id:'flight',n:'Flight school',at:'Skyline Flight School',lvl:1,need:0,days:300,cost:90000,sma:5,min:50,hea:70},
- {id:'teach',n:'Teaching certificate',at:'Midtown State University',lvl:2,need:2,days:120,cost:8000,sma:3,min:40},
- {id:'ma',n:"Master's degree",lvl:3,need:2,days:240,cost:60000,sma:10,min:55,mj:1,sch:['online','state','priv','elite']},
- {id:'mba',n:'MBA',lvl:3,need:2,days:240,cost:120000,sma:8,min:55,sch:['state','priv','elite']},
- {id:'jd',n:'Law school (JD)',lvl:3,need:2,days:360,cost:150000,sma:12,min:65,sch:['state','priv','elite']},
- {id:'md',n:'Medical school (MD)',lvl:4,need:2,days:720,cost:250000,sma:15,min:72,sch:['state','priv','elite']},
- {id:'phd',n:'PhD',lvl:4,need:3,days:480,cost:0,sma:15,min:70,mj:1,stipend:60,sch:['state','priv','elite']},
+ {id:'ba',n:"Bachelor's degree",lvl:2,need:0,days:1095,cost:35000,sma:12,min:35,mj:1,sch:['online','state','priv','elite']},
+ {id:'flight',n:'Flight school',at:'Skyline Flight School',lvl:1,need:0,days:540,cost:90000,sma:5,min:50,hea:70},
+ {id:'teach',n:'Teaching certificate',at:'Midtown State University',lvl:2,need:2,days:365,cost:8000,sma:3,min:40},
+ {id:'ma',n:"Master's degree",lvl:3,need:2,days:730,cost:60000,sma:10,min:55,mj:1,sch:['online','state','priv','elite']},
+ {id:'mba',n:'MBA',lvl:3,need:2,days:730,cost:120000,sma:8,min:55,sch:['state','priv','elite']},
+ {id:'jd',n:'Law school (JD)',lvl:3,need:2,days:1095,cost:150000,sma:12,min:65,sch:['state','priv','elite']},
+ {id:'md',n:'Medical school (MD)',lvl:4,need:2,days:1460,cost:250000,sma:15,min:72,sch:['state','priv','elite']},
+ {id:'phd',n:'PhD',lvl:4,need:3,days:1825,cost:0,sma:15,min:70,mj:1,stipend:60,sch:['state','priv','elite']},
 ];
 const PG=Object.fromEntries(PROGS.map(x=>[x.id,x]));
 const SCHOOLS={online:{n:'Open Online University',cost:.5,adm:0,pres:0,slow:1.25,note:'Study alongside work with no mood hit. Takes 25% longer.'},cc:{n:'Riverside Community College',cost:.6,adm:0,pres:0},
@@ -89,16 +89,17 @@ const PACTS={
 };
 const PACT_ORDER=['call','time','date','gift','propose','baby','ask','reconnect','split','divorce'];
 const RANKS=['','Senior ','Lead ','Principal ','Head ','Chief '];
+// real-world costs; income is the owner's yearly profit per unit divided by 365 (a food truck nets about half its cost a year, a hotel about 13%)
 const BIZ=[
- {id:'lemon',n:'Lemonade Stand',cost:120,inc:3},
- {id:'truck',n:'Food Truck',cost:2000,inc:30},
- {id:'cafe',n:'Coffee Shop',cost:18000,inc:190},
- {id:'wash',n:'Car Wash',cost:150000,inc:1200},
- {id:'gym',n:'Fitness Club',cost:1.2e6,inc:7500},
- {id:'app',n:'App Studio',cost:1e7,inc:48000},
- {id:'hotel',n:'Boutique Hotel',cost:9e7,inc:320000},
- {id:'bank',n:'Private Bank',cost:8e8,inc:2.2e6},
- {id:'rocket',n:'Rocket Company',cost:9e9,inc:1.6e7},
+ {id:'lemon',n:'Lemonade Stand',cost:120,inc:1.8,gr:1.25}, // a few stands pay; a lemonade empire doesn't
+ {id:'truck',n:'Food Truck',cost:45000,inc:60,gr:1.16},
+ {id:'cafe',n:'Coffee Shop',cost:180000,inc:150},
+ {id:'wash',n:'Car Wash',cost:900000,inc:600},
+ {id:'gym',n:'Fitness Club',cost:3e6,inc:1600},
+ {id:'app',n:'App Studio',cost:1.2e7,inc:8000},
+ {id:'hotel',n:'Boutique Hotel',cost:6e7,inc:22000},
+ {id:'bank',n:'Private Bank',cost:5e8,inc:1.6e5},
+ {id:'rocket',n:'Rocket Company',cost:5e9,inc:2.2e6},
 ];
 // a stable pseudo-random number per ticker, for mock data that never changes between visits
 const ph=(t,i)=>{const x=Math.sin([...t].reduce((a,c)=>(a*31+c.charCodeAt(0))%1e6,i*7919)+i)*43758.5453;return x-Math.floor(x)};
@@ -416,9 +417,8 @@ const EV=[
 const EVM=EM(EV.map(e=>[e.id,e]));
 
 // ---------- businesses: realistic returns, and profits that ride the economy ----------
-// f scales income so the first ten units return about 600% a year for a lemonade stand down to 20-35% for hotels, banks and rockets.
 // cyc = how much demand swings with the economy, lev = operating leverage (fixed costs magnify swings), cl = yearly chance a location closes.
-const BZX=[{f:.6,cyc:.3,lev:1.2,cl:.05},{f:.5,cyc:.6,lev:1.5,cl:.06},{f:.36,cyc:.7,lev:2,cl:.08},{f:.28,cyc:.8,lev:2,cl:.05},{f:.24,cyc:1,lev:2.5,cl:.07},{f:.24,cyc:1.2,lev:2.5,cl:.12},{f:.21,cyc:1.6,lev:3,cl:.04},{f:.2,cyc:1.3,lev:3,cl:.02},{f:.5,cyc:1,lev:3.5,cl:.08}];
+const BZX=[{f:1,cyc:.3,lev:1.2,cl:.05},{f:1,cyc:.6,lev:1.5,cl:.06},{f:1,cyc:.7,lev:2,cl:.08},{f:1,cyc:.8,lev:2,cl:.05},{f:1,cyc:1,lev:2.5,cl:.07},{f:1,cyc:1.2,lev:2.5,cl:.12},{f:1,cyc:1.6,lev:3,cl:.04},{f:1,cyc:1.3,lev:3,cl:.02},{f:1,cyc:1,lev:3.5,cl:.08}];
 BIZ.forEach((b,i)=>{const x=BZX[i];b.inc=+(b.inc*x.f).toPrecision(3);b.cyc=x.cyc;b.lev=x.lev;b.cl=x.cl});
 const CLOSE_WHY=['A competitor opened across the street.','The landlord doubled the rent when the lease ran out.','The regulars moved on.','Your best employee left and took the customers with them.','A health scare kept people away for good.'];
 
@@ -493,7 +493,7 @@ const SAVE='hustle-v1',GROW=1.13,CAP=10,MILES=[10,25,50,100,150,200,300,400,500]
 let helpOpen={},showAll={},openP=null,tour=-1,tourSpeed=1,tourJump=false,enr=null,iv=null,bmode='1',wf='All',bd={},vmode='chart',oxp=0,oq=1,lastSpeed=1,lastIn=[],cg=null,tf='3M',cmode='candle',hov=null,ot={side:'buy',qty:10}; // screen state, not saved
 let s=null,tab='dash',sel='NOVA',csel='SATS',speed=1,holding=false,wiped=false,heir={},hiddenAt=0;
 const age=()=>s.startAge+s.day/365;
-const add=(k,v)=>s.st[k]=clamp(s.st[k]+v,0,100);
+const add=(k,v)=>s.st[k]=clamp(s.st[k]+((k==='hap'||k==='sma')&&v>0?v*clamp((100-s.st[k])/(k==='hap'?50:70),.05,1)**2:v),0,100); // gains in happiness and smarts shrink as they climb
 const job=()=>s.job&&JM[s.job];
 const jobPay=()=>job().pay*(1+.15*s.rank)*(1+(s.raise||0));
 const jobTitle=()=>RANKS[Math.min(s.rank,5)]+job().n;
@@ -530,10 +530,12 @@ function peopleDay(){
   }
   if(s.job&&friendsN()<10&&R()<1/250){const p=meet('friend',35);log(`You became friends with ${esc(p.n)} from work.`,'good')}
 }
-const bmul=n=>2**MILES.filter(m=>n>=m).length;
+const bmul=n=>1.5**MILES.filter(m=>n>=m).length; // each milestone adds half again: bigger chains still pay, with diminishing returns
+const mgrCost=b=>b.cost*2; // hiring and training a manager to run every unit of one business
 const bizInc=(b,o)=>b.inc*o.n*bmul(o.n)*s.legacy*(s.day<s.boost?1.25:1)*bizPf(b);
-const bcost=(b,n,q)=>b.cost*GROW**n*(GROW**q-1)/(GROW-1);
-const bmax=(b,n)=>Math.floor(Math.log(s.cash*(GROW-1)/(b.cost*GROW**n)+1)/Math.log(GROW));
+const grw=b=>b.gr||GROW; // how much each extra unit costs over the last
+const bcost=(b,n,q)=>{const g=grw(b);return b.cost*g**n*(g**q-1)/(g-1)};
+const bmax=(b,n)=>{const g=grw(b);return Math.floor(Math.log(s.cash*(g-1)/(b.cost*g**n)+1)/Math.log(g))};
 const buyout=id=>{const o=s.biz[id];return bcost(BM[id],Math.max(0,o.n-5),5)*2};
 const shopSum=k=>SHOP.reduce((t,i)=>t+(s.own[i.id]?i[k]:0),0);
 const sponsor=()=>s.fol<1000?0:s.fol*.0015*(.5+s.st.loo/100);
@@ -548,7 +550,8 @@ const rentOf=p=>renting(p)?pval(p)*PM[p.t].yld/365:0;
 const carSum=k=>s.cars.reduce((t,c)=>t+CM[c.t][k],0);
 const bestCar=()=>s.cars.reduce((m,c)=>!m||CM[c.t].hap>CM[m.t].hap?c:m,null);
 const upkeep=()=>shopSum('up')+carSum('up')+s.props.reduce((t,p)=>t+pval(p)*.02/365,0); // 1% upkeep plus 1% property tax
-const expenses=()=>(15+(homeP()?0:30)+kidsHome()*35+(partner()?.role==='spouse'?10:0))*s.eco.P+upkeep();
+const salaryNow=()=>(s.job?jobPay():0)+(s.pension||0),rentNow=()=>homeP()?0:clamp(salaryNow()*.25,20*s.eco.P,90*s.eco.P); // renters spend about a quarter of their pay on housing
+const expenses=()=>rentNow()+(15+kidsHome()*47+(partner()?.role==='spouse'?20:0))*s.eco.P+salaryNow()*.15+upkeep(); // lifestyle grows with pay
 const canBorrow=L=>{const f=flows();return mpay(L)+f.mort<=(f.job+f.biz+f.rent)*.4};
 function listing(){const nw=Math.max(netWorth(),60000),ok=PROPS.filter(p=>p.base<=nw*4),[loc,m]=pick(LOCS);return {uid:uid(),t:pick(ok.slice(-4)).id,loc,m:m*(.92+R()*.16)}}
 function relist(){s.re.list=Array.from({length:6},listing);s.re.next=s.day+30}
@@ -1108,12 +1111,12 @@ const ACT={
     const cost=A.c?A.c(p):0;if((p.c?.[k]||0)>s.day||s.cash<cost||A.need?.(p))return;
     s.cash-=cost;(p.c??={})[k]=s.day+(A.cd||0);const m=A.fx(p);if(sure)closeModal();toast(esc(m));if(A.bad)log(esc(m),'bad')},
   quit:()=>{log(`Quit your job as ${jobTitle()}.`);fire()},
-  gig:()=>{const g=gig();s.cash+=g;taxAdd('ord',g);s.gigs=(s.gigs||0)+1},
+  gig:()=>{if(gigsLeft()<1)return;const g=gig();s.cash+=g;taxAdd('ord',g);s.gigs=(s.gigs||0)+1;if(s.gd!==s.day){s.gd=s.day;s.gn=0}s.gn++},
   bbuy:(id,x)=>{const b=BM[id],o=s.biz[id]??={n:0,mgr:0,pend:0,spent:0},q=x==='max'?bmax(b,o.n):+x;if(q<1)return;const c=bcost(b,o.n,q);if(c>s.cash)return;
     const first=!o.n;s.cash-=c;o.spent+=c;const before=bmul(o.n);o.n+=q;
     if(first){log(`Opened your first ${b.n}`,'good');if(s.fol>100&&R()<.6)chirp(...pick(NPC),`just walked past ${s.handle}'s new ${b.n.toLowerCase()} ${pick(['love to see it','entrepreneur arc','the grind pays'])}`)}
     if(bmul(o.n)>before){log(`${b.n} milestone: ${o.n} units → income ×${bmul(o.n)}!`,'good');toast(`${b.n} income doubled`)}},
-  mgr:id=>{const b=BM[id],o=s.biz[id],c=b.cost*12;if(!o||o.mgr||s.cash<c)return;s.cash-=c;o.spent+=c;o.mgr=1;s.cash+=o.pend;taxAdd('ord',o.pend);o.pend=0;log(`Hired a manager for your ${b.n}. It runs itself now.`,'good')},
+  mgr:id=>{const b=BM[id],o=s.biz[id],c=mgrCost(b);if(!o||o.mgr||s.cash<c)return;s.cash-=c;o.spent+=c;o.mgr=1;s.cash+=o.pend;taxAdd('ord',o.pend);o.pend=0;log(`Hired a manager for your ${b.n}. It runs itself now.`,'good')},
   col:id=>{const o=s.biz[id];s.cash+=o.pend;taxAdd('ord',o.pend);o.pend=0},
   colAll:()=>{for(const id in s.biz){const v=s.biz[id].pend;s.cash+=v;taxAdd('ord',v);s.biz[id].pend=0}},
   buy:(t,x,mg)=>{const n=x==='max'?maxBuy(t,s.cash,mg):+x;if(n<1)return;const{avg,p1}=fillAt(t,n);if(!canBuy(t,n,mg))return;if(n*avg>s.cash){const need=n*avg-Math.max(0,s.cash);s.mloan+=need;s.cash+=need}const was=controls(t),h=s.port[t]??={sh:0,cost:0};
@@ -1208,6 +1211,7 @@ const ACT={
   goals:()=>goalsModal(),
   begin:bg=>{newGame(($('#nm').value.trim()||pick(NAMES)).slice(0,20),bg,heir);closeModal();save();if(heir.gen)s.tour=1;else ACT.guide()},
 };
+const gigsLeft=()=>3-(s.gd===s.day?s.gn||0:0); // a gig takes a few hours: three a day at most
 const gig=()=>(4+s.st.sma*.15)*s.eco.P+(s.job?jobPay()*.02:0);
 const canJob=j=>!jobMiss(j).length;
 function ivOdds(j,k){const sc=k==='exp'?xpY(j.fld)*15+(s.st.sma-j.s)*.8:k==='charm'?(s.st.loo-50)*.8+(s.fol>1000?10:0):-10;return clamp(.55+sc/100+eduBonus(j)-Math.max(0,s.eco.u-.045)*3,.1,.95)} // a weak job market makes interviews harder
@@ -1294,7 +1298,7 @@ function needs(){
   for(const it of s.inbox){const e=EVM[it.id];if(!e.c||e.c(s))L.push({k:'dec',it,e})}
   let pend=0;const full=[];for(const b of BIZ){const o=s.biz[b.id];if(o?.n&&!o.mgr&&o.pend>0){pend+=o.pend;if(o.pend>=bizInc(b,o)*CAP*.999)full.push(b.n)}}
   if(pend>=1&&(full.length||pend>=Math.max(50,s.cash*.02)))L.push({k:'till',pend,full});
-  const m=BIZ.find(b=>{const o=s.biz[b.id];return o?.n&&!o.mgr&&s.cash>=b.cost*12});if(m)L.push({k:'mgr',b:m});
+  const m=BIZ.find(b=>{const o=s.biz[b.id];return o?.n&&!o.mgr&&s.cash>=mgrCost(b)});if(m)L.push({k:'mgr',b:m});
   for(const k of ['hea','hap'])if(s.st[k]<25)L.push({k:'low',st:k,a:LOWFIX[k].map(id=>AM[id]).find(a=>(!a.show||a.show())&&!cdLeft(a.id)&&s.cash>=a.c)});
   if(!homeP()){const l=[...s.re.list].sort((a,b)=>PM[a.t].base*a.m-PM[b.t].base*b.m).find(l=>{const v=PM[l.t].base*l.m*s.re.idx;return !PM[l.t].biz&&(s.cash>=v||(s.cash>=v*.2&&canBorrow(v*.8)))});if(l)L.push({k:'home',l})}
   if(s.cz.bj&&!s.cz.bj.done)L.push({k:'bj'});
@@ -1308,9 +1312,9 @@ function needHtml(n){
   const row=(k,ti,d,acts,hot)=>`<div class="need"><div><div class="k ${hot?'hot':''}">${k}</div><div class="t">${ti}</div><div class="d">${d}</div></div><div class="acts2">${acts}</div></div>`;
   if(n.k==='dec'){const left=30-(s.day-n.it.d);return row(`Decision · ${left} day${left===1?'':'s'} left`,n.e.t,n.e.d(s,n.it.a),n.e.ch.map((c,j)=>`<button data-a="pick" data-x="${n.it.id}" data-y="${j}">${c[0]}</button>`).join(''),1)}
   if(n.k==='till'){const f=n.full;return row('Business',f.length?(f.length===1?`${f[0]}'s till is full`:`${f.length} tills are full`):'Tills are filling up',f.length?`${f.join(' and ')} ${f.length===1?'has':'have'} stopped earning until you collect.`:'Collect before they stop earning.',`<span class="amt">${fmt(n.pend)}</span><button class="pri" data-a="colAll">Collect</button>`)}
-  if(n.k==='mgr')return row('Worth it now',`Hire a manager for ${n.b.n}`,`It earns ${fmt(bizInc(n.b,s.biz[n.b.id]))} a day, but only while you keep collecting.`,`<button data-a="mgr" data-x="${n.b.id}">Hire for ${fmt(n.b.cost*12)}</button>`);
+  if(n.k==='mgr')return row('Worth it now',`Hire a manager for ${n.b.n}`,`It earns ${fmt(bizInc(n.b,s.biz[n.b.id]))} a day, but only while you keep collecting.`,`<button data-a="mgr" data-x="${n.b.id}">Hire for ${fmt(mgrCost(n.b))}</button>`);
   if(n.k==='low')return row(n.st==='hea'?'Health':'Mood',`${n.st==='hea'?'Health':'Happiness'} is low`,n.st==='hea'?'If it hits zero, your life ends.':'Unhappy people stop getting promoted, and their health slips.',n.a?`<button data-a="act" data-x="${n.a.id}">${n.a.n}${n.a.c?` · ${fmt(n.a.c)}`:''}</button>`:'');
-  if(n.k==='home'){const k=PM[n.l.t],v=k.base*n.l.m*s.re.idx;return row('Save on rent',`You pay ${fmt(30*s.eco.P)} a day in rent`,`${k.n}, ${n.l.loc} is for sale for ${fmt(v)}. On a mortgage it would cost ${fmt(mpay(v*.8))} a day.`,`<button data-a="tab" data-x="home">See listings</button>`)}
+  if(n.k==='home'){const k=PM[n.l.t],v=k.base*n.l.m*s.re.idx;return row('Save on rent',`You pay ${fmt(rentNow())} a day in rent`,`${k.n}, ${n.l.loc} is for sale for ${fmt(v)}. On a mortgage it would cost ${fmt(mpay(v*.8))} a day.`,`<button data-a="tab" data-x="home">See listings</button>`)}
   if(n.k==='rel'){const A=PACTS.date,w=(n.p.c?.date||0)>s.day,c=A.c(n.p);return row('Relationship',`${esc(n.p.n)} feels neglected`,`Closeness is down to ${Math.round(n.p.rel)}. If it keeps falling, they may leave.`,`<button data-a="pp" data-x="${n.p.uid}" data-y="date" ${w||s.cash<c?'disabled':''}>Date night · ${fmt(c)}</button>`)}
   if(n.k==='perf'){const w=(s.cd.w_hard||0)>s.day;return row('Work','You could be fired',`Your performance is ${Math.round(s.perf)}. Below 20, your boss starts looking for a replacement.`,`<button data-a="work" data-x="hard" ${w?'disabled':''}>Work hard</button>`)}
   if(n.k==='guide')return row('New here?','Take the one-minute tour','It shows where everything is and how to make your first money.','<button class="pri" data-a="guide">Start the tour</button><button data-a="tskip">No thanks</button>',1);
@@ -1341,9 +1345,9 @@ function personRow(p){
 function bizRow(b,i,last){
   const o=s.biz[b.id]||{n:0,pend:0,mgr:0},n=o.n;if(i>last+1&&!n)return '';
   if(!n&&s.cash<b.cost)return `<div class="brow locked"><div><div class="nm">${b.n}</div><div class="ms">Earns ${fmt(b.inc*s.legacy)} a day each</div></div><span class="own num">0</span><span class="inc num">—</span><span>Opens at ${fmt(b.cost)}</span><div class="acts3"><button disabled>${fmt(b.cost-s.cash)} to go</button></div></div>`;
-  const g=n?bizInc(b,o):0,nm=MILES.find(m=>m>n),mx=bmax(b,n),q=Math.min(bmode==='max'?mx:+bmode,mx),mc=b.cost*12,full=n&&!o.mgr&&o.pend>=g*CAP*.999;
+  const g=n?bizInc(b,o):0,nm=MILES.find(m=>m>n),mx=bmax(b,n),q=Math.min(bmode==='max'?mx:+bmode,mx),mc=mgrCost(b),full=n&&!o.mgr&&o.pend>=g*CAP*.999;
   const buy=q>=1?`<button class="pri" data-a="bbuy" data-x="${b.id}" data-y="${q}">Buy ${q} · ${fmt(bcost(b,n,q))}</button>`:`<button disabled>Buy 1 · ${fmt(bcost(b,n,1))}</button>`;
-  return `<div class="brow"><div><div class="nm">${b.n}</div><div class="ms">${nm?`${meter(n/nm*100)}<span>${n} / ${nm} to ×2</span>`:'<span>Every milestone reached</span>'}</div></div>
+  return `<div class="brow"><div><div class="nm">${b.n}</div><div class="ms">${nm?`${meter(n/nm*100)}<span>${n} / ${nm} to +50%</span>`:'<span>Every milestone reached</span>'}</div></div>
    <span class="own num">${n}<small class="m"> owned</small></span><span class="inc num ${g?'up':''}">${fmt(g)}<small class="m"> a day</small></span>
    <div class="till">${!n?'<span class="mut">Not open yet</span>':o.mgr?'<span class="mut">Managed, pays itself</span>':`<div class="top2"><span class="${full?'full':'mut'}">${full?'Full':'Filling'}</span><span class="num">${fmt(o.pend)}</span></div>${meter(o.pend/(g*CAP)*100,'warn')}`}</div>
    <div class="acts3">${n&&!o.mgr?`<button data-a="col" data-x="${b.id}" ${o.pend<.01?'disabled':''}>Collect</button><button data-a="mgr" data-x="${b.id}" ${s.cash<mc?'disabled':''}>Manager ${fmt(mc)}</button>`:''}${buy}</div></div>`;
@@ -1445,7 +1449,7 @@ dash(){
   <div class="sec-h"><h2>Needs you</h2><span>${N.length?`${N.length} thing${N.length>1?'s':''}`:'all clear'}</span></div>
   <div class="needs">${N.length?N.map(needHtml).join(''):'<p class="mut" style="padding:var(--space-sm) 0">Nothing needs you right now. Your money is working.</p>'}</div>
   <div class="sec-h"><h2>Quick actions</h2></div>
-  <div class="quick"><button class="pri" data-a="gig">Take a gig · +${fmt(gig())}</button>${ACTS.filter(a=>!a.show||a.show()).map(a=>{const w=cdLeft(a.id);return `<button data-a="act" data-x="${a.id}" ${w||s.cash<a.c?'disabled':''}>${a.n}${a.c?` · ${fmt(a.c)}`:''}${w?` · in ${w}d`:''}</button>`}).join('')}${cdLeft('post')?'':'<button data-a="post" data-x="meme">Post a meme</button>'}</div>
+  <div class="quick"><button class="pri" data-a="gig" ${gigsLeft()?'':'disabled'}>Take a gig · +${fmt(gig())} · ${gigsLeft()} left today</button>${ACTS.filter(a=>!a.show||a.show()).map(a=>{const w=cdLeft(a.id);return `<button data-a="act" data-x="${a.id}" ${w||s.cash<a.c?'disabled':''}>${a.n}${a.c?` · ${fmt(a.c)}`:''}${w?` · in ${w}d`:''}</button>`}).join('')}${cdLeft('post')?'':'<button data-a="post" data-x="meme">Post a meme</button>'}</div>
   <section class="snap">
    <div><div class="sec-row"><h2>Net worth</h2>${h.length>1?`<span class="${h.at(-1)>=h[0]?'up':'dn'}">${h.at(-1)>=h[0]?'+':''}${fmt(h.at(-1)-h[0])} over ${h.length-1} weeks</span>`:''}</div>
     ${h.length>1?nwChart(h):'<p class="mut" style="margin-top:var(--space-xs)">The chart fills in after a couple of weeks.</p>'}
@@ -1476,8 +1480,8 @@ work(){
      <p class="dek">${J?`Paid <b class="num">${fmt(jobPay())}</b> a day in ${FIELD[J.fld]}. ${topRank()?'You are at the top of this ladder. Switch jobs to earn more.':s.perf>=promoNeed()?`On track for promotion in ${toPromo} days.`:`Promotion review in ${toPromo} days. You need a performance of ${promoNeed()}.`}`:'No salary coming in. Pick a position from the board below and go to the interview.'}${s.pension?` Your pension pays <b class="num">${fmt(s.pension)}</b> a day.`:''}</p></div>
     ${J?`<div class="side"><p class="mut">Performance</p><span class="figure ${s.perf<25?'dn':s.perf>=promoNeed()?'up':''}">${Math.round(s.perf)}</span>${meter(s.perf,s.perf<25?'low':'')}<p class="mut" style="font-size:var(--text-xs)">${s.perf<25?'At risk of being fired.':s.perf>=promoNeed()||topRank()?'Your boss is happy.':`Get it to ${promoNeed()} for the next promotion.`}</p></div>`:''}
   </section>
-  ${J?`<div class="sec-h"><h2>At work</h2></div><div class="quick">${wbtn('hard')}${wbtn('slack')}${wbtn('net')}${wbtn('raise',` · ${Math.round(raiseOdds()*100)}% odds`)}<button data-a="gig">Side gig · +${fmt(gig())}</button>${age()>=55?'<button data-a="retire">Retire on a pension</button>':''}<button class="bad" data-a="quit">Resign</button></div>`
-     :`<div class="quick" style="margin-top:var(--space-md)"><button class="pri" data-a="gig">Take a gig · +${fmt(gig())}</button></div>`}
+  ${J?`<div class="sec-h"><h2>At work</h2></div><div class="quick">${wbtn('hard')}${wbtn('slack')}${wbtn('net')}${wbtn('raise',` · ${Math.round(raiseOdds()*100)}% odds`)}<button data-a="gig" ${gigsLeft()?'':'disabled'}>Side gig · +${fmt(gig())} · ${gigsLeft()} left</button>${age()>=55?'<button data-a="retire">Retire on a pension</button>':''}<button class="bad" data-a="quit">Resign</button></div>`
+     :`<div class="quick" style="margin-top:var(--space-md)"><button class="pri" data-a="gig" ${gigsLeft()?'':'disabled'}>Take a gig · +${fmt(gig())} · ${gigsLeft()} left today</button></div>`}
   <div class="sec-h"><h2>Job board</h2><span>${JOBS.filter(j=>canJob(j)&&s.job!==j.id).length} you qualify for</span></div>
   <div class="scroll"><table class="ledger"><thead><tr><th>Position</th><th>Field</th><th>Requires</th><th class="r">Stress</th><th class="r">Per day</th><th></th></tr></thead><tbody>
   ${JOBS.map(j=>{const miss=jobMiss(j),cur=s.job===j.id,wait=Math.max(0,(s.cd['job_'+j.id]||0)-s.day);if(miss.length&&!cur&&!showAll.work)return '';return `<tr class="${miss.length&&!cur?'dim':''}"><td><b>${j.n}</b></td><td class="mut">${FIELD[j.fld]}</td><td>${jobReqText(j)}${miss.length&&!cur?`<div class="sub dn">Missing ${miss.join(', ')}</div>`:''}</td><td class="r num">${j.str}/5</td><td class="r num">${fmt(j.pay)}</td>
@@ -1526,7 +1530,7 @@ biz(){
   ${bb?`<div class="bestbuy"><p><b>Best next buy:</b> ${bb.k} ${bb.k>1?plural(bb.b.n):bb.b.n} for ${fmt(bb.c)}${bb.m?`, reaching ${bb.m} and doubling its income`:''}. Pays for itself in about ${Math.max(1,Math.round(bb.pb))} days.</p><button class="pri" data-a="bbuy" data-x="${bb.b.id}" data-y="${bb.k}">Buy ${bb.k}</button></div>`:''}
   <div class="blist"><div class="brow head"><span>Business</span><span class="own">Owned</span><span class="inc">Per day</span><span>Till</span><span></span></div>
   ${BIZ.map((b,i)=>bizRow(b,i,last)).join('')}</div>
-  ${howto(`The buy button follows the switch above and shrinks to what you can afford. Milestones at ${MILES.slice(0,5).join(', ')} and on double a business's income. Small businesses return far more on the money you put in, but big ones earn far more in total. Profits follow the economy: a lemonade stand barely notices a recession, while a hotel can run at a loss. Competition closes a location now and then, more often in a recession and less often with a manager. Managers keep earning while you're away.`)}`;
+  ${howto(`The buy button follows the switch above and shrinks to what you can afford. Milestones at ${MILES.slice(0,5).join(', ')} and on each add 50% to a business's income. Small businesses return far more on the money you put in, but big ones earn far more in total. Profits follow the economy: a lemonade stand barely notices a recession, while a hotel can run at a loss. Competition closes a location now and then, more often in a recession and less often with a manager. Managers keep earning while you're away.`)}`;
 },
 stock(){
   const k=SK[sel],q=s.px[sel],h=s.port[sel],M=s.mkt,d=q.p/q.o-1,H=q.h,buy=ot.side==='buy'||!ot.side,ext=ot.side==='short'||ot.side==='cover',wl=BYCAP.filter(k=>wf==='All'||(wf==='Held'?s.port[k.t]:wf==='Penny'?k.pn:k.sec===wf&&!k.pn));
@@ -1853,8 +1857,8 @@ document.addEventListener('visibilitychange',()=>{if(!s||s.dead)return;if(docume
 
 function selfTest(){ // open with ?test=1 — never touches your real save
   wiped=true;const ok=(c,m)=>{if(!c)throw Error(m)};
-  ok(fmt(1234)==='$1.23K','fmt K');ok(fmt(12.5)==='$12.50','fmt cents');ok(fmt(-2e6)==='-$2.00M','fmt neg');ok(bmul(25)===4,'milestones');
-  ok(Math.abs(bcost(BIZ[0],0,2)-(120+120*GROW))<1e-6,'bcost sum');
+  ok(fmt(1234)==='$1.23K','fmt K');ok(fmt(12.5)==='$12.50','fmt cents');ok(fmt(-2e6)==='-$2.00M','fmt neg');ok(bmul(25)===2.25,'milestones');
+  ok(Math.abs(bcost(BIZ[0],0,2)-(120+120*1.25))<1e-6,'bcost sum');
   newGame('Test','street');s.cash=1e7;ACT.bbuy('lemon','max');ok(s.biz.lemon.n>=25&&bmax(BIZ[0],s.biz.lemon.n)===0,'buy max spends down');
   s.cash=1e6;ACT.buy('NOVA','10');ACT.sell('NOVA','all');ok(!s.port.NOVA,'sell all');
   s.cash=2e5;s.job='crew';relist();s.re.list[0]={...s.re.list[0],t:'studio'};const lu=s.re.list[0].uid;ACT.pbuy(lu,'m');
@@ -1877,7 +1881,7 @@ function selfTest(){ // open with ?test=1 — never touches your real save
   ok(jobMiss(JM.surgeon).length&&canJob(JM.crew),'job requirements');s.job=null;ACT.apply('crew');ok(iv&&!$('#modal').hidden,'interview opens');ACT.answer('exp');ok(s.job==='crew'||s.cd.job_crew>s.day,'interview resolves');
   s.job='crew';s.perf=40;ACT.work('hard');ok(s.perf===45,'work hard');
   s.study=null;s.st.sma=90;s.cash=1e7;ACT.learn('ba');ok(enr&&!$('#modal').hidden,'enroll opens');ACT.mj('Nursing');ACT.enroll('online','cash');ok(s.study?.mj==='Nursing','enrolled');
-  s.study.g=90;for(let i=0;i<500&&s.study;i++)day();ok(s.degs.some(d=>d.p==='ba'&&d.mj==='Nursing')&&s.edu>=2&&canJob(JM.nurse),'graduated as nurse');
+  s.study.g=90;for(let i=0;i<2000&&s.study;i++)day();ok(s.degs.some(d=>d.p==='ba'&&d.mj==='Nursing')&&s.edu>=2&&canJob(JM.nurse),'graduated as nurse');
   s.cash=0;s.debt=0;ACT.learn('ma');ACT.enroll('online','loan');ok(s.study&&s.debt>0,'student loan');const d0=s.debt;for(let i=0;i<30;i++)day();ok(s.debt<d0,'loan repays');
   ok(xpY('health')>=1,'major counts as experience');tab='school';VIEWS.school();
   s.tour=0;ACT.guide();ok(tour===0&&speed===0,'guide starts paused');for(let i=0;i<TOUR.length;i++)ACT.tnext();ok(tour===-1&&s.tour===1&&speed>0,'guide finishes');
