@@ -327,7 +327,7 @@ const foundHtml=()=>s.su?'':`<div class="sec-h"><h2>Start a company</h2><span>a 
   <div class="acards">${IDEAS.map(I=>`<button class="acard" data-a="found" data-x="${I.id}" ${s.cash<suSeed()||jailed()?'disabled':''}><b>${I.n}</b><span>${I.d}.${xpY(I.fld)>=1?` Your ${FIELD[I.fld]} experience helps.`:''}</span><small>${s.cash<suSeed()?`Needs ${fmt(1e4*s.eco.P)} to start`:`Found with ${fmt(suSeed())}`}</small></button>`).join('')}</div>`;
 
 // ---------- the family tree: a record of every generation, carried from heir to heir ----------
-function lifeRec(){const w=netWorth(),pt=partner();return {gen:s.gen,n:s.name,age:Math.floor(age()),cause:s.dead?(s.cause||'of old age'):null,nw:Math.round(w),real:Math.round(w/s.eco.P),
+function lifeRec(){const w=netWorth(),pt=partner();return {gen:s.gen,n:s.name,age:Math.floor(age()),hap:Math.round(s.st.hap),cause:s.dead?(s.cause||'of old age'):null,nw:Math.round(w),real:Math.round(w/s.eco.P),
   job:s.job?jobTitle():s.su?`Founder of ${s.su.n}`:s.pension?'Retired':'Out of work',kids:kids().length,sp:pt?.role==='spouse'?pt.n:null,tr:s.tr||[],edu:EDU[s.edu].n,
   exits:(s.car2?.acq||0)+(s.car2?.ipo||0),rec:s.legal.rec.length,mile:(s.mile||[]).slice(-40),given:Math.round(s.given||0),goals:Object.values(s.goals).filter(g=>g.gen===s.gen).length}}
 function legacyHtml(){const T=[...(s.tree||[]),lifeRec()],top=Math.max(1,...T.map(r=>r.real)),founder=T[0].n,tot=T.reduce((a,r)=>a+r.real,0);
@@ -336,7 +336,7 @@ function legacyHtml(){const T=[...(s.tree||[]),lifeRec()],top=Math.max(1,...T.ma
   <div class="gbars">${T.map(r=>`<div><span class="mut">${r.gen}</span><i style="width:${Math.max(1,Math.sqrt(Math.max(0,r.real)/top)*100)}%"></i><b class="num">${fmt(r.real)}</b></div>`).join('')}</div>
   <div class="sec-h"><h2>Every generation</h2></div>
   <div class="gens">${T.map((r,i)=>{const now=i===T.length-1,known=[trTxt(r.tr),r.exits?`${r.exits} startup exit${r.exits>1?'s':''}`:'',r.given>=1e6?`gave ${fmt(r.given)}`:'',r.rec?`${r.rec} conviction${r.rec>1?'s':''}`:'',r.goals?`${r.goals} goal${r.goals>1?'s':''}`:''].filter(Boolean).join(' · ');
-    return `<div class="gen${now?' now':''}"><div class="gh"><span class="mut">Generation ${r.gen}</span><b>${esc(r.n)}${now?' <span class="mut">(you)</span>':''}</b><span class="num">${fmt(r.nw)}</span></div>
+    return `<div class="gen${now?' now':''}"><div class="gh">${avatar(r.n+r.gen,r.age,r.hap??60,44)}<div><span class="mut">Generation ${r.gen}</span><b>${esc(r.n)}${now?' <span class="mut">(you)</span>':''}</b></div><span class="num">${fmt(r.nw)}</span></div>
     <p>${r.cause?`Lived to ${r.age}, died ${esc(r.cause)}.`:`${r.age} and counting.`} ${esc(r.job)}, ${r.edu.toLowerCase()}. ${r.sp?`Married to ${esc(r.sp)}`:'Single'}${r.kids?`, ${r.kids} kid${r.kids>1?'s':''}`:''}.</p>
     ${known?`<p class="mut">${known}</p>`:''}
     ${r.mile?.length&&!now?`<details><summary>Their story</summary><ol class="story">${r.mile.map(m=>`<li><span class="num">${m.a}</span><span>${m.t}</span></li>`).join('')}</ol></details>`:''}</div>`}).join('')}</div>
@@ -690,6 +690,7 @@ const NEWS=[
  {v:12,t:['Aging parents who need care','Friends and siblings marry, have kids, move away and grow old']},
  {v:13,t:['New careers: pro athlete, fashion model and actor']},
  {v:14,t:['Five new starting lives: lottery winner, young parent, sporty kid, new arrival and art school dropout','Lifetime stats on the family tree','Nine more life moments, from roommates to a memoir']},
+ {v:15,t:['A portrait for every character, who ages and shows your mood']},
 ];
 const NEWSV=NEWS.at(-1).v;
 function newsHtml(){const seen=s.seenV||1,L=NEWS.filter(n=>n.v>seen);if(!L.length)return '';s.seenV=NEWSV;
@@ -813,3 +814,9 @@ const EV15=[
  ['Search all night',(s,a)=>{const p=s.pets.find(x=>x.uid===a);if(!p)return 'The moment has passed.';add('hea',-2);if(R()<.85){add('hap',6);return `You found ${p.n} at 4 AM under a neighbor's porch.`}s.pets.splice(s.pets.indexOf(p),1);add('hap',-12);return `No sign of ${p.n}. You keep the light on.`}],
  ['Put up posters',(s,a)=>{const p=s.pets.find(x=>x.uid===a);if(!p)return 'The moment has passed.';if(R()<.6){add('hap',4);return `A kid down the street brought ${p.n} home.`}s.pets.splice(s.pets.indexOf(p),1);add('hap',-12);return `${p.n} never came home.`}]]},
 ];
+
+// ---------- a portrait: drawn from the name, it ages and wears your mood ----------
+function avatar(name,ag,hap=60,sz=56){let h=0;for(const c of name||'?')h=(h*31+c.charCodeAt(0))>>>0;const r=k=>((h>>>k)&255)/255;
+  const SK=['#f2d3b3','#e5b98f','#c68c5e','#a06a42','#6f4a2e'],HR=['#2b1d14','#5a3a22','#8c5a2b','#c9a15a','#1a1a1a','#7a2e1b'],skin=SK[Math.floor(r(1)*SK.length)],grey=ag>=62?'#d8d8d8':ag>=48?'#9a9a9a':null,hair=grey||HR[Math.floor(r(5)*HR.length)],style=Math.floor(r(9)*4);
+  const smile=hap>=65?'M22 38 Q28 44 34 38':hap>=40?'M22 39 Q28 41 34 39':'M22 41 Q28 36 34 41',hairP=['M12 26 Q14 8 28 8 Q42 8 44 26 Q40 16 28 16 Q16 16 12 26Z','M11 30 Q10 6 28 7 Q46 6 45 30 Q44 18 36 15 Q28 20 18 15 Q12 18 11 30Z','M12 24 Q20 6 36 9 Q46 12 44 24 Q36 14 12 24Z','M10 36 Q8 8 28 8 Q48 8 46 36 L42 36 Q42 16 28 16 Q14 16 14 36Z'][style];
+  return `<svg class="avatar" width="${sz}" height="${sz}" viewBox="0 0 56 56" aria-hidden="true"><circle cx="28" cy="28" r="27" fill="var(--color-paper-2)"/><ellipse cx="28" cy="29" rx="15" ry="17" fill="${skin}"/>${ag<62||r(13)>.4?`<path d="${hairP}" fill="${hair}"/>`:''}<circle cx="22" cy="28" r="1.8" fill="#222"/><circle cx="34" cy="28" r="1.8" fill="#222"/>${ag>=58?'<path d="M18 33 l3 1 M38 33 l-3 1" stroke="#0003" stroke-width="1"/>':''}<path d="${smile}" stroke="#5a2a1a" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>`}
