@@ -683,6 +683,7 @@ const NEWS=[
  {v:7,t:['Businesses valued at a multiple of profit: sell or franchise a chain','Work hours and diet','Settings in the ? menu','A housing boom and bust','Walk your dog, and vet decisions','A family trust, a best friend, and retirement communities']},
  {v:8,t:['Holiday lets for your rentals','Start a podcast or video channel','A semester abroad']},
  {v:9,t:['Car loans','Adopt a child','IVF']},
+ {v:10,t:['The world rich list: see where you rank']},
 ];
 const NEWSV=NEWS.at(-1).v;
 function newsHtml(){const seen=s.seenV||1,L=NEWS.filter(n=>n.v>seen);if(!L.length)return '';s.seenV=NEWSV;
@@ -722,3 +723,12 @@ function carLoanDay(){for(const c of s.cars)if(c.loan>0){c.loan-=c.pay-c.loan*(c
 const adoptCost=()=>4e4*s.eco.P,ivfCost=()=>2e4*s.eco.P;
 const canAdopt=()=>age()>=25&&age()<56&&kidsHome()<4&&s.cash>=adoptCost()&&!jailed();
 function adoptKid(){if(!canAdopt())return;s.cash-=adoptCost();const p=meet('child',70,s.day-rint(0,8)*365);const tr=rollTraits();p.k={...kidNew(),tr,gs:rint(30,80),loo:rint(30,80)};p.k.sma=p.k.gs*(.3+Math.min(1,ageOf(p)/10)*.7);p.adopt=1;add('hap',14);mile(`Adopted ${esc(p.n)}.`);log(`You adopted ${esc(p.n)}, ${Math.floor(ageOf(p))}. Welcome home.`,'good');return p}
+
+// ---------- the rich list: the world's richest people, whose fortunes ride on their companies' shares ----------
+const RICH=[['Elon Mask','TSLE',2.5e11,5e10],['Jeff Bezoz','AMZM',2e11,1e10],['Bernard Arnoh','LVHM',1.8e11,0],['Mark Zuckerbird','METT',1.8e11,0],['Larry Elison','ORKL',1.7e11,5e9],['Warren Buffit','BRKH',1.4e11,0],['Larry Paige','ABUT',1.4e11,0],['Sergei Brinn','ABUT',1.3e11,0],['Steve Balmer','MSFY',1.2e11,0],['Jensen Huong','NVBA',1.1e11,0],['Bill Gaytes','MSFY',6e10,4e10],['Michael Dull','',0,1e11],['Mukesh Ambanee','',0,1e11],['Amancio Ortegga','',0,9e10],['Françoise Bettencort','',0,9e10],['Carlos Slimm','',0,8e10],['Ma Hwa-teng','TCNT',6e10,0],['Tadashi Yanaii','',0,4.5e10],['Changpeng Zhow','CBAS',2e10,2e10],['Phil Nite','NIKA',3.5e10,0]];
+function richList(){const ix=s.mkt?.div?idx()/5000:1,L=RICH.map(([n,t,stake,other])=>{const k=t&&SK[t];return {n,t,w:(k?stake/k.p*s.px[t].p:0)+other*ix}});L.push({n:s.name,me:1,w:netWorth()});return L.sort((a,b)=>b.w-a.w)}
+const worldRank=w=>w<1e6?0:Math.max(1,Math.round(2700*(1e9/w)**1.5)); // roughly how many people are richer, from the shape of real wealth
+function richHtml(){const L=richList(),me=L.findIndex(x=>x.me),top=L.slice(0,20);
+  return `<p class="kicker">The Hustle Rich List</p><h2>The world's richest</h2><p>${me<20?`You're <b>number ${me+1}</b> in the world.`:netWorth()>=1e6?`About <b class="num">${big(worldRank(netWorth()))}</b> people in the world are richer than you.`:'Most of the world. Keep going.'} Fortunes move with their companies' share prices.</p>
+  <table class="ledger"><tbody>${top.map((x,i)=>`<tr${x.me?' class="now"':''}><td class="num">${i+1}</td><td><b>${esc(x.n)}</b>${x.t?` <span class="mut">${nameOf(x.t)}</span>`:''}${x.me?' <span class="mut">(you)</span>':''}</td><td class="r num">${fmt(x.w)}</td></tr>`).join('')}${me>=20?`<tr class="now"><td class="num">—</td><td><b>${esc(s.name)}</b> <span class="mut">(you)</span></td><td class="r num">${fmt(netWorth())}</td></tr>`:''}</tbody></table>
+  <button class="pri" data-a="close" style="margin-top:var(--space-sm)">Back</button>`}

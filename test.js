@@ -49,10 +49,10 @@ function selfTest(){ // open with ?test=1 — never touches your real save
   for(let i=0;i<600;i++)minute();ok(q.p===c&&s.day===1,'prices hold overnight');
   const d7=s.day;for(let i=0;i<7*1440;i++)minute();let ns=1;for(let d=d7;d<s.day;d++)ns+=tradingDay(d)&&d>0?1:0;ok(holiday(7)==='Martin Luther King Jr. Day'&&q.k.length-1-q.k.indexOf(mk)===ns,'sessions skip weekends and holidays');
   const sd=a=>{const r=[];for(let i=1;i<a.length;i++)r.push(Math.abs(Math.log(a[i]/a[i-1])));return r.sort((x,y)=>x-y)[r.length>>1]};
-  const cb0=closeBell;closeBell=()=>{s.mkt.ic=idx()};s.mkt.bull=true;s.mkt.h=MVOL.bull**2/YR; // hold volatility still so both samples see the same market
+  const cb0=closeBell,crash0=crash,wd0=worldDay;closeBell=()=>{s.mkt.ic=idx()};crash=()=>{};worldDay=()=>{};s.mkt.bull=true;s.mkt.h=MVOL.bull**2/YR; // hold volatility still so both samples see the same market
   let lv=0,bk=0;for(const k of MAIN){const x=s.px[k.t];x.p=k.p;x.h=[k.p];x.k=[[k.p,k.p,k.p]]}for(let i=0;i<1440*7*26;i++)minute();for(const k of MAIN)lv+=sd(s.px[k.t].h);
   for(const k of MAIN){const x=s.px[k.t];x.h=[k.p];x.k=[[k.p,k.p,k.p]]}for(let i=0;i<130;i++)tradeDay(1);for(const k of MAIN)bk+=sd(s.px[k.t].h);
-  closeBell=cb0;ok(lv/bk>.75&&lv/bk<1.33,'live sessions move like whole-day steps '+(lv/bk).toFixed(2));
+  closeBell=cb0;crash=crash0;worldDay=wd0;ok(lv/bk>.75&&lv/bk<1.33,'live sessions move like whole-day steps '+(lv/bk).toFixed(2));
   delete s.px.NVBA;delete s.px.CBAS;upgrade();ok(s.px.NVBA.h.length===240&&s.px.CBAS.k.length===240&&Number.isFinite(s.px.NVBA.p),'new stocks seed into old saves');ok(Math.abs(s.px.NVBA.p/SK.NVBA.p-1)<1e-9,'history ends at the listed price');
   tab='stock';wf='Semis';ok(VIEWS.stock().includes('NVBA')&&!VIEWS.stock().includes('>MSFY<'),'sector filter');wf='Held';VIEWS.stock();wf='All';
   newGame('Coins','street');const sats=coin('SATS'),usd=s.cx.coins.find(c=>c.stable);s.day=5;s.min=120;const cp=sats.p;for(let i=0;i<30;i++)minute();ok(sats.p!==cp&&sats.h.at(-1)===sats.p&&usd.p===1,'crypto trades at 2 AM on a Saturday');
@@ -259,6 +259,7 @@ function selfTest(){ // open with ?test=1 — never touches your real save
   s.study={p:'ba',sc:'state',mj:'Business',left:300,days:1095,g:60};ACT.abroad();ok(s.study.abroad,'a semester abroad');s=sl_s0;
   const cl_s0=s;newGame('Loan','nerd');s.cash=5e4;s.credit=720;ok(canCarLoan(CM.sedan.price),'a car loan');ACT.cfin('sedan');const cl_c=s.cars[0];ok(cl_c.loan>0&&flows().mort>=cl_c.pay,'loan payments come out daily');const cl_l=cl_c.loan;day();ok(cl_c.loan<cl_l,'and pay it down');ok(Math.abs(netWorth()-(s.cash+cl_c.v-cl_c.loan+finVal()+walletVal()))<1,'net of the loan');
   s.startAge=30;s.cash=1e6;const cl_n=kids().length;ACT.kidadopt();ok(kids().length===cl_n+1&&kids().at(-1).adopt,'adoption');const cl_sp=meet('spouse',80);ok(PACTS.ivf.show(cl_sp),'IVF offered');s=cl_s0;
+  const rl_s0=s;newGame('Rich','nerd');const rl_L=richList();ok(rl_L.length===RICH.length+1&&rl_L[0].w>1e11&&rl_L.at(-1).me,'the rich list');s.cash=1e12;ok(richList()[0].me,'top of the list');ACT.rich();ok($('#mbox').innerHTML.includes('number 1'),'rich list modal');$('#modal').hidden=true;ok(worldRank(1e6)>1e7&&worldRank(1e10)<1000,'world rank estimate');s=rl_s0;
   tab='dash';ok(VIEWS.dash().includes('Goals'),'goals on home');goalsModal();
   const sp2=meet('spouse',70),k1=addChild(),k2=addChild(),k3=addChild();k1.b=s.day-40*365;k2.b=s.day-30*365;k3.b=s.day-5*365;k1.rel=90;
   deathModal();ok($('#mbox').innerHTML.includes('Continue as '+k1.n),'death lists the kids');ACT.heir(String(k1.uid));

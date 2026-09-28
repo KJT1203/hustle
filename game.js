@@ -1061,6 +1061,8 @@ const GOALS=[
  {id:'gen3',n:'Dynasty',d:'Reach the third generation',p:()=>[s.gen,3]},
  {id:'give',n:'Philanthropist',d:'Give $1M to charity in one lifetime',p:()=>[s.given||0,1e6],m:1},
  {id:'fdn',n:'A family foundation',d:'Endow a foundation that gives forever',p:()=>has(s.fdn>0)},
+ {id:'rich20',n:'Rich list',d:'Make the top 20 of the world rich list',p:()=>has(richList().findIndex(x=>x.me)<20)},
+ {id:'rich1',n:'Richest person alive',d:'Top the world rich list',p:()=>has(richList()[0].me)},
  {id:'nw4',n:'Billionaire',d:'Reach a net worth of $1B',p:()=>[netWorth(),1e9],m:1},
 ];
 function checkGoals(quiet){
@@ -1115,6 +1117,7 @@ const dur=sec=>sec<3600?`${Math.round(sec/60)} minutes`:sec<172800?`${Math.floor
 
 // ---------- actions ----------
 const ACT={
+  rich:()=>modal(richHtml()),
   stl:u=>{const p=P(+u);if(!p||p.uid===s.home||PM[p.t].biz)return;p.stl=p.stl?0:1;toast(p.stl?'Now a holiday let: more rent, more wear, more empty nights':'Back to a long let')},
   chstart:()=>{const C=s.ch??=chNew();if(C.on||s.cash<500*s.eco.P)return;s.cash-=500*s.eco.P;C.on=1;C.last=s.day;mile('Started a channel.');toast('Your channel is live')},
   chpost:()=>{const m=chPost();if(m)toast(m)},
@@ -1632,7 +1635,7 @@ dash(){
   <div class="sec-h"><h2>Quick actions</h2></div>
   <div class="quick"><button class="pri" data-a="gig" ${gigsLeft()?'':'disabled'}>Take a gig · +${fmt(gig())} · ${gigsLeft()} left today</button>${ACTS.filter(a=>!a.show||a.show()).map(a=>{const w=cdLeft(a.id);return `<button data-a="act" data-x="${a.id}" ${w||s.cash<a.c?'disabled':''}>${a.n}${a.c?` · ${fmt(a.c)}`:''}${w?` · in ${w}d`:''}</button>`}).join('')}${cdLeft('post')?'':'<button data-a="post" data-x="meme">Post a meme</button>'}</div>
   <section class="snap">
-   <div><div class="sec-row"><h2>Net worth</h2>${h.length>1?`<span class="${h.at(-1)>=h[0]?'up':'dn'}">${h.at(-1)>=h[0]?'+':''}${fmt(h.at(-1)-h[0])} over ${h.length-1} weeks</span>`:''}</div>
+   <div><div class="sec-row"><h2>Net worth</h2><button class="link2" data-a="rich">${(()=>{const L=richList(),me=L.findIndex(x=>x.me);return me<20?`#${me+1} on the rich list`:'Rich list'})()}</button>${h.length>1?`<span class="${h.at(-1)>=h[0]?'up':'dn'}">${h.at(-1)>=h[0]?'+':''}${fmt(h.at(-1)-h[0])} over ${h.length-1} weeks</span>`:''}</div>
     ${h.length>1?nwChart(h):'<p class="mut" style="margin-top:var(--space-xs)">The chart fills in after a couple of weeks.</p>'}
     <p class="mut" style="margin-top:var(--space-2xs)">Earning ${sign(net)} a day: salary ${fmt(f.job)}, businesses ${fmt(f.biz+f.pend)}${f.rent?`, rent ${fmt(f.rent)}`:''}${f.spon?`, sponsors and ads ${fmt(f.spon)}`:''}${f.own?`, companies ${fmt(f.own)}`:''}, costs −${fmt(f.exp+f.mort)}, tax about −${fmt(f.tax)}.</p></div>
    <div><h2>Where it sits</h2><div class="stack">${parts.map(x=>`<span style="width:${x[1]/tot*100}%;background:${x[2]}"></span>`).join('')}</div>
