@@ -415,3 +415,7 @@ input:focus-visible{outline:2px solid var(--color-focus);outline-offset:1px}
 .chain td,.chain th{padding-left:.4rem;padding-right:.4rem}.chain .c{text-align:center}.chain td.itm{background:color-mix(in oklch,var(--color-accent) 8%,transparent)}
 .chain .act button{height:1.9rem;padding:0 .6rem;font-size:var(--text-xs)}
 .lboard tr.me td{background:color-mix(in oklch,var(--color-accent) 10%,transparent)}.lboard td:first-child{width:2.5rem;color:var(--color-ink-3)}
+.acard.on{box-shadow:inset 0 0 0 1px var(--color-accent)}
+.hcard{cursor:default;background:var(--color-paper-2);border-radius:var(--radius)}.hcard button{background:var(--color-paper)}.hcard .row{margin-top:auto;padding-top:var(--space-2xs);gap:var(--space-3xs);flex-wrap:wrap;align-items:center}
+.hcard .row small{margin:0;padding:0;color:var(--color-ink-3);flex-basis:100%}
+.hsk{display:flex;align-items:center;gap:var(--space-2xs);width:100%}.hsk .meter{flex:1}
