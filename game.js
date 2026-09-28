@@ -1136,7 +1136,7 @@ const ACT={
   trust:v=>{v=+v;if(!(v>0)||s.cash<v)return;const gt=trustAdd(v);log(`Moved ${fmt(v)} into the family trust${gt?`, paying ${fmt(gt)} in gift tax`:''}.`,'good');toast(`Trust: +${fmt(v)}`)},
   comm:()=>{moveComm()},
   petplay:u=>{const m=petPlay(u);if(m)toast(esc(m))},
-  setopt:(k,v)=>{const O=s.opt??={};if(k==='dec'){if([7,30,90].includes(+v))O.dec=+v}else if(k==='pause'||k==='quiet')O[k]=!O[k];ACT.help()},
+  setopt:(k,v)=>{const O=s.opt??={};if(k==='dec'){if([7,30,90].includes(+v))O.dec=+v}else if(k==='pause'||k==='quiet'||k==='gentle')O[k]=!O[k];ACT.help()},
   hours:k=>{if(HOURS[k]){s.hours=k;toast(`Work hours: ${HOURS[k].n.toLowerCase()}`)}},
   diet:k=>{if(DIETS[k]){s.diet=k;toast(`Food: ${DIETS[k].n.toLowerCase()}`)}},
   bsell:(id,y)=>{const b=BM[id],o=s.biz[id];if(!b||!o?.n)return;const v=Math.round(bizVal(b,o)*.95);
@@ -1198,6 +1198,7 @@ const ACT={
     <h3 style="margin-top:var(--space-lg)">Settings</h3><table class="ledger"><tbody>
      <tr><td>Pause when a decision arrives</td><td class="act"><button class="${opt('pause')?'pri':''}" data-a="setopt" data-x="pause">${opt('pause')?'On':'Off'}</button></td></tr>
      <tr><td>Decisions decide themselves after</td><td class="act">${[7,30,90].map(d=>`<button class="${decDays()===d?'pri':''}" data-a="setopt" data-x="dec" data-y="${d}">${d} days</button>`).join('')}</td></tr>
+     <tr><td>Gentle mode: illness can still hurt, but never kills you</td><td class="act"><button class="${opt('gentle')?'pri':''}" data-a="setopt" data-x="gentle">${opt('gentle')?'On':'Off'}</button></td></tr>
      <tr><td>Quiet mode: no pop-up messages (everything still goes in The Record)</td><td class="act"><button class="${opt('quiet')?'pri':''}" data-a="setopt" data-x="quiet">${opt('quiet')?'On':'Off'}</button></td></tr></tbody></table>
     <h3 style="margin-top:var(--space-lg)">Keyboard</h3><table class="ledger"><tbody><tr><td class="num">1 to 0</td><td>Switch screens</td></tr><tr><td>Space</td><td>Pause or resume</td></tr><tr><td>C</td><td>Collect every till</td></tr><tr><td>?</td><td>Replay the guide</td></tr><tr><td>Esc</td><td>Close the guide</td></tr></tbody></table>`),
   guide2:()=>{closeModal();ACT.guide()},

@@ -22,7 +22,7 @@ const condName=c=>c.id==='cancer'?`Stage ${c.st} cancer`:CONDS[c.id].n;
 function addCond(id,hid){const K=CONDS[id],c={id,d:s.day};if(K.len)c.left=rint(...K.len);if(id==='cancer'){c.st=1;c.nx=s.day+rint(220,420)}if(K.hid&&hid!==0)c.hid=1;s.conds.push(c);
   if(!c.hid){if(!K.acute)mile(`Diagnosed with ${condName(c).toLowerCase()}.`);log(`Diagnosed with ${condName(c).toLowerCase()}.`,'bad');toast(`Health: ${condName(c)}`)}return c}
 function checkup(){const f=s.conds.filter(c=>c.hid);for(const c of f){delete c.hid;c.dx=s.day}return f.length?` The tests found <b>${f.map(c=>condName(c).toLowerCase()).join(' and ')}</b>. See Health.`:' No hidden problems.'}
-function condHaz(c){const K=CONDS[c.id];if(c.id==='cancer')return c.tx?CSTAGE.hz[c.st-1]*.3:CSTAGE.hz[c.st-1];return (c.tx?K.thz:K.hz)||0}
+function condHaz(c){if(opt('gentle'))return 0;const K=CONDS[c.id];if(c.id==='cancer')return c.tx?CSTAGE.hz[c.st-1]*.3:CSTAGE.hz[c.st-1];return (c.tx?K.thz:K.hz)||0}
 function medDaily(){return s.conds.reduce((t,c)=>t+(c.tx===1&&CONDS[c.id].med?CONDS[c.id].med:0),0)*s.eco.P*(1-INS[s.ins].cov)}
 function healthDay(A){
   for(const id in CONDS){const K=CONDS[id];if(!cond(id)&&R()<K.r(A)/365)addCond(id)}
