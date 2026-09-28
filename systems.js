@@ -12,7 +12,7 @@ const CONDS={
  cancer:{n:'Cancer',hid:1,r:A=>A<35?0:.0015*((A-35)/10+1)**2,hea:.03,d:'It spreads in stages. Caught at stage 1, treatment works 95% of the time. By stage 4, only one in five.'},
 };
 const CSTAGE={cost:[40e3,90e3,200e3,350e3],cure:[.95,.8,.5,.2],hz:[0,.01,.1,.8]};
-const INS={none:{n:'No insurance',prem:0,cov:0,ded:0,cap:Infinity,d:'You pay every bill in full.'},basic:{n:'Basic plan',prem:9,jobp:0,cov:.7,ded:3000,cap:8000,d:'Pays 70% after a $3,000 deductible. You never pay more than $8,000 a year. Free with a job.'},premium:{n:'Premium plan',prem:24,jobp:12,cov:.9,ded:500,cap:3000,d:'Pays 90% after a $500 deductible, capped at $3,000 a year.'}};
+const INS={va:{n:'VA healthcare',prem:0,cov:.9,ded:0,cap:2000,d:'For veterans: 90% covered, no deductible, capped at $2,000 a year.'},none:{n:'No insurance',prem:0,cov:0,ded:0,cap:Infinity,d:'You pay every bill in full.'},basic:{n:'Basic plan',prem:9,jobp:0,cov:.7,ded:3000,cap:8000,d:'Pays 70% after a $3,000 deductible. You never pay more than $8,000 a year. Free with a job.'},premium:{n:'Premium plan',prem:24,jobp:12,cov:.9,ded:500,cap:3000,d:'Pays 90% after a $500 deductible, capped at $3,000 a year.'}};
 const insPrem=(k=s.ins)=>{const I=INS[k];return (s.job&&I.jobp!=null?I.jobp:I.prem)*s.eco.P};
 function medYear(){const y=dateOf(s.day).y;if(s.med?.y!==y)s.med={y,ded:0,oop:0};return s.med}
 function oopOf(cost,k=s.ins){const I=INS[k],m=medYear(),d=Math.min(cost,Math.max(0,I.ded*s.eco.P-m.ded)),out=d+(cost-d)*(1-I.cov);return {out:Math.min(out,Math.max(0,I.cap*s.eco.P-m.oop)),d}}
@@ -508,3 +508,65 @@ function clubHtml(){const T=s.club,P=s.eco.P;
   ${T?`<p class="mut">Worth about <b class="num">${fmt(T.v)}</b>. Team values tend to rise about 7% a year. Each October the season settles: profit or loss depends on payroll, and so do your odds of a title.</p>
   <div class="quick" style="margin-top:var(--space-xs)">${[[.6,'Cheap'],[1,'Normal'],[1.6,'All in']].map(([v,l])=>`<button class="${(T.pay||1)===v?'pri':''}" data-a="tpay" data-x="${v}">${l} payroll</button>`).join('')}<button class="bad" data-a="tsell">Sell for ${fmt(T.v*.97)}</button></div>`
   :`<div class="acards">${CLUBS.map(k=>`<button class="acard" data-a="tbuy" data-x="${k.id}" ${s.cash<k.price*P?'disabled':''}><b>${k.n}</b><span>Profits a few percent of its value in a good year, a loss in a bad one, and a lot of attention.</span><small>${fmt(k.price*P)}</small></button>`).join('')}</div>`}`}
+
+// ---------- credit: a score from 300 to 850 that sets whether banks lend to you, and at what rate ----------
+const credit=()=>Math.round(s.credit??650);
+const creditWord=c=>c>=800?'Exceptional':c>=740?'Very good':c>=670?'Good':c>=580?'Fair':'Poor';
+const rateSpread=()=>Math.max(0,(740-credit())/100*.01); // each 100 points under 740 adds a point to your mortgage rate
+const myRate=()=>mrate()+rateSpread();
+const debtAPR=()=>.15+(850-credit())/550*.15; // what a negative balance costs you: 15% a year with perfect credit, 30% with the worst
+function creditDay(){let c=s.credit??650;
+  if(s.cash<0)c-=.6; // missed payments
+  else{const loans=(s.debt>0?1:0)+s.props.filter(p=>p.loan>0).length;c+=(.012+loans*.012)*(c<760?1:.3)} // paying on time builds it, slowly
+  if(s.bk&&s.day<s.bk)c=Math.min(c,560);s.credit=clamp(c,300,850)}
+function bankruptcy(){ // wipes what you owe on your balance, and most of what you own, but keeps your home and retirement money
+  const lost=[];for(const t in s.port){lost.push('stocks');delete s.port[t]}s.shorts={};s.opts=[];s.mloan=0;
+  for(const t in s.wallet)delete s.wallet[t];if(s.fin.fu){s.fin.fu=0;s.fin.fc=0;lost.push('the index fund')}s.fin.sav=0;
+  for(const id in s.biz)if(s.biz[id].n){lost.push('your businesses');break}s.biz={};
+  const keep=s.props.filter(p=>p.uid===s.home);if(s.props.length>keep.length)lost.push('your rentals');s.props=keep;s.cars=s.cars.slice(0,1);s.own={};
+  s.cash=0;s.credit=380;s.bk=s.day+7*365;add('hap',-25);log(`You declared bankruptcy. The debt is gone, and so are ${[...new Set(lost)].join(', ')||'most of your things'}. It stays on your credit report for 7 years.`,'bad')}
+function creditHtml(){const c=credit(),neg=s.cash<0;
+  return `<div class="sec-h"><h2>Credit score</h2><span>${creditWord(c)}</span></div>
+  <div class="stats4 eco"><div><span>Your score</span><b class="num ${c<620?'dn':c>=740?'up':''}">${c}</b></div><div><span>Your mortgage rate</span><b class="num">${pctA(myRate())}</b></div><div><span>A negative balance costs</span><b class="num">${pctA(debtAPR())}</b></div><div><span>Mortgages</span><b>${c<620||s.bk>s.day?'<span class="dn">Refused</span>':'Available'}</b></div></div>
+  <p class="mut" style="margin-top:var(--space-2xs)">Every day your balance is negative counts as a missed payment and costs about half a point. Loans and mortgages paid on time build it back up slowly. Banks won't give a mortgage under 620.${s.bk>s.day?` Your bankruptcy stays on file for another ${Math.ceil((s.bk-s.day)/365)} years.`:''}</p>
+  ${neg&&netWorth()<0?`<div class="quick" style="margin-top:var(--space-xs)"><button class="bad" data-a="bankrupt">Declare bankruptcy</button></div>`:''}`}
+
+// ---------- habits: drinking and gambling can turn into problems; rehab resets them ----------
+const vice=k=>s.vice?.[k]||0;
+function viceAdd(k,v){(s.vice??={alc:0,gam:0})[k]=clamp(vice(k)+v,0,100)}
+function viceDay(){const V=s.vice;if(!V)return;V.alc=Math.max(0,V.alc-.06);V.gam=Math.max(0,V.gam-.05);
+  if(V.alc>60){add('hea',-.05);add('hap',-.04);if(s.job)s.perf=clamp(s.perf-.03,0,100)}
+  if(V.gam>60&&R()<1/45&&s.cash>100){const v=Math.round(s.cash*.04);s.cash-=v;taxAdd('gam',-v);add('hap',-3);log(`The itch got you again: ${fmt(v)} gone on a gambling binge.`,'bad')}
+  for(const k of ['alc','gam']){const on=V[k]>60,was=V[k+'On'];if(on&&!was)log(k==='alc'?'Your drinking has become a problem. It is wearing down your health and your work.':'Gambling has become a problem. You keep chasing losses.','bad');V[k+'On']=on}}
+const rehabCost=()=>2e4*s.eco.P;
+function viceHtml(){const V=s.vice||{alc:0,gam:0},bad=V.alc>60||V.gam>60;
+  return `<div class="sec-h"><h2>Habits</h2><span>${bad?'<span class="dn">a problem</span>':'under control'}</span></div>
+  <table class="ledger"><tbody>${[['Drinking','alc','Every night out adds to it. It fades if you ease off.'],['Gambling','gam','Every casino bet adds to it, and so does chasing losses.']].map(([n,k,d])=>`<tr><td><b>${n}</b><div class="mut">${d}</div></td><td style="width:30%">${meter(V[k],V[k]>60?'low':'')}</td><td class="r">${V[k]>60?'<span class="dn">Problem</span>':V[k]>35?'Watch it':'Fine'}</td></tr>`).join('')}</tbody></table>
+  ${bad?`<div class="quick" style="margin-top:var(--space-xs)"><button class="pri" data-a="rehab" ${s.cash<oopOf(rehabCost()).out?'disabled':''}>Go to rehab · you pay ${fmt(oopOf(rehabCost()).out)}</button></div><p class="mut" style="margin-top:var(--space-2xs)">Thirty days away: no work pay while you're there, and you come back clean.</p>`:''}`}
+
+// ---------- travel: somewhere for every budget, from a beach week to low orbit ----------
+const TRIPS=[
+ {id:'beach',n:'Beach week',c:3000,cd:90,hap:22,hea:4,d:'Sun, sea and no emails'},
+ {id:'city',n:'European city break',c:6000,cd:120,hap:25,sma:2,d:'Museums, cafés, and a little culture'},
+ {id:'ski',n:'Ski trip',c:8000,cd:150,hap:26,hea:3,risk:.06,d:'Great fun, until someone breaks a leg'},
+ {id:'safari',n:'Safari',c:18000,cd:240,hap:32,fol:300,d:'Lions at dawn. Your feed has never looked better'},
+ {id:'cruise',n:'Round-the-world cruise',c:90000,cd:365,hap:42,hea:3,fol:800,d:'Three months at sea'},
+ {id:'space',n:'A flight to space',c:3e7,cd:1825,hap:60,fol:2e5,d:'Eleven minutes of weightlessness and a view nobody forgets'},
+];
+const TRM=Object.fromEntries(TRIPS.map(t=>[t.id,t]));
+function travel(id){const T=TRM[id],c=T.c*s.eco.P;if(!T||s.cash<c||cdLeft('t_'+id)||jailed())return;s.cash-=c;s.cd['t_'+id]=s.day+T.cd;
+  add('hap',T.hap);if(T.hea)add('hea',T.hea);if(T.sma)add('sma',T.sma);if(T.fol)s.fol+=Math.round(T.fol*(1+s.fol/1e5));
+  const pt=partner();if(pt)prel(pt,pt.pt==='adventurous'?15:6);if(T.risk&&R()<T.risk&&!cond('inj'))addCond('inj');
+  let m=`${T.n}: ${T.d.toLowerCase()}.`;if(!pt&&R()<.15){const p=meet('date',45);m+=` You met ${p.n} along the way, and you're seeing each other.`}return m}
+function travelHtml(){return `<div class="sec-h"><h2>Travel</h2><span>each trip has its own wait</span></div>
+  <div class="acards">${TRIPS.map(T=>{const w=cdLeft('t_'+T.id),c=T.c*s.eco.P;return `<button class="acard" data-a="travel" data-x="${T.id}" ${w||s.cash<c?'disabled':''}><b>${T.n}</b><span>${T.d}. +${T.hap} happiness${T.fol?', and followers':''}.</span><small>${fmt(c)}${w?` · again in ${w}d`:''}</small></button>`}).join('')}</div>`}
+
+// ---------- the military: a steady career that pays for college and healthcare afterwards ----------
+const VET=4*365; // a full enlistment
+const isVet=()=>!!s.vet;
+function milDay(){if((s.job==='army'||s.job==='officer')&&s.jobDays>=VET&&!s.vet){s.vet=1;log('You finished your enlistment. As a veteran, the GI Bill pays your tuition and VA healthcare covers you for life.','good');toast('You are a veteran')}}
+const EV8=[
+{id:'deploy',w:s=>s.job==='army'||s.job==='officer'?3:0,c:()=>s.job==='army'||s.job==='officer',t:'Deployment',d:()=>'Your unit is shipping out for six months. There is hazard pay, and real danger.',def:0,ch:[
+ ['Go with your unit',()=>{const v=Math.round(jobPay()*90);s.cash+=v;taxAdd('ord',v);s.perf=clamp(s.perf+8,0,100);add('hap',-6);if(R()<.08){addCond('inj');add('hea',-15);return `You came home hurt, with ${fmt(v)} in hazard pay.`}return `Six hard months. You came home with ${fmt(v)} in hazard pay.`}],
+ ['Ask for a posting at home',()=>{s.perf=clamp(s.perf-6,0,100);return 'You stay stateside. Your commander remembers.'}]]},
+];

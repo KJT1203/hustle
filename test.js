@@ -96,7 +96,7 @@ function selfTest(){ // open with ?test=1 — never touches your real save
   const hot=BM.hotel,lem=BM.lemon;s.eco.g=.4;const pfB=bizPf(hot);s.eco.g=-1;ok(pfB>1&&bizPf(hot)<0&&bizPf(lem)>.8,'a slump sinks hotels, barely touches lemonade');s.eco.g=.3;
   s.biz.cafe={n:5,mgr:0,pend:0,spent:1e5};closeCheck(BM.cafe,s.biz.cafe,1);ok(s.biz.cafe.n===4&&s.biz.cafe.spent===8e4,'competition closes a location');
   for(let y=0;y<15*365;y++){s.day++;ecoDay();marketDay(1)}const E=s.eco;ok([E.g,E.u,E.pi,E.r,E.lr,E.P].every(Number.isFinite)&&E.u>=.03&&E.u<=.14&&E.r>=0&&E.P>1.1&&E.P<3.5,'fifteen years of economy stay sane');
-  s.cash=2e5;s.job='crew';relist();s.re.list[0]={...s.re.list[0],t:'studio'};const lu2=s.re.list[0].uid;ACT.pbuy(lu2,'m');const mp=s.props.find(p=>p.loan>0);ok(mp&&Math.abs(mp.rate-mrate())<1e-12,'a mortgage locks in the going rate');
+  s.cash=2e5;s.job='crew';relist();s.re.list[0]={...s.re.list[0],t:'studio'};const lu2=s.re.list[0].uid;ACT.pbuy(lu2,'m');const mp=s.props.find(p=>p.loan>0);ok(mp&&Math.abs(mp.rate-myRate())<1e-12,'a mortgage locks in the going rate for your credit');
   newGame('Bank','nerd');s.day=nextTrading(s.day);s.min=600;s.cash=1e6;const bk_F=s.fin;ACT.sdep('100000');const bk_sv0=bk_F.sav;finDay();ok(bk_F.sav>bk_sv0&&s.cash===9e5,'savings earn interest');
   ACT.fbuy('100000');ok(Math.abs(bk_F.fu*fundPx()-1e5)<1e-6,'index fund buys at a tenth of the index');const bk_nw0=netWorth();ok(bk_nw0>9.9e5&&bk_nw0<1.01e6,'bank money counts in net worth');ACT.fsell('all');ok(!bk_F.fu&&Math.abs(s.cash-9e5)<1,'sell the fund');
   ACT.bnd('10','100000');const bk_bd0=bk_F.bonds[0];ok(Math.abs(bondVal(bk_bd0)-1e5)<1,'a new bond is worth its price');s.eco.lr+=.02;ok(bondVal(bk_bd0)<9e4,'rising rates cut a long bond\'s price');const bk_cbond=s.cash;ACT.bndsell('0');ok(!bk_F.bonds.length&&s.cash-bk_cbond<9e4,'sell a bond early at the market price');
@@ -230,6 +230,14 @@ function selfTest(){ // open with ?test=1 — never touches your real save
   s.cash=1e8;s.club=null;ACT.tbuy('minor');ok(s.club&&VIEWS.shop().includes('Minor-league'),'own a team');ACT.tpay('1.6');ok(s.club.pay===1.6,'payroll');
   const po_c=s.cash;let po_d=dayOf(dateOf(s.day).y,9,1);if(po_d<=s.day)po_d=dayOf(dateOf(s.day).y+1,9,1);s.day=po_d;clubDay();ok(s.club.season===dateOf(s.day).y&&s.cash!==po_c,'a season settles');
   ACT.tsell();ok(!s.club,'sell the team');s.cars=[{uid:1,t:'hatch',v:9000,paid:9000,bought:0}];const po_g=gig();s.cars=[];ok(po_g>gig(),'rideshare pays more');s=po_s0;
+  const cr_s0=s;newGame('Cred','nerd');ok(credit()===650&&creditWord(650)==='Fair','credit starts fair');
+  s.cash=-100;const cr0=s.credit;creditDay();ok(s.credit<cr0,'missed payments hurt');s.credit=600;ok(!canBorrow(1e5),'no mortgage under 620');s.credit=800;ok(myRate()===mrate(),'great credit gets the base rate');s.credit=540;ok(myRate()>mrate()+.019&&debtAPR()>.2,'bad credit costs more');
+  tab='bank';ok(VIEWS.bank().includes('Credit score'),'credit on the bank screen');s.cash=-5e4;ACT.bankrupt('yes');ok(s.cash===0&&s.credit===380&&s.bk>s.day,'bankruptcy');
+  s.cash=1e5;for(let i=0;i<20;i++){s.cd.out=0;ACT.act('out')}ok(vice('alc')>60,'drinking adds up');viceDay();tab='health';ok(VIEWS.health().includes('Go to rehab'),'rehab offered');s.job='admin';ACT.rehab();ok(vice('alc')===0&&s.rehab>s.day&&flows().job===0,'rehab: clean, and no pay for a month');
+  s.cash=1e8;s.cd={};ACT.travel('safari');ok(cdLeft('t_safari')>0&&s.cash<1e8,'a safari');ACT.travel('space');ok(s.cd.t_space,'to space');tab='life';ok(VIEWS.life().includes('Travel'),'travel section');
+  s.job='army';s.rank=2;ok(jobTitle()==='Sergeant','army ranks');s.jobDays=VET;milDay();ok(isVet()&&tuition(PG.ba,{cost:1})===0,'the GI Bill');ACT.ins('va');ok(s.ins==='va','VA healthcare');
+  for(const e of EV8)if(!e.c||e.c(s))for(const c of e.ch){const a=e.a?e.a(s):0;e.d(s,a);ok(typeof c[1](s,a)==='string','event '+e.id)}
+  s=cr_s0;
   tab='dash';ok(VIEWS.dash().includes('Goals'),'goals on home');goalsModal();
   const sp2=meet('spouse',70),k1=addChild(),k2=addChild(),k3=addChild();k1.b=s.day-40*365;k2.b=s.day-30*365;k3.b=s.day-5*365;k1.rel=90;
   deathModal();ok($('#mbox').innerHTML.includes('Continue as '+k1.n),'death lists the kids');ACT.heir(String(k1.uid));
