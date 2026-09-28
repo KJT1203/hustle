@@ -566,7 +566,7 @@ const EV2=[
 {id:'lend',w:1.2,c:s=>friendsN()>0&&s.cash>2000,a:s=>({u:pick(s.people.filter(p=>p.role==='friend'))?.uid,v:Math.round(Math.min(s.cash*.1,rint(5,40)*100*s.eco.P))}),t:'Can I borrow some money?',d:(s,a)=>`${esc(per(a.u)?.n||'A friend')} asks to borrow <b>${fmt(a.v)}</b> to cover rent. "I'll pay you back, I swear."`,def:1,ch:[
  ['Lend it',(s,a)=>{if(s.cash<a.v)return "You don't have it to lend.";s.cash-=a.v;s.later.push({d:s.day+rint(45,180),k:'x',id:'lend',u:a.u,v:a.v});const f=per(a.u);if(f)prel(f,5);return 'They hug you. Now you wait.'}],
  ['Say no',(s,a)=>{const f=per(a.u);if(f)prel(f,-8);return 'They say they understand. They seem hurt.'}]]},
-{id:'lump',w:.6,c:()=>age()>25&&!cond('cancer'),t:'Something feels off',d:()=>'You notice a small lump. It doesn\'t hurt.',def:1,ch:[
+{id:'lump',w:.6,c:()=>age()>25&&!cond('cancer'),t:'Something feels off',d:()=>'You notice a small lump. It doesn\'t hurt.',def:0,ch:[
  ['Get it checked',()=>{const v=billMed(300*s.eco.P);if(R()<.12){addCond('cancer',0);return `You paid ${fmt(v)}. It's early-stage cancer, and caught early, treatment works 95% of the time. See Health.`}return `You paid ${fmt(v)}. It's benign. Relief.`}],
  ['Wait and see',()=>{if(R()<.12)addCond('cancer');return 'It seems to go away. Probably nothing.'}]]},
 {id:'nbr',w:.8,t:'Fence feud',d:()=>`Your neighbor says your tree cracked their fence and wants ${fmt(3000*s.eco.P)} for a new one.`,def:1,ch:[
