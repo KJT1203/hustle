@@ -334,10 +334,11 @@ function legacyHtml(){const T=[...(s.tree||[]),lifeRec()],top=Math.max(1,...T.ma
   <div class="sec-h"><h2>Fortune by generation</h2><span>net worth in today's money${T.length>1?', at death':''}</span></div>
   <div class="gbars">${T.map(r=>`<div><span class="mut">${r.gen}</span><i style="width:${Math.max(1,Math.sqrt(Math.max(0,r.real)/top)*100)}%"></i><b class="num">${fmt(r.real)}</b></div>`).join('')}</div>
   <div class="sec-h"><h2>Every generation</h2></div>
-  <div class="scroll"><table class="ledger"><thead><tr><th>Gen</th><th>Name</th><th>Lived</th><th>Career</th><th class="r">Fortune</th><th>Family</th><th>Known for</th></tr></thead><tbody>
-  ${T.map((r,i)=>`<tr${i===T.length-1?' class="now"':''}><td class="num">${r.gen}</td><td><b>${esc(r.n)}</b>${i===T.length-1?' <span class="mut">(you)</span>':''}</td><td>${r.cause?`${r.age}, died ${esc(r.cause)}`:`${r.age} and counting`}</td><td>${esc(r.job)}<div class="sub">${r.edu}</div></td><td class="r num">${fmt(r.nw)}</td>
-   <td>${r.sp?`Married to ${esc(r.sp)}`:'Single'}${r.kids?`, ${r.kids} kid${r.kids>1?'s':''}`:''}</td><td class="mut">${r.mile?.length&&i<T.length-1?`<details><summary>Their story</summary><ol class="story">${r.mile.map(m=>`<li><span class="num">${m.a}</span><span>${m.t}</span></li>`).join('')}</ol></details>`:''}${[trTxt(r.tr),r.exits?`${r.exits} startup exit${r.exits>1?'s':''}`:'',r.given>=1e6?`gave ${fmt(r.given)}`:'',r.rec?`${r.rec} conviction${r.rec>1?'s':''}`:'',r.goals?`${r.goals} goal${r.goals>1?'s':''}`:''].filter(Boolean).join(' · ')||'—'}</td></tr>`).join('')}
-  </tbody></table></div>
+  <div class="gens">${T.map((r,i)=>{const now=i===T.length-1,known=[trTxt(r.tr),r.exits?`${r.exits} startup exit${r.exits>1?'s':''}`:'',r.given>=1e6?`gave ${fmt(r.given)}`:'',r.rec?`${r.rec} conviction${r.rec>1?'s':''}`:'',r.goals?`${r.goals} goal${r.goals>1?'s':''}`:''].filter(Boolean).join(' · ');
+    return `<div class="gen${now?' now':''}"><div class="gh"><span class="mut">Generation ${r.gen}</span><b>${esc(r.n)}${now?' <span class="mut">(you)</span>':''}</b><span class="num">${fmt(r.nw)}</span></div>
+    <p>${r.cause?`Lived to ${r.age}, died ${esc(r.cause)}.`:`${r.age} and counting.`} ${esc(r.job)}, ${r.edu.toLowerCase()}. ${r.sp?`Married to ${esc(r.sp)}`:'Single'}${r.kids?`, ${r.kids} kid${r.kids>1?'s':''}`:''}.</p>
+    ${known?`<p class="mut">${known}</p>`:''}
+    ${r.mile?.length&&!now?`<details><summary>Their story</summary><ol class="story">${r.mile.map(m=>`<li><span class="num">${m.a}</span><span>${m.t}</span></li>`).join('')}</ol></details>`:''}</div>`}).join('')}</div>
   ${givingHtml()}`}
 
 // ---------- giving: donations are tax-deductible up to 60% of the year's income; a foundation keeps giving after you're gone ----------
