@@ -430,7 +430,7 @@ const EV=[
  ['Take it to a shelter',()=>'It will find a good home.']]},
 ];
 
-EV.push(...EV2,...EV3,...EV4,...EV5,...EV6,...EV7,...EV8,...EV9,...EV10,...EV11,...EV12);
+EV.push(...EV2,...EV3,...EV4,...EV5,...EV6,...EV7,...EV8,...EV9,...EV10,...EV11,...EV12,...EV13);
 const EVM=EM(EV.map(e=>[e.id,e]));
 
 // ---------- businesses: realistic returns, and profits that ride the economy ----------
@@ -695,7 +695,7 @@ function day(live){
     if(s.jobDays%120===0&&!topRank()){if(s.perf>=promoNeed()){s.rank++;s.perf-=10;mile(`Promoted to ${jobTitle()}.`);{const pt=partner();if(pt?.pt==='ambitious')prel(pt,8)}log(`Promoted to <b>${jobTitle()}</b>! Now ${fmt(jobPay())} a day.`,'good');toast('Promotion!')}else log(`Passed over for promotion. You needed a performance of ${promoNeed()}.`,'bad')}
     if(s.job&&s.eco.u>.05&&R()<(s.eco.u-.045)*2/365){const j=jobTitle(),sev=jobPay()*30;fire();s.cash+=sev;taxAdd('ord',sev);add('hap',-12);mile(`Laid off from ${j}.`);log(`Laid off from ${j} as the economy slows. Severance: ${fmt(sev)}.`,'bad');toast(`Laid off from ${j}`)}
     if(s.job&&s.perf<20&&R()<.01){const j=jobTitle();fire();mile(`Fired from ${j}.`);add('hap',-15);log(`Fired from ${j} for poor performance.`,'bad');toast(`Fired from ${j}.`)}}
-  peopleDay();
+  peopleDay();othersDay();
   if(s.study&&!jailed()){const st=s.study,P=PG[st.p];st.left--;st.g=clamp(st.g+((40+(trait('bright')?6:0)+s.st.sma*.4+(s.st.hap-50)*.2)-st.g)*.02,0,100);if(P.stipend)s.cash+=P.stipend;
     if(st.left<=0){if(st.g<30){st.left=60;st.g=45;log(`Failed the final exams for ${degName(st)}. One more term.`,'bad');toast('Failed the finals. One more term.')}else graduate()}}
   const J=job();
@@ -1486,7 +1486,7 @@ function personRow(p){
   const all=PACT_ORDER.filter(k=>PACTS[k].roles.includes(p.role)&&(!PACTS[k].show||PACTS[k].show(p))),main=['date','call','reconnect'].find(k=>all.includes(k)),open=openP===p.uid,lo=p.rel<30;
   const btn=k=>{const A=PACTS[k],w=Math.max(0,(p.c?.[k]||0)-s.day),cost=A.c?A.c(p):0,why=A.need?.(p);if(why)return `<span class="hint">${why}</span>`;
     return `<button class="${A.bad?'bad':k==='propose'||k==='baby'?'pri':''}" data-a="pp" data-x="${p.uid}" data-y="${k}" ${w||s.cash<cost?'disabled':''}>${typeof A.n==='function'?A.n(p):A.n}${cost?` · ${fmt(cost)}`:''}${w?` · ${w}d`:''}</button>`};
-  return `<div class="prow"><div class="who"><span class="av">${esc(p.n[0])}</span><div><div class="pn">${esc(p.n)}</div><div class="mut" style="font-size:var(--text-xs)">${p.uid===s.best&&p.role==='friend'?'Best friend':ROLE[p.role]}${p.out?', moved out':''} · ${Math.max(0,Math.floor(ageOf(p)))}</div>${p.role==='child'&&p.k?`<div class="mut kstat">${kidStat(p)}</div>`:p.role==='boss'&&BOSSES[p.bt]?`<div class="mut kstat">${BOSSES[p.bt].n}</div>`:(p.role==='date'||p.role==='spouse')&&p.pt?`<div class="mut kstat">${persLine(p)}</div>`:''}</div></div>
+  return `<div class="prow"><div class="who"><span class="av">${esc(p.n[0])}</span><div><div class="pn">${esc(p.n)}</div><div class="mut" style="font-size:var(--text-xs)">${p.uid===s.best&&p.role==='friend'?'Best friend':ROLE[p.role]}${p.out?', moved out':''} · ${Math.max(0,Math.floor(ageOf(p)))}</div>${p.role==='child'&&p.k?`<div class="mut kstat">${kidStat(p)}</div>`:p.role==='boss'&&BOSSES[p.bt]?`<div class="mut kstat">${BOSSES[p.bt].n}</div>`:(p.role==='date'||p.role==='spouse')&&p.pt?`<div class="mut kstat">${persLine(p)}</div>`:(p.sp||p.nk||p.away||p.care)?`<div class="mut kstat">${[p.sp?`Married to ${esc(p.sp)}`:'',p.nk?`${p.nk} kid${p.nk>1?'s':''}`:'',p.away?'Moved away':'',p.care==='home'?'In a care home':p.care==='you'?'Lives with you':''].filter(Boolean).join(' · ')}</div>`:''}</div></div>
    <div class="close"><div class="top2"><span class="${lo?'dn':'mut'}">${closeWord(p.rel)}</span><span class="num">${Math.round(p.rel)}</span></div>${meter(p.rel,lo?'low':'')}</div>
    <div class="acts3">${main?btn(main):''}${all.length>1?`<button data-a="pmore" data-x="${p.uid}" aria-expanded="${open}">${open?'Less':'More'}</button>`:''}</div>
    ${open?`<div class="pmore">${all.filter(k=>k!==main).map(btn).join('')}</div>`:''}</div>`;

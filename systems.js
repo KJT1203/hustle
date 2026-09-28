@@ -685,6 +685,7 @@ const NEWS=[
  {v:9,t:['Car loans','Adopt a child','IVF']},
  {v:10,t:['The world rich list: see where you rank']},
  {v:11,t:['Hire a personal assistant and a financial advisor (Lifestyle)']},
+ {v:12,t:['Aging parents who need care','Friends and siblings marry, have kids, move away and grow old']},
 ];
 const NEWSV=NEWS.at(-1).v;
 function newsHtml(){const seen=s.seenV||1,L=NEWS.filter(n=>n.v>seen);if(!L.length)return '';s.seenV=NEWSV;
@@ -744,3 +745,19 @@ function staffHtml(){const S=s.staff||{};
   return `<div class="sec-h"><h2>Staff</h2><span>for when life runs itself</span></div>
   <div class="acards"><button class="acard${S.pa?' on':''}" data-a="staff" data-x="pa" aria-pressed="${!!S.pa}"><b>Personal assistant</b><span>Collects every till each day and answers decisions after 7 days with the sensible choice.</span><small>${S.pa?'Hired · tap to let go':`${fmt(paCost())} a day`}</small></button>
   <button class="acard${S.adv?' on':''}" data-a="staff" data-x="adv" aria-pressed="${!!S.adv}"><b>Financial advisor</b><span>Each week, invests spare cash in the index fund, keeping about 90 days of spending in cash.</span><small>${S.adv?'Hired · tap to let go':'1% a year of what they manage'}</small></button></div>`}
+
+// ---------- other people's lives: parents who need care, friends and siblings who move on ----------
+function othersDay(){for(const p of [...s.people]){const a=ageOf(p);
+  if(p.role==='parent'&&a>=78&&!p.care&&!p.askedCare&&R()<1/900){p.askedCare=1;s.inbox.push({id:'pcare',d:s.day,a:p.uid})}
+  if(p.role==='parent'&&p.care==='home')s.cash-=180*s.eco.P; // a care home, every day
+  if(p.role==='friend'||p.role==='sibling'){
+    if(!p.sp&&a>=24&&a<45&&R()<1/3000){p.sp=pick(PNAMES.filter(n=>n!==p.n));if(p.rel>=50)log(`${esc(p.n)} got married to ${esc(p.sp)}.`,'good')}
+    if(p.sp&&a>=26&&a<44&&(p.nk||0)<3&&R()<1/1800){p.nk=(p.nk||0)+1;if(p.role==='sibling')log(`${esc(p.n)} had a baby. You're an aunt or uncle${p.nk>1?' again':''}.`,'good')}
+    if(p.role==='friend'&&a>40&&R()<1/(20*365)){p.away=1;p.rel=Math.max(0,p.rel-15);log(`${esc(p.n)} moved across the country. You'll have to try harder to stay close.`)}
+    if(a>72&&R()<Math.min(.5,((a-72)/22)**3*2)/365){s.people.splice(s.people.indexOf(p),1);add('hap',p.rel>=60?-12:-4);mile(`Lost ${esc(p.n)}, ${p.role==='sibling'?'a sibling':'an old friend'}.`);log(`${esc(p.n)} passed away at ${Math.floor(a)}.`,'bad')}}}}
+const EV13=[
+{id:'pcare',w:0,c:s=>s.people.some(p=>p.role==='parent'),t:'A parent needs care',d:(s,a)=>{const p=per(a);return p?`${esc(p.n)} can't manage alone any more. A care home costs about <b>${fmt(180*s.eco.P)}</b> a day.`:'A parent needs help.'},def:1,ch:[
+ ['Move them in with you',(s,a)=>{const p=per(a);if(!p)return 'The moment has passed.';p.care='you';prel(p,20);add('hap',-6);if(s.job)s.perf=clamp(s.perf-5,0,100);return `${p.n} moves in. It's hard, and it's the right thing.`}],
+ ['Pay for a good care home',(s,a)=>{const p=per(a);if(!p)return 'The moment has passed.';p.care='home';prel(p,8);return `${p.n} settles into a care home. You visit on Sundays.`}],
+ ['They\'ll have to cope',(s,a)=>{const p=per(a);if(!p)return 'The moment has passed.';p.care='none';prel(p,-25);add('hap',-4);p.x=(p.x||0)-3;return 'You tell yourself they are fine. They are not.'}]]},
+];
