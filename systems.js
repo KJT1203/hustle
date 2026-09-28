@@ -340,6 +340,7 @@ function legacyHtml(){const T=[...(s.tree||[]),lifeRec()],top=Math.max(1,...T.ma
     <p>${r.cause?`Lived to ${r.age}, died ${esc(r.cause)}.`:`${r.age} and counting.`} ${esc(r.job)}, ${r.edu.toLowerCase()}. ${r.sp?`Married to ${esc(r.sp)}`:'Single'}${r.kids?`, ${r.kids} kid${r.kids>1?'s':''}`:''}.</p>
     ${known?`<p class="mut">${known}</p>`:''}
     ${r.mile?.length&&!now?`<details><summary>Their story</summary><ol class="story">${r.mile.map(m=>`<li><span class="num">${m.a}</span><span>${m.t}</span></li>`).join('')}</ol></details>`:''}</div>`}).join('')}</div>
+  ${lifeStatsHtml()}
   ${trustHtml()}
   ${givingHtml()}`}
 
@@ -774,3 +775,9 @@ const EV14=[
  ['Take it',(s,a)=>{s.cash+=a;taxAdd('ord',a);s.fol+=Math.round(a/50);s.perf=clamp(s.perf+10,0,100);add('hap',10);mile(job()?.id==='actor'?'Starred in a blockbuster.':'Fronted a global campaign.');return `You signed. ${fmt(a)}, and your face is everywhere.`}],
  ['Hold out for more',(s,a)=>{if(R()<.4){const v=Math.round(a*1.5);s.cash+=v;taxAdd('ord',v);s.fol+=Math.round(v/50);return `They came back with ${fmt(v)}. Well played.`}return 'They went with someone else.'}]]},
 ];
+
+// ---------- lifetime stats ----------
+function statsDay(){const w=netWorth();if(w>(s.peak||0))s.peak=w}
+function lifeStatsHtml(){const T=s.tax,paid=Object.values(T.hist||{}).reduce((a,h)=>a+(h.tax||0),0)+(T.paid||0),trips=Object.keys(s.cd).filter(k=>k.startsWith('t_')).length,ops=BIZ.filter(b=>s.biz[b.id]).length;
+  const rows=[['Peak net worth',fmt(s.peak||netWorth())],['Salary earned',fmt(s.wage||0)],['Income tax paid',fmt(paid)],['Gigs worked',big(s.gigs||0)],['Casino',`${(s.cz?.net||0)>=0?'+':''}${fmt(s.cz?.net||0)} over ${big(s.cz?.played||0)} bets`],['Kinds of business run',ops],['Places visited',trips],['Followers',big(s.fol)],['Given to charity',fmt(s.given||0)],['Goals reached this life',Object.values(s.goals).filter(g=>g.gen===s.gen).length]];
+  return `<div class="sec-h"><h2>Lifetime stats</h2><span>${esc(s.name)}</span></div><div class="stats4 eco">${rows.map(([l,v])=>`<div><span>${l}</span><b class="num">${v}</b></div>`).join('')}</div>`}
