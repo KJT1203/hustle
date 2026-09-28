@@ -520,7 +520,7 @@ const myRate=()=>mrate()+rateSpread();
 const debtAPR=()=>.15+(850-credit())/550*.15; // what a negative balance costs you: 15% a year with perfect credit, 30% with the worst
 function creditDay(){let c=s.credit??650;
   if(s.cash<0)c-=.6; // missed payments
-  else{const loans=(s.debt>0?1:0)+s.props.filter(p=>p.loan>0).length;c+=(.012+loans*.012)*(c<760?1:.3)} // paying on time builds it, slowly
+  else{const loans=(s.debt>0?1:0)+s.props.filter(p=>p.loan>0).length+s.cars.filter(c=>c.loan>0).length;c+=(.012+loans*.012)*(c<760?1:.3)} // paying on time builds it, slowly
   if(s.bk&&s.day<s.bk)c=Math.min(c,560);s.credit=clamp(c,300,850)}
 function bankruptcy(){ // wipes what you owe on your balance, and most of what you own, but keeps your home and retirement money
   const lost=[];for(const t in s.port){lost.push('stocks');delete s.port[t]}s.shorts={};s.opts=[];s.mloan=0;
@@ -682,6 +682,7 @@ const NEWS=[
  {v:6,t:['Politics: from city council to president','Own a sports team','Credit scores and bankruptcy','Habits, addiction and rehab','Travel, up to a flight to space','Military service and the GI Bill','A life story timeline','Next steps suggestions on Home']},
  {v:7,t:['Businesses valued at a multiple of profit: sell or franchise a chain','Work hours and diet','Settings in the ? menu','A housing boom and bust','Walk your dog, and vet decisions','A family trust, a best friend, and retirement communities']},
  {v:8,t:['Holiday lets for your rentals','Start a podcast or video channel','A semester abroad']},
+ {v:9,t:['Car loans','Adopt a child','IVF']},
 ];
 const NEWSV=NEWS.at(-1).v;
 function newsHtml(){const seen=s.seenV||1,L=NEWS.filter(n=>n.v>seen);if(!L.length)return '';s.seenV=NEWSV;
@@ -709,3 +710,15 @@ function chHtml(){const C=s.ch||chNew(),w=cdLeft('ep');
 const abroadCost=()=>8000*s.eco.P;
 function abroad(){const st=s.study;if(!st||st.abroad||s.cash<abroadCost()||st.sc==='online')return;s.cash-=abroadCost();st.abroad=1;st.g=clamp(st.g+4,0,100);add('sma',3);add('hap',15);s.fol+=rint(30,150);mile('Spent a semester abroad.');
   if(friendsN()<10){const p=meet('friend',55);return `A semester abroad: new languages, late nights, and a friend for life in ${p.n}.`}return 'A semester abroad. You come home a little different.'}
+
+// ---------- car loans: 10% down, five years, at a rate your credit sets ----------
+const carRate=()=>myRate()+.025;
+const CARN=5*365,carPay=(L,r=carRate())=>L*(r/365)/(1-(1+r/365)**-CARN);
+const carPays=()=>s.cars.reduce((t,c)=>t+(c.loan>0?c.pay:0),0);
+function canCarLoan(price){const f=flows(),pay=carPay(price*.9);return credit()>=580&&!(s.bk>s.day)&&s.cash>=price*.1&&pay+carPays()<=(f.job+f.biz+f.rent)*.2}
+function carLoanDay(){for(const c of s.cars)if(c.loan>0){c.loan-=c.pay-c.loan*(c.rate||carRate())/365;if(c.loan<=1){c.loan=c.pay=0;log(`Paid off the loan on your ${CM[c.t].n.toLowerCase()}.`,'good')}}}
+
+// ---------- adoption and IVF ----------
+const adoptCost=()=>4e4*s.eco.P,ivfCost=()=>2e4*s.eco.P;
+const canAdopt=()=>age()>=25&&age()<56&&kidsHome()<4&&s.cash>=adoptCost()&&!jailed();
+function adoptKid(){if(!canAdopt())return;s.cash-=adoptCost();const p=meet('child',70,s.day-rint(0,8)*365);const tr=rollTraits();p.k={...kidNew(),tr,gs:rint(30,80),loo:rint(30,80)};p.k.sma=p.k.gs*(.3+Math.min(1,ageOf(p)/10)*.7);p.adopt=1;add('hap',14);mile(`Adopted ${esc(p.n)}.`);log(`You adopted ${esc(p.n)}, ${Math.floor(ageOf(p))}. Welcome home.`,'good');return p}

@@ -257,6 +257,8 @@ function selfTest(){ // open with ?test=1 — never touches your real save
   const sl_s0=s;newGame('Let','rich');s.cash=5e6;ACT.pbuy(String(s.re.list[0].uid));ACT.pbuy(String(s.re.list[1].uid));const sl_p=s.props.find(p=>p.uid!==s.home);sl_p.from=0;const sl_r=rentOf(sl_p);ACT.stl(String(sl_p.uid));ok(sl_p.stl&&rentOf(sl_p)>sl_r,'a holiday let pays more');tab='home';ok(VIEWS.home().includes('Holiday let'),'holiday let shown');
   ACT.chstart();ok(s.ch.on,'a channel');const sl_c=chPost();ok(sl_c&&s.ch.subs>0&&!chPost(),'post an episode, then wait');ok(chInc()>0,'ads pay');tab='chirp';ok(VIEWS.chirp().includes('Your channel'),'channel on Chirp');
   s.study={p:'ba',sc:'state',mj:'Business',left:300,days:1095,g:60};ACT.abroad();ok(s.study.abroad,'a semester abroad');s=sl_s0;
+  const cl_s0=s;newGame('Loan','nerd');s.cash=5e4;s.credit=720;ok(canCarLoan(CM.sedan.price),'a car loan');ACT.cfin('sedan');const cl_c=s.cars[0];ok(cl_c.loan>0&&flows().mort>=cl_c.pay,'loan payments come out daily');const cl_l=cl_c.loan;day();ok(cl_c.loan<cl_l,'and pay it down');ok(Math.abs(netWorth()-(s.cash+cl_c.v-cl_c.loan+finVal()+walletVal()))<1,'net of the loan');
+  s.startAge=30;s.cash=1e6;const cl_n=kids().length;ACT.kidadopt();ok(kids().length===cl_n+1&&kids().at(-1).adopt,'adoption');const cl_sp=meet('spouse',80);ok(PACTS.ivf.show(cl_sp),'IVF offered');s=cl_s0;
   tab='dash';ok(VIEWS.dash().includes('Goals'),'goals on home');goalsModal();
   const sp2=meet('spouse',70),k1=addChild(),k2=addChild(),k3=addChild();k1.b=s.day-40*365;k2.b=s.day-30*365;k3.b=s.day-5*365;k1.rel=90;
   deathModal();ok($('#mbox').innerHTML.includes('Continue as '+k1.n),'death lists the kids');ACT.heir(String(k1.uid));

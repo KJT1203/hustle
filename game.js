@@ -84,6 +84,7 @@ const PACTS={
   fx:p=>{if(R()<.3+p.rel/150){married(p);prel(p,15);add('hap',15);log(`Married ${esc(p.n)}.`,'good');return `${p.n} said yes! You're married.`}prel(p,-15);add('hap',-8);return `${p.n} says they're not ready.`}},
  baby:{n:'Try for a baby',cd:60,roles:['spouse'],need:p=>kidsHome()>=4?'Four kids at home is plenty':age()>=48?'Too late for another baby':p.rel<50?'Try for a baby once closeness reaches 50':'',
   fx:()=>{if(R()<.6){const k=addChild();add('hap',12);log(`Welcome, ${esc(k.n)}!`,'good');return `It's a baby! Welcome, ${k.n}.`}return 'Not this time. You can try again in a couple of months.'}},
+ ivf:{n:'Try IVF',cd:90,c:()=>Math.round(ivfCost()),roles:['spouse'],show:p=>age()>=30&&age()<52&&kidsHome()<4,fx:()=>{if(R()<.45){const k=addChild();add('hap',14);log(`Welcome, ${esc(k.n)}! IVF worked.`,'good');return `It worked! Welcome, ${k.n}.`}add('hap',-6);return 'This round didn\'t take. You can try again in a few months.'}},
  ask:{n:'Ask for money',cd:180,roles:['parent'],need:p=>p.rel<40?'Ask for money once closeness reaches 40':'',fx:p=>{const v=rint(300,3000);s.cash+=v;prel(p,-8);return `${p.n} sends ${fmt(v)}, with a lecture.`}},
  reconnect:{n:'Reach out',cd:30,roles:['ex'],need:()=>partner()?'Not while you are with someone':'',fx:p=>{if(R()<.35){p.role='date';p.rel=45;p.met=s.day;return `You and ${p.n} are giving it another go.`}prel(p,-5);return `${p.n} left you on read.`}},
  homework:{n:'Help with homework',cd:7,roles:['child'],show:p=>p.k&&ageOf(p)>=6&&ageOf(p)<18,fx:p=>{p.k.sma=Math.min(100,p.k.sma+.25*s.st.sma/60);prel(p,3);return `You and ${p.n} got through the homework.`}},
@@ -101,7 +102,7 @@ const PACTS={
  split:{n:'Break up',bad:1,roles:['date'],fx:p=>endRel(p)},
  divorce:{n:'Divorce',bad:1,roles:['spouse'],fx:p=>endRel(p)},
 };
-const PACT_ORDER=['lunch','pitch','coffee','cover','credit','call','time','homework','play','tutor','camp','school','fund','date','gift','propose','baby','ask','reconnect','bff','split','divorce'];
+const PACT_ORDER=['lunch','pitch','coffee','cover','credit','call','time','homework','play','tutor','camp','school','fund','date','gift','propose','baby','ivf','ask','reconnect','bff','split','divorce'];
 const RANKS=['','Senior ','Lead ','Principal ','Head ','Chief '];
 // real-world costs; income is the owner's yearly profit per unit divided by 365 (a food truck nets about half its cost a year, a hotel about 13%)
 const BIZ=[
@@ -601,7 +602,7 @@ function upgrade(){ // bring older saves up to date
   for(const k of STOCKS){const q=s.px[k.t];if(q.k)continue; // daily candles used to be drawn from closes alone
     q.k=q.h.map((c,i)=>{const o=i?q.h[i-1]:c;return [o,Math.max(o,c)*(1+.005*hsh(i,1)),Math.min(o,c)*(1-.005*hsh(i,2))]});[q.op,q.hi,q.lo]=q.k.at(-1)}
 }
-function flows(){const f={job:(s.job&&!jailed()&&!(s.rehab>s.day)?jobPay():0)+(s.pension||0)+(s.su?.st>=2?suDraw():0)+spouseInc()+polPay(),biz:0,pend:0,spon:sponsor()+chInc()+(s.roy&&s.day<s.roy.end?s.roy.v:0),exp:expenses(),rent:s.props.reduce((t,p)=>t+rentOf(p),0),mort:s.props.reduce((t,p)=>t+(p.loan>0?p.pay:0),0)+loanPay(),own:ownInc()};f.tax=s.tax?Math.max(0,(f.job+f.biz+f.pend+f.spon+f.rent*.5)*margRate()+f.own*.15):0;for(const b of BIZ){const o=s.biz[b.id];if(o?.n)f[o.mgr?'biz':'pend']+=bizInc(b,o)}return f}
+function flows(){const f={job:(s.job&&!jailed()&&!(s.rehab>s.day)?jobPay():0)+(s.pension||0)+(s.su?.st>=2?suDraw():0)+spouseInc()+polPay(),biz:0,pend:0,spon:sponsor()+chInc()+(s.roy&&s.day<s.roy.end?s.roy.v:0),exp:expenses(),rent:s.props.reduce((t,p)=>t+rentOf(p),0),mort:s.props.reduce((t,p)=>t+(p.loan>0?p.pay:0),0)+loanPay()+carPays(),own:ownInc()};f.tax=s.tax?Math.max(0,(f.job+f.biz+f.pend+f.spon+f.rent*.5)*margRate()+f.own*.15):0;for(const b of BIZ){const o=s.biz[b.id];if(o?.n)f[o.mgr?'biz':'pend']+=bizInc(b,o)}return f}
 const pfmt=n=>n>=1?fmt(n):'$'+(n<1e-6?n.toExponential(1):n.toPrecision(3));
 const qfmt=n=>n>=1?'$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):pfmt(n); // share prices to the cent, like a broker
 const units=u=>u>=1000?big(u):u>=1?u.toFixed(2):u.toPrecision(3);
@@ -649,7 +650,7 @@ function bjEnd(){const b=s.cz.bj,p=hv(b.p),nat=b.p.length===2&&p===21;
   const ret=p>21?0:nat&&!dnat?b.bet*2.5:dnat&&!nat?0:d>21||p>d?b.bet*2:p===d?b.bet:0;
   b.msg=p>21?'Bust.':nat&&!dnat?'Blackjack! Paid 3 to 2.':dnat&&!nat?'Dealer has blackjack.':ret>b.bet?(d>21?'Dealer busts. You win.':'You win.'):ret===b.bet?'Push. Your bet comes back.':'Dealer wins.';
   b.done=1;settle(b.bet,ret,'blackjack','bj')}
-function netWorth(){let w=s.cash+(s.fin&&s.mkt.div?finVal():0)-(s.mloan||0);for(const t in s.shorts||{})w-=s.shorts[t].sh*s.px[t].p;if(s.opts?.length)w+=optVal();for(const t in s.port)w+=s.port[t].sh*s.px[t].p;w+=bizWorth();for(const id in s.own)w+=SM[id].cost*.6;for(const p of s.props)w+=pval(p)-p.loan;for(const c of s.cars)w+=c.v;return w+walletVal()+suWorth()+clubVal()-(s.debt||0)}
+function netWorth(){let w=s.cash+(s.fin&&s.mkt.div?finVal():0)-(s.mloan||0);for(const t in s.shorts||{})w-=s.shorts[t].sh*s.px[t].p;if(s.opts?.length)w+=optVal();for(const t in s.port)w+=s.port[t].sh*s.px[t].p;w+=bizWorth();for(const id in s.own)w+=SM[id].cost*.6;for(const p of s.props)w+=pval(p)-p.loan;for(const c of s.cars)w+=c.v-(c.loan||0);return w+walletVal()+suWorth()+clubVal()-(s.debt||0)}
 function log(t,k='info'){s.log.unshift({d:s.day,t,k});if(s.log.length>80)s.log.pop()}
 function chirp(h,n,x,v){s.feed.unshift({h,n,x,v,l:0,tl:rint(3,40)*(v?40:1),d:s.day});if(s.feed.length>60)s.feed.pop()}
 const decDays=()=>s?.opt?.dec||30,opt=k=>!!s?.opt?.[k];
@@ -682,6 +683,7 @@ function day(live){
   s.day++;ecoDay();finDay();shortDay();const A=age(),f=flows();
   s.cash+=f.job+f.biz+f.spon+f.rent+f.own-f.exp-f.mort;taxAdd('ord',f.job+f.biz+f.spon+f.rent*.5);taxAdd('lt',f.own); // half of rent is sheltered by landlord deductions; company profits are taxed like dividends
   if(s.debt>0){s.debt=Math.max(0,s.debt*(1+.06/365)-loanPay());if(s.debt<1){s.debt=0;log('Student loans paid off.','good')}}
+  carLoanDay();
   for(const p of s.props)if(p.loan>0){p.loan-=p.pay-p.loan*(p.rate||.055)/365;if(p.loan<=1){p.loan=p.pay=0;log(`Paid off the mortgage on your ${pname(p)}.`,'good')}}
   s.re.idx*=Math.exp((s.eco.pi+.012+.06*s.eco.g-2*(mrate()-.06))/365+housingDrift()+.0035*gauss());
   for(const c of s.cars){const k=CM[c.t];c.v=Math.max(k.price*.08,c.v*Math.exp(-k.dep/365+(k.vol?k.vol/19.1*gauss():0)))}
@@ -1268,8 +1270,10 @@ const ACT={
   psell:u=>{const i=s.props.findIndex(p=>p.uid===+u);if(i<0)return;const p=s.props[i],v=pval(p),gn=v*.97-p.paid;s.cash+=v*.97-p.loan;capGain(s.home===p.uid&&gn>0?Math.max(0,gn-250000*s.eco.P):gn,p.bought);s.props.splice(i,1);if(s.home===p.uid)s.home=null; // the home you live in: first $250K of gain is tax-free
    
     log(`Sold your ${pname(p)} for ${fmt(v)} (${v>=p.paid?'+':''}${fmt(v-p.paid)} on what you paid).`,v>=p.paid?'good':'bad')},
+  cfin:id=>{const k=CM[id];if(!k||!canCarLoan(k.price))return;const L=k.price*.9,r=carRate();s.cash-=k.price*.1;s.cars.push({uid:uid(),t:id,paid:k.price,v:k.dep>0?k.price*.9:k.price,bought:s.day,loan:L,pay:carPay(L,r),rate:r});add('hap',4);log(`Bought ${art(k.n.toLowerCase())} with ${fmt(k.price*.1)} down and a 5-year loan at ${pctA(r)}.`,'good')},
+  kidadopt:()=>{const p=adoptKid();if(p)toast(`Welcome home, ${esc(p.n)}!`)},
   cbuy:id=>{const k=CM[id];if(s.cash<k.price)return;s.cash-=k.price;s.cars.push({uid:uid(),t:id,paid:k.price,v:k.dep>0?k.price*.9:k.price,bought:s.day});add('hap',4);log(`Bought ${art(k.n.toLowerCase())}.`,'good')},
-  csell:u=>{const i=s.cars.findIndex(c=>c.uid===+u);if(i<0)return;const c=s.cars[i];s.cash+=c.v;s.cars.splice(i,1);log(`Sold your ${CM[c.t].n.toLowerCase()} for ${fmt(c.v)}.`,c.v>=c.paid?'good':'bad')},
+  csell:u=>{const i=s.cars.findIndex(c=>c.uid===+u);if(i<0)return;const c=s.cars[i];s.cash+=c.v-(c.loan||0);s.cars.splice(i,1);log(`Sold your ${CM[c.t].n.toLowerCase()} for ${fmt(c.v)}.`,c.v>=c.paid?'good':'bad')},
   xsel:x=>csel=x,
   xbuy:(k,x)=>{const c=coin(k),amt=x==='all'?s.cash:+x;if(!c||c.dead||amt<=0||amt>s.cash)return;const w=s.wallet[k]??={u:0,c:0};w.d=avgDay(w.d,w.u,amt*.99/c.p);w.u+=amt*.99/c.p;w.c+=amt;s.cash-=amt;log(`Bought ${fmt(amt)} of $${k}.`)},
   xsell:(k,x)=>{const c=coin(k),w=s.wallet[k];if(!c||!w)return;const f=x==='all'?1:+x,u=w.u*f,v=u*c.p*.99,cost=w.c*f;w.u-=u;w.c-=cost;s.cash+=v;capGain(v-cost,w.d);if(f===1)delete s.wallet[k];log(`Sold ${fmt(v)} of $${k} (${v>=cost?'+':''}${fmt(v-cost)}).`,v>=cost?'good':'bad')},
@@ -1698,7 +1702,7 @@ people(){
   const pt=partner(),G=[['Partner',['date','spouse']],['Family',['child','parent','sibling']],['Friends',['friend']],['Work',['boss','coworker']],['Exes',['ex']]];
   return `<section class="lede">
     <div><h2 class="headline">People</h2><p class="dek">${pt?`You are ${pt.role==='spouse'?'married to':'seeing'} <b>${esc(pt.n)}</b>.`:'You are single.'} Staying close to people keeps you happy.</p></div>
-    <div class="side"><p class="mut">Meet people</p><div class="row">${['date','out','club'].map(id=>{const a=AM[id];if(a.show&&!a.show())return '';const w=cdLeft(id);return `<button data-a="act" data-x="${id}" ${w||s.cash<a.c?'disabled':''}>${a.n}${a.c?` · ${fmt(a.c)}`:''}${w?` · ${w}d`:''}</button>`}).join('')}</div></div>
+    <div class="side"><p class="mut">Meet people</p><div class="row">${['date','out','club'].map(id=>{const a=AM[id];if(a.show&&!a.show())return '';const w=cdLeft(id);return `<button data-a="act" data-x="${id}" ${w||s.cash<a.c?'disabled':''}>${a.n}${a.c?` · ${fmt(a.c)}`:''}${w?` · ${w}d`:''}</button>`}).join('')}${age()>=25&&age()<56?`<button data-a="kidadopt" ${canAdopt()?'':'disabled'}>Adopt a child · ${fmt(adoptCost())}</button>`:''}</div></div>
   </section>
   ${G.map(([g,rs])=>{const L=s.people.filter(p=>rs.includes(p.role)).sort((a,b)=>b.rel-a.rel);return L.length?`<div class="sec-h"><h2>${g}</h2><span>${L.length}</span></div><div class="plist">${L.map(personRow).join('')}</div>`:''}).join('')||'<p class="mut">Nobody yet. Go out and meet people.</p>'}
   ${howto('Closeness fades a little every day. Call, hang out, give gifts and plan date nights to keep it up. Close relationships lift your mood every day, and neglected ones drag it down. A neglected partner may leave. Propose once you are close and have been together a while, and try for a baby once you are married.')}`;
@@ -1843,13 +1847,13 @@ garage(){
   return `<section class="lede"><div><h2 class="headline">Garage</h2>
     <p class="dek">${s.cars.length?`${s.cars.length===1?'One car':s.cars.length+' cars'} worth <b class="num">${fmt(val)}</b>. Your ${CM[b.t].n.toLowerCase()} is the one that lifts your mood. Every car adds followers and upkeep.`:'No car yet. Most lose value the moment you drive them off the lot. Classics are the exception.'}</p></div></section>
   ${s.cars.length?`<h3>Your cars</h3><div class="scroll"><table class="ledger"><thead><tr><th>Car</th><th class="r">Paid</th><th class="r">Worth now</th><th class="r">Upkeep a day</th><th></th></tr></thead><tbody>
-   ${s.cars.map(c=>`<tr><td><b>${CM[c.t].n}</b><div class="sub">owned ${Math.floor((s.day-c.bought)/365)}y ${(s.day-c.bought)%365}d</div></td><td class="r num">${fmt(c.paid)}</td><td class="r num ${c.v>=c.paid?'up':'dn'}">${fmt(c.v)}</td><td class="r num">${fmt(CM[c.t].up)}</td><td class="act"><button class="bad" data-a="csell" data-x="${c.uid}">Sell for ${fmt(c.v)}</button></td></tr>`).join('')}
+   ${s.cars.map(c=>`<tr><td><b>${CM[c.t].n}</b><div class="sub">owned ${Math.floor((s.day-c.bought)/365)}y ${(s.day-c.bought)%365}d${c.loan>0?` · owes ${fmt(c.loan)} at ${fmt(c.pay)} a day`:''}</div></td><td class="r num">${fmt(c.paid)}</td><td class="r num ${c.v>=c.paid?'up':'dn'}">${fmt(c.v)}</td><td class="r num">${fmt(CM[c.t].up)}</td><td class="act"><button class="bad" data-a="csell" data-x="${c.uid}">Sell for ${fmt(c.v-(c.loan||0))}</button></td></tr>`).join('')}
    </tbody></table></div>`:''}
   <h3>Dealership</h3>
   <div class="scroll"><table class="ledger"><thead><tr><th>Model</th><th class="r">Price</th><th class="r">Value a year</th><th class="r">Upkeep a day</th><th class="r">Mood</th><th class="r">Followers a year</th><th></th></tr></thead><tbody>
-  ${CARS.map(k=>`<tr class="${s.cash>=k.price?'':'dim'}"><td><b>${k.n}</b>${k.vol?' <span class="mut">· collectible</span>':''}</td><td class="r num">${fmt(k.price)}</td><td class="r num ${k.dep<0?'up':'dn'}">${k.dep<0?'+':'−'}${Math.abs(k.dep*100).toFixed(0)}%</td><td class="r num">${fmt(k.up)}</td><td class="r num">+${Math.round(k.hap/.004)}</td><td class="r num">${k.fame?big(k.fame*365):'—'}</td><td class="act"><button class="pri" data-a="cbuy" data-x="${k.id}" ${s.cash<k.price?'disabled':''}>Buy</button></td></tr>`).join('')}
+  ${CARS.map(k=>`<tr class="${s.cash>=k.price?'':'dim'}"><td><b>${k.n}</b>${k.vol?' <span class="mut">· collectible</span>':''}</td><td class="r num">${fmt(k.price)}</td><td class="r num ${k.dep<0?'up':'dn'}">${k.dep<0?'+':'−'}${Math.abs(k.dep*100).toFixed(0)}%</td><td class="r num">${fmt(k.up)}</td><td class="r num">+${Math.round(k.hap/.004)}</td><td class="r num">${k.fame?big(k.fame*365):'—'}</td><td class="act"><button class="pri" data-a="cbuy" data-x="${k.id}" ${s.cash<k.price?'disabled':''}>Buy</button>${k.price<2e6*s.eco.P?`<button data-a="cfin" data-x="${k.id}" ${canCarLoan(k.price)?'':'disabled'}>Finance · ${fmt(k.price*.1)} down</button>`:''}</td></tr>`).join('')}
   </tbody></table></div>
-  ${howto(`Only your best car lifts your mood, but every car adds followers. New cars lose 10% the day you drive them away. Collectibles swing in value and tend to climb.`)}`;
+  ${howto(`Only your best car lifts your mood, but every car adds followers. New cars lose 10% the day you drive them away. Collectibles swing in value and tend to climb. Financing takes 10% down and five years at ${pctA(carRate())} for your credit; lenders want a score of at least 580 and payments under a fifth of your income.`)}`;
 },
 shop(){
   return `<section class="lede"><div><h2 class="headline">Lifestyle</h2>
