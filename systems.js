@@ -494,6 +494,7 @@ const EV7=[
 function polHtml(){const P=s.pol,o=P.cur&&OM[P.cur],c=P.camp&&OM[P.camp.id];
   return `<section class="lede"><div><h2 class="headline">${o?o.n:'Politics'}</h2><p class="dek">${o?`Approval <b class="num">${Math.round(P.app)}%</b>, paid ${fmt(polPay())} a day, ${Math.max(0,P.until-s.day)} days left in this term. Approval follows the economy and how you handle what comes up.`:'Run for office. Campaigns cost money, and your odds depend on your following, your looks and smarts, your record and the economy. Start with city council.'}${c?` <b>Campaigning for ${c.n.toLowerCase()}</b>: election in ${P.camp.end-s.day} days, about ${Math.round(P.camp.odds*100)}% odds.`:''}</p></div>
   ${o?`<div class="side"><p class="mut">Approval</p><span class="figure ${P.app<40?'dn':P.app>=55?'up':''}">${Math.round(P.app)}%</span>${meter(P.app,P.app<40?'low':'')}</div>`:''}</section>
+  ${policyHtml()}
   <div class="sec-h"><h2>Offices</h2></div>
   <div class="scroll"><table class="ledger"><thead><tr><th>Office</th><th>Needs</th><th class="r">Campaign</th><th class="r">Pay a day</th><th class="r">Odds</th><th></th></tr></thead><tbody>
   ${OFFICES.map(x=>{const m=polMiss(x),held=P.held[x.id];return `<tr class="${m.length?'dim':''}"><td><b>${x.n}</b><div class="sub">${x.d}${held?` Served ${held} term${held>1?'s':''}.`:''}</div></td><td>${big(x.fol)} followers${x.need?`, ${OM[x.need].n.toLowerCase()} first`:''}${m.length?`<div class="sub dn">Missing: ${m.join(', ')}</div>`:''}</td><td class="r num">${fmt(polCost(x))}</td><td class="r num">${fmt(x.pay*s.eco.P)}</td><td class="r num">${m.length?'—':Math.round(polOdds(x)*100)+'%'}</td>
@@ -692,6 +693,7 @@ const NEWS=[
  {v:13,t:['New careers: pro athlete, fashion model and actor']},
  {v:14,t:['Five new starting lives: lottery winner, young parent, sporty kid, new arrival and art school dropout','Lifetime stats on the family tree','Nine more life moments, from roommates to a memoir']},
  {v:15,t:['Unemployment benefits after a layoff, and Medicare from 65','A portrait for every character, who ages and shows your mood','Three save slots for separate families (? menu)','Gentle mode: illness never kills you (? menu)','Menu badges for court, illness, campaigns and startup offers']},
+ {v:16,t:['Enact policies once you hold office']},
 ];
 const NEWSV=NEWS.at(-1).v;
 function newsHtml(){const seen=s.seenV||1,L=NEWS.filter(n=>n.v>seen);if(!L.length)return '';s.seenV=NEWSV;
@@ -829,3 +831,19 @@ const uiPay=()=>s.ui&&!s.job&&s.day<s.ui.until?s.ui.v:0;
 function uiDay(){if(s.ui&&(s.job||s.day>=s.ui.until))s.ui=null}
 const medicare=()=>age()>=65;
 
+
+// ---------- policies: what you do in office moves your approval and the economy ----------
+const POLICIES={
+ tax:{n:'Cut taxes',d:'Popular now; the economy gets a small lift',app:[6,10],g:.08,min:'council'},
+ build:{n:'Fund infrastructure',d:'Slow to win people over, but the economy grows for years',app:[1,4],g:.15,min:'mayor'},
+ safe:{n:'Crack down on crime',d:'Divisive: some cheer, some march',app:[-6,12],g:0,min:'council'},
+ stim:{n:'Pass a stimulus',d:'Pulls the economy out of a slump, and pushes up prices',app:[4,8],g:.4,pi:.01,min:'gov'},
+ trade:{n:'Sign a trade deal',d:'Business loves it; some workers do not',app:[-3,6],g:.2,min:'pres'},
+};
+const OFFRANK={council:0,mayor:1,gov:2,pres:3};
+function enact(k){const P=s.pol,X=POLICIES[k];if(!P?.cur||!X||OFFRANK[P.cur]<OFFRANK[X.min]||cdLeft('pol_'+k))return;s.cd['pol_'+k]=s.day+120;
+  const scale=[.2,.5,1,2][OFFRANK[P.cur]],dA=rint(...X.app);P.app=clamp(P.app+dA,0,100);s.eco.g=clamp(s.eco.g+X.g*scale,-1.2,.8);if(X.pi)s.eco.pi=clamp(s.eco.pi+X.pi*scale,-.02,.15);
+  mile(`As ${OM[P.cur].n.toLowerCase()}, ${X.n.toLowerCase().replace(/^./,c=>c)}.`);return `${X.n}: approval ${dA>=0?'+':''}${dA}.${X.g?' The economy picks up.':''}`}
+function policyHtml(){const P=s.pol;if(!P?.cur)return '';
+  return `<div class="sec-h"><h2>Policies</h2><span>each one can be used every 120 days</span></div>
+  <div class="acards">${Object.entries(POLICIES).filter(([,X])=>OFFRANK[P.cur]>=OFFRANK[X.min]).map(([k,X])=>{const w=cdLeft('pol_'+k);return `<button class="acard" data-a="enact" data-x="${k}" ${w?'disabled':''}><b>${X.n}</b><span>${X.d}.</span><small>${w?`Again in ${w}d`:'Enact'}</small></button>`}).join('')}</div>`}
