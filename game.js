@@ -545,7 +545,7 @@ function petsDay(){for(const p of [...s.pets])if(s.day>=p.dies){s.pets.splice(s.
   if(s.pets.length&&R()<s.pets.length*.4/365){const v=Math.round(rint(200,2500)*s.eco.P);s.cash-=v;log(`A vet bill for ${esc(pick(s.pets).n)}: ${fmt(v)}.`,'bad')}}
 
 // ---------- the daily tick for all of the above ----------
-const lifeCost=()=>insPrem()+medDaily()+kidsCost()+petSum('up')*s.eco.P-Math.min(.2,hobSk('cook')/500)*(15+kidsHome()*47)*s.eco.P;
+const lifeCost=()=>careCost()+insPrem()+medDaily()+kidsCost()+petSum('up')*s.eco.P-Math.min(.2,hobSk('cook')/500)*(15+kidsHome()*47)*s.eco.P;
 function lifeDay(A){
   if(jailed())add('hap',-.25);else if(s.legal.jail&&s.legal.jail===s.day){log('Released from jail.','good');toast('Released from jail')}
   for(const id in s.hob){const h=s.hob[id];if(s.day-h.last>30)h.sk=Math.max(0,h.sk-.03)}
@@ -844,6 +844,38 @@ const EV6=[
  ['Plan something special',()=>{const p=partner();if(!p)return 'The moment has passed.';const v=Math.round(clamp(netWorth()*.002,200,5e4));s.cash-=v;prel(p,p.pt==='romantic'?16:10);add('hap',5);return `${fmt(v)} well spent. ${p.n} is glowing.`}],
  ['Oops, forgot',()=>{const p=partner();if(p)prel(p,p.pt==='romantic'?-18:-10);return 'The silence at dinner is deafening.'}]]},
 ];
+
+// ---------- cities: where you live sets your pay, your costs, house prices and state income tax ----------
+const CITIES={
+ suburb:{n:'The suburbs',d:'Where you grew up. Average pay, average prices',pay:1,cost:1,home:1,tax:.045,hap:0},
+ metro:{n:'Big city',d:'Top salaries, sky-high rents and a state income tax',pay:1.3,cost:1.45,home:1.8,tax:.065,hap:-.005},
+ coast:{n:'Coastal city',d:'Beautiful, expensive, great hospitals, and the highest state tax',pay:1.2,cost:1.35,home:1.6,tax:.08,hap:.02},
+ sun:{n:'Sunbelt city',d:'No state income tax, warm winters, and a boom in jobs',pay:1.05,cost:1.05,home:1.1,tax:0,hap:.008},
+ town:{n:'Small town',d:'Cheap living and quiet streets, but lower pay',pay:.8,cost:.72,home:.55,tax:.04,hap:.01},
+};
+const city=()=>CITIES[s.city||'suburb'];
+const cityTax=()=>city().tax;
+const moveCost=()=>Math.round((5000+s.props.length*0+kids().filter(k=>ageOf(k)<18).length*1500)*s.eco.P*(1+s.cars.length*.1));
+function moveTo(id){const C=CITIES[id];if(!C||id===(s.city||'suburb')||jailed())return;const c=moveCost();if(s.cash<c)return;s.cash-=c;
+  const old=city().n,lost=[];if(s.job&&!(R()<.3)){lost.push(`left your job as ${jobTitle()}`);fire()}
+  const h=homeP();if(h){s.home=null;h.from=s.day+rint(10,30);lost.push(`put your ${pname(h)} up for rent`)}
+  for(const p of s.people)if(p.role==='friend'||p.role==='parent'||p.role==='sibling')prel(p,p.role==='friend'?-15:-6);
+  s.city=id;relist();add('hap',-4);
+  log(`Moved from ${old.toLowerCase()} to ${C.n.toLowerCase()} for ${fmt(c)}.${lost.length?` You ${lost.join(' and ')}.`:''}${s.job?' Your employer let you transfer.':''}`,'good');return c}
+function cityHtml(){const cur=s.city||'suburb',c=moveCost();
+  return `<div class="sec-h"><h2>Where you live</h2><span>${city().n}</span></div>
+  <div class="acards">${Object.entries(CITIES).map(([k,C])=>`<button class="acard${k===cur?' on':''}" data-a="move" data-x="${k}" ${k===cur||s.cash<c?'disabled':''} aria-pressed="${k===cur}"><b>${C.n}</b><span>${C.d}. Pay ${C.pay>=1?'+':''}${Math.round((C.pay-1)*100)}%, living costs ${C.cost>=1?'+':''}${Math.round((C.cost-1)*100)}%, homes ${C.home>=1?'+':''}${Math.round((C.home-1)*100)}%, state tax ${(C.tax*100).toFixed(1)}%.</span><small>${k===cur?'You live here':`Move for ${fmt(c)}`}</small></button>`).join('')}</div>
+  <p class="mut" style="margin-top:var(--space-2xs)">Moving usually means a new job (about one employer in three lets you transfer), your home goes up for rent, and friends drift a little. Properties you own stay where they are.</p>`}
+
+// ---------- old age: Social Security from 67 for anyone who worked, and care when health fails ----------
+const SS_AGE=67;
+function ssBenefit(){const yrs=(s.wage||0)>0?Math.min(35,xpT()):0,avg=(s.wage||0)/Math.max(35*365,1);return Math.round(Math.min(130*s.eco.P,avg*.42+(yrs>=10?10*s.eco.P:0)))} // about 40% of your average pay over 35 years, capped
+const careCost=()=>age()>=75&&s.st.hea<35?160*s.eco.P:0;
+function oldDay(A){
+  if(s.job)s.wage=(s.wage||0)+jobPay();
+  if(A>=SS_AGE&&!s.ss&&(s.wage||0)>0){s.ss=ssBenefit();s.pension=(s.pension||0)+s.ss;log(`Social Security starts: ${fmt(s.ss)} a day for life.`,'good');toast('Social Security starts')}
+  if(careCost()&&!s.care){s.care=1;log(`You need help at home now. Care costs ${fmt(careCost())} a day.`,'bad')}else if(!careCost())s.care=0;
+}
 EV.push(...EV2,...EV3,...EV4,...EV5,...EV6);
 const EVM=EM(EV.map(e=>[e.id,e]));
 
@@ -913,11 +945,12 @@ function taxParts(T=s.tax){ // capital losses net against gains, and up to $3,00
 function taxDue(T=s.tax){const{ord,lt}=taxParts(T);return bracketTax(ord,BRK)+bracketTax(lt,LTB,ord)}
 function taxAdd(kind,amt){ // book income (or a deduction or loss, if negative) and settle the tax difference now
   if(!amt||!s.tax)return;const T=s.tax;taxRoll();
-  const before=taxDue();T[kind]+=amt;const d=taxDue()-before;s.cash-=d;T.paid+=d}
+  const before=taxDue(),b0=stateBase();T[kind]+=amt;const d=taxDue()-before,st=(stateBase()-b0)*cityTax();s.cash-=d+st;T.paid+=d+st;T.state=(T.state||0)+st} // state tax is flat on income above the deduction, booked as you earn at the rate where you live now
+const stateBase=(T=s.tax)=>{const{ord,lt}=taxParts(T);return Math.max(0,ord+lt-BRK[0][0]*s.eco.P)};
 function taxRoll(){const T=s.tax,y=dateOf(s.day).y; // close last year's books when a new tax year starts
   if(T.y!==y){if(T.y){const inc=taxParts(T);T.hist[T.y]={inc:inc.ord+inc.lt,tax:T.paid};if(T.paid>1)log(`Tax year ${T.y} closed: ${fmt(T.paid)} on ${fmt(inc.ord+inc.lt)} of taxable income.`)}Object.assign(T,{y,ord:0,st:0,lt:0,gam:0,paid:0,don:0})}}
 function capGain(g,since){taxAdd(since!=null&&s.day-since<=365?'st':'lt',g)} // held a year or less: taxed like income
-const margRate=()=>{const{ord}=taxParts(),P=s.eco.P;for(const[hi,r]of BRK)if(ord<hi*P)return r;return .37};
+const margRate=()=>{const{ord}=taxParts(),P=s.eco.P;for(const[hi,r]of BRK)if(ord<hi*P)return r+cityTax();return .37+cityTax()};
 const avgDay=(d0,n0,n)=>d0==null?s.day:(d0*n0+s.day*n)/(n0+n); // the average purchase day of a holding, for the holding period
 
 // ---------- state ----------
@@ -927,7 +960,7 @@ let s=null,tab='dash',sel='NOVA',csel='SATS',speed=1,holding=false,wiped=false,h
 const age=()=>s.startAge+s.day/365;
 const add=(k,v)=>s.st[k]=clamp(s.st[k]+((k==='hap'||k==='sma')&&v>0?v*clamp((100-s.st[k])/(k==='hap'?50:70),.05,1)**2:v),0,100); // gains in happiness and smarts shrink as they climb
 const job=()=>s.job&&JM[s.job];
-const jobPay=()=>job().pay*(1+.15*s.rank)*(1+(s.raise||0));
+const jobPay=()=>job().pay*(1+.15*s.rank)*(1+(s.raise||0))*city().pay;
 const jobTitle=()=>RANKS[Math.min(s.rank,5)]+job().n;
 const promoNeed=()=>Math.round(55+s.rank*5-bossAdj()),topRank=()=>s.rank>=5;
 const fire=()=>{s.job=null;s.rank=0;s.jobDays=0;s.raise=0};
@@ -978,7 +1011,8 @@ const sponsor=()=>s.fol<1000?0:s.fol*.0015*(.5+s.st.loo/100);
 const MN=30*365,mpay=(L,rate=mrate())=>L*(rate/365)/(1-(1+rate/365)**-MN);
 const uid=()=>s.nid=(s.nid||0)+1;
 const pval=p=>PM[p.t].base*p.m*s.re.idx*cmul(p);
-const pname=p=>`${PM[p.t].n}, ${p.loc}`;
+const pname=p=>`${PM[p.t].n}, ${p.loc}${p.city&&p.city!==(s.city||'suburb')?` (${CITIES[p.city].n.replace(/^The /,'')})`:''}`;
+const here=p=>(p.city||'suburb')===(s.city||'suburb');
 const P=u=>s.props.find(p=>p.uid===u);
 const homeP=()=>s.home&&P(s.home);
 const renting=p=>p.uid!==s.home&&s.day>=p.from&&!p.reno;
@@ -986,10 +1020,10 @@ const rentOf=p=>renting(p)?pval(p)*PM[p.t].yld/365:0;
 const carSum=k=>s.cars.reduce((t,c)=>t+CM[c.t][k],0);
 const bestCar=()=>s.cars.reduce((m,c)=>!m||CM[c.t].hap>CM[m.t].hap?c:m,null);
 const upkeep=()=>shopSum('up')+carSum('up')+s.props.reduce((t,p)=>t+pval(p)*.02/365,0); // 1% upkeep plus 1% property tax
-const salaryNow=()=>(s.job?jobPay():0)+(s.pension||0),rentNow=()=>homeP()?0:clamp(salaryNow()*.25,20*s.eco.P,90*s.eco.P); // renters spend about a quarter of their pay on housing
-const expenses=()=>rentNow()+(15+kidsHome()*47+(partner()?.role==='spouse'?20:0))*s.eco.P+salaryNow()*.15+upkeep()+lifeCost(); // lifestyle grows with pay
+const salaryNow=()=>(s.job?jobPay():0)+(s.pension||0),rentNow=()=>homeP()?0:clamp(salaryNow()*.25,20*s.eco.P*city().cost,90*s.eco.P*city().cost); // renters spend about a quarter of their pay on housing
+const expenses=()=>rentNow()+(15+kidsHome()*47+(partner()?.role==='spouse'?20:0))*s.eco.P*city().cost+salaryNow()*.15+upkeep()+lifeCost(); // lifestyle grows with pay
 const canBorrow=L=>{const f=flows();return mpay(L)+f.mort<=(f.job+f.biz+f.rent)*.4};
-function listing(){const nw=Math.max(netWorth(),60000),ok=PROPS.filter(p=>p.base<=nw*4),[loc,m]=pick(LOCS);return {uid:uid(),t:pick(ok.slice(-4)).id,loc,m:m*(.92+R()*.16),cond:R()<.2?rint(25,55):rint(85,100)}}
+function listing(){const nw=Math.max(netWorth(),60000),ok=PROPS.filter(p=>p.base<=nw*4),[loc,m]=pick(LOCS);return {uid:uid(),t:pick(ok.slice(-4)).id,loc,city:s.city||'suburb',m:m*(.92+R()*.16)*city().home,cond:R()<.2?rint(25,55):rint(85,100)}}
 function relist(){s.re.list=Array.from({length:6},listing);s.re.next=s.day+30}
 function upgrade(){ // bring older saves up to date
   if(!s.cx){s.wallet={};initCrypto();const m=s.port.MOON;if(m){s.wallet.MOON={u:m.sh,c:m.cost};delete s.port.MOON}delete s.px.MOON}
@@ -1073,7 +1107,7 @@ function newGame(name,bg,h={}){
      job:b.job||null,jobDays:0,rank:0,biz:{},port:{},px:{},mkt:{bull:true,h:MVOL.bull**2/YR,eps:0,cb:0,div:1,ic:1,ih:1,rc:1e13},orders:[],fol:b.fol||0,feed:[],own:{},people:[],degs:b.edu?[{p:'dip',sc:'cc',mj:'Computer science',hon:false}]:[],debt:0,xp:{},perf:50,raise:0,pension:0,wallet:{},cz:{chip:100,net:0,played:0,rh:[],ban:0},props:[],cars:[],home:null,re:{idx:1,list:[],next:0},cd:{},inbox:[],later:[],log:[],fl:flNew(),su:null,pets:[],conds:[],ins:'basic',legal:{rec:[],cases:[],jail:0},hob:{},
      gen:h.gen||1,boost:0,lastPost:0,dead:0,lastSeen:Date.now(),goals:{...h.goals},min:480,eco:h.eco?{...h.eco}:ecoNew(),fin:finNew(),tax:taxNew(),mloan:0,shorts:{},opts:[]};applyPrices();
   s.legacy=1+.25*(s.gen-1);
-  s.tr=h.tr||rollTraits().slice(0,1);s.tree=h.tree||[];s.fdn=h.fdn||0;
+  s.tr=h.tr||rollTraits().slice(0,1);s.tree=h.tree||[];s.fdn=h.fdn||0;s.city=h.city||'suburb';
   if(h.ks){for(const k in h.ks)s.st[k]=Math.round(clamp(h.ks[k],0,100));s.cash+=h.fund||0;s.debt=h.loan||0;if(h.degs){s.degs=h.degs;s.edu=h.edu}if(h.job){s.job=h.job;s.xp=h.xp||{}}if(h.study)s.study=h.study} // the heir is the person their childhood made
   else if(h.gen){s.st.sma=Math.round(s.st.sma*.7+h.sma*.3);s.st.loo=Math.round(s.st.loo*.7+h.loo*.3)} // a little of the family runs in the blood
   if(h.pets)s.pets=h.pets.map(p=>({...p,uid:uid()}));
@@ -1109,7 +1143,7 @@ function day(live){
     if(st.left<=0){if(st.g<30){st.left=60;st.g=45;log(`Failed the final exams for ${degName(st)}. One more term.`,'bad');toast('Failed the finals. One more term.')}else graduate()}}
   const J=job();
   // stats drift toward a baseline, so an idle life is dull but survivable; choices push you above or below it
-  add('hap',(50+(trait('sunny')?6:0)-(trait('anxious')?6:0)-s.st.hap)*.004-(J?J.str*.02:0)-(s.study&&s.study.sc!=='online'?.03:0)+peopleHap()+mateHap()-(s.job&&boss()?.bt==='toxic'?.04:0)+petSum('hap')+shopSum('hap')+(PM[homeP()?.t]?.hap||0)+(bestCar()?CM[bestCar().t].hap:0));
+  add('hap',(50+(trait('sunny')?6:0)-(trait('anxious')?6:0)-s.st.hap)*.004-(J?J.str*.02:0)-(s.study&&s.study.sc!=='online'?.03:0)+peopleHap()+mateHap()+city().hap-(s.job&&boss()?.bt==='toxic'?.04:0)+petSum('hap')+shopSum('hap')+(PM[homeP()?.t]?.hap||0)+(bestCar()?CM[bestCar().t].hap:0));
   add('hea',(85+(trait('sporty')?5:0)-Math.max(0,A-35)*1.2-s.st.hea)*.003+(s.st.hap>70?.01:0)-(s.st.hap<15?.04:0));
   if(A>30)add('loo',-.004);
   s.fol+=shopSum('fame')+carSum('fame')+s.props.reduce((t,p)=>t+(PM[p.t].fame||0),0);if(s.day-s.lastPost>30)s.fol*=.999;
@@ -1120,7 +1154,7 @@ function day(live){
   s.later=s.later.filter(p=>p.d>s.day||(runLater(p),false));
   s.inbox=s.inbox.filter(it=>{if(s.day-it.d<30)return true;const e=EVM[it.id];if(!e.c||e.c(s))log(`<b>${e.t}</b> ${e.ch[e.def][1](s,it.a)}<span class="auto">decided for you</span>`);return false});
   if(s.inbox.length<3&&R()<1/28)newEvent();
-  flDay();if(s.su)suDay();propDay();worldDay();fdnDay();
+  flDay();if(s.su)suDay();propDay();worldDay();fdnDay();oldDay(A);
   lifeDay(A);if(s.dead)return;
   const pd=s.st.hea<=0?1:A>60?Math.min(.5,((A-60)/30)**3*3)/365:0;
   if(R()<pd)die();else checkGoals();
@@ -1477,7 +1511,7 @@ const goalAmt=(g,v)=>g.m?fmt(v):g.id==='old'||g.id==='peak'||g.id==='gen3'?Math.
 
 // ---------- the heir: one of your kids, or a relative if you had none ----------
 function heirOf(k){
-  const w=Math.max(0,netWorth()),tax=estateTax(w),h={tree:s.tree,fdn:s.fdn||0,inherit:(w-tax)*(k?1:.5),tax,gen:s.gen+1,last:s.name,goals:s.goals,sma:s.st.sma,loo:s.st.loo,eco:s.eco};
+  const w=Math.max(0,netWorth()),tax=estateTax(w),h={tree:s.tree,fdn:s.fdn||0,city:s.city,inherit:(w-tax)*(k?1:.5),tax,gen:s.gen+1,last:s.name,goals:s.goals,sma:s.st.sma,loo:s.st.loo,eco:s.eco};
   if(!k)return h;
   const skip=Math.max(0,18*365-(s.day-k.b)),carry=p=>({n:p.n,b:p.b-s.day-skip,rel:(p.rel+k.rel)/2});
   const K=k.k,x={};if(K){const age18=k.b+18*365;if(!K.path&&s.day+skip>=age18){const d=s.day;s.day+=skip;kidLaunch(k,1);s.day=d}
@@ -1516,6 +1550,7 @@ const dur=sec=>sec<3600?`${Math.round(sec/60)} minutes`:sec<172800?`${Math.floor
 
 // ---------- actions ----------
 const ACT={
+  move:k=>{const c=moveTo(k);if(c)toast(`Moved to ${CITIES[k].n.toLowerCase()}`)},
   reno:u=>{const p=P(+u);if(!p||p.reno)return;const c=renoCost(p);if(s.cash<c)return;s.cash-=c;p.reno=s.day+60;toast(`Renovation started: ${fmt(c)}, about 60 days.`)},
   give:(v,to)=>{v=+v;if(!(v>0)||s.cash<v)return;const ded=donate(v,to);log(to==='fdn'?`Put ${fmt(v)} into the family foundation.`:`Donated ${fmt(v)} to charity.`,'good');toast(`${to==='fdn'?'Foundation':'Donation'}: ${fmt(v)}${ded?`, ${fmt(ded)} tax-deductible`:''}`)},
   flt:id=>{const F=s.fl,i=F.offers.findIndex(o=>o.id===+id);if(i<0||F.jobs.length>=flCap())return;const o=F.offers.splice(i,1)[0];F.jobs.push({...o,left:o.days});toast(`Contract started: ${o.n}`)},
@@ -1638,7 +1673,7 @@ const ACT={
     s.cash-=mort?v*.2:v;const p={...l,paid:v,bought:s.day,loan:mort?v*.8:0,pay:mort?mpay(v*.8):0,rate:mort?mrate():0,from:s.day+rint(5,20)};
     s.props.push(p);s.re.list.splice(i,1,listing());if(!homeP()&&!PM[p.t].biz)s.home=p.uid;add('hap',5);
     log(`Bought ${art(pname(p))} for ${fmt(v)}${mort?' with a mortgage':''}${s.home===p.uid?', and moved in':''}.`,'good')},
-  live:u=>{const p=P(+u);if(!p||PM[p.t].biz)return;const o=homeP();if(o)o.from=s.day+rint(5,20);s.home=p.uid;log(`Moved into your ${pname(p)}.`)},
+  live:u=>{const p=P(+u);if(!p||PM[p.t].biz||!here(p))return;const o=homeP();if(o)o.from=s.day+rint(5,20);s.home=p.uid;log(`Moved into your ${pname(p)}.`)},
   moveout:u=>{const p=P(+u);if(!p||s.home!==p.uid)return;s.home=null;p.from=s.day+rint(5,20);log(`Moved out of your ${pname(p)}. It goes up for rent.`)},
   payoff:u=>{const p=P(+u);if(!p?.loan||s.cash<p.loan)return;s.cash-=p.loan;p.loan=p.pay=0;log(`Paid off the mortgage on your ${pname(p)}.`,'good')},
   psell:u=>{const i=s.props.findIndex(p=>p.uid===+u);if(i<0)return;const p=s.props[i],v=pval(p),gn=v*.97-p.paid;s.cash+=v*.97-p.loan;capGain(s.home===p.uid&&gn>0?Math.max(0,gn-250000*s.eco.P):gn,p.bought);s.props.splice(i,1);if(s.home===p.uid)s.home=null; // the home you live in: first $250K of gain is tax-free
@@ -1768,7 +1803,7 @@ const sign=(n,cls=true)=>`<span class="num${cls?n>=0?' up':' dn':''}">${n>=0?'+'
 function lifeLine(){
   const pt=partner(),kn=kids().length,b=[s.job?`works as ${art(jobTitle())}`:s.pension?'is retired':'is between jobs',pt?`${pt.role==='spouse'?'is married to':'is seeing'} ${esc(pt.n)}`:'is single'];
   if(kn)b.push(`has ${kn===1?'one kid':kn+' kids'}`);
-  b.push(homeP()?`lives in ${art(PM[homeP().t].n.toLowerCase())} in ${homeP().loc}`:'rents a room');
+  b.push(homeP()?`lives in ${art(PM[homeP().t].n.toLowerCase())} in ${homeP().loc}`:'rents a room');if((s.city||'suburb')!=='suburb')b[b.length-1]+=` in ${city().n.toLowerCase().replace(/^the /,'the ')}`;
   if(bestCar())b.push(`drives ${art(CM[bestCar().t].n.toLowerCase())}`);
   if(s.pets.length)b.push(s.pets.length===1?`has ${art(PTM[s.pets[0].t].n.toLowerCase().replace(' tank',''))} called ${esc(s.pets[0].n)}`:`has ${s.pets.length} pets`);
   if(jailed())b.push(`is in jail for ${s.legal.jail-s.day} more day${s.legal.jail-s.day>1?'s':''}`);
@@ -2173,10 +2208,11 @@ home(){
   return `<section class="lede"><div><h2 class="headline">Property</h2>
     <p class="dek">${s.props.length?`You own ${s.props.length===1?'one property':s.props.length+' properties'} worth <b class="num">${fmt(val)}</b>${debt?`, with <b class="num">${fmt(debt)}</b> still owed to the bank`:''}. Tenants pay you <b class="num">${fmt(f.rent)}</b> a day.`:`You own nothing yet, so rent costs you ${fmt(rentNow())} a day. A small flat on a mortgage can cost less than that.`}</p></div>
     <div class="side"><p class="mut"><span class="figure ${idx>=1?'up':'dn'}">${pct(idx-1)}</span><br>house prices this lifetime</p></div></section>
+  ${cityHtml()}
   ${s.props.length?`<h3>Your properties</h3><div class="scroll"><table class="ledger"><thead><tr><th>Property</th><th class="r">Paid</th><th class="r">Worth now</th><th class="r">Owed</th><th class="r">Rent a day</th><th>Condition</th><th>Status</th><th></th></tr></thead><tbody>
    ${s.props.map(p=>{const v=pval(p),k=PM[p.t],home=s.home===p.uid;return `<tr><td><b>${pname(p)}</b></td><td class="r num">${fmt(p.paid)}</td><td class="r num ${v>=p.paid?'up':'dn'}">${fmt(v)}</td><td class="r num">${p.loan?fmt(p.loan):'—'}</td><td class="r num">${home?'—':fmt(v*k.yld/365)}</td>
     <td class="${(p.cond??100)<60?'dn':''}">${condWord(p.cond)}${p.rv?' · renovated':''}</td><td>${p.reno?`Renovating, ${p.reno-s.day}d`:home?'Your home':s.day<p.from?`Finding a tenant, ${p.from-s.day}d`:'Rented out'}</td>
-    <td class="act">${!p.reno&&((p.cond??100)<95||!p.rv)?`<button data-a="reno" data-x="${p.uid}" ${s.cash<renoCost(p)?'disabled':''}>${(p.cond??100)<85?'Renovate':'Upgrade'} · ${fmt(renoCost(p))}</button>`:''}${home?`<button data-a="moveout" data-x="${p.uid}">Move out</button>`:k.biz?'':`<button data-a="live" data-x="${p.uid}">Live here</button>`}${p.loan?`<button data-a="payoff" data-x="${p.uid}" ${s.cash<p.loan?'disabled':''}>Pay off</button>`:''}<button class="bad" data-a="psell" data-x="${p.uid}">Sell for ${fmt(v*.97-p.loan)}</button></td></tr>`}).join('')}
+    <td class="act">${!p.reno&&((p.cond??100)<95||!p.rv)?`<button data-a="reno" data-x="${p.uid}" ${s.cash<renoCost(p)?'disabled':''}>${(p.cond??100)<85?'Renovate':'Upgrade'} · ${fmt(renoCost(p))}</button>`:''}${home?`<button data-a="moveout" data-x="${p.uid}">Move out</button>`:k.biz||!here(p)?'':`<button data-a="live" data-x="${p.uid}">Live here</button>`}${p.loan?`<button data-a="payoff" data-x="${p.uid}" ${s.cash<p.loan?'disabled':''}>Pay off</button>`:''}<button class="bad" data-a="psell" data-x="${p.uid}">Sell for ${fmt(v*.97-p.loan)}</button></td></tr>`}).join('')}
    </tbody></table></div>`:''}
   <h3>For sale</h3>
   <div class="scroll"><table class="ledger"><thead><tr><th>Listing</th><th class="r">Price</th><th class="r">Rent a day</th><th class="r">Mortgage a day</th><th></th></tr></thead><tbody>
@@ -2491,7 +2527,7 @@ function selfTest(){ // open with ?test=1 — never touches your real save
   ACT.bnd('10','100000');const bk_bd0=bk_F.bonds[0];ok(Math.abs(bondVal(bk_bd0)-1e5)<1,'a new bond is worth its price');s.eco.lr+=.02;ok(bondVal(bk_bd0)<9e4,'rising rates cut a long bond\'s price');const bk_cbond=s.cash;ACT.bndsell('0');ok(!bk_F.bonds.length&&s.cash-bk_cbond<9e4,'sell a bond early at the market price');
   s.job='admin';ACT.irapct('.06');const bk_ira0=bk_F.ira,bk_c0=s.cash;finDay();ok(bk_F.ira>bk_ira0&&Math.abs((bk_c0-s.cash)-jobPay()*.06)<1e-6&&Math.abs(iraVal()-jobPay()*.09)<1e-6,'retirement contributions with a 50% match');
   const bk_iv=iraVal(),bk_c1=s.cash;ACT.iraw('all');ok(bk_F.ira<1e-12&&Math.abs(s.cash-bk_c1-bk_iv*.9)<1e-6,'early withdrawal pays a 10% penalty');tab='bank';ok(VIEWS.bank().includes('Retirement account'),'bank screen');
-  newGame('Tax','street');const tx=(o)=>taxDue({...taxNew(),...o});ok(Math.abs(tx({ord:5e4})-4016)<.01,'income tax brackets');ok(Math.abs(tx({ord:5e4,lt:1e5})-19016)<.01,'long-term gains stack on income at 15%');
+  newGame('Tax','street');s.city='sun';const tx=(o)=>taxDue({...taxNew(),...o});ok(Math.abs(tx({ord:5e4})-4016)<.01,'income tax brackets');ok(Math.abs(tx({ord:5e4,lt:1e5})-19016)<.01,'long-term gains stack on income at 15%');
   ok(Math.abs(tx({ord:5e4})-tx({ord:5e4,st:-1e4})-360)<.01&&tx({ord:5e4,st:2e4,lt:-2e4})===tx({ord:5e4}),'losses offset gains, then $3,000 of income');
   s.cash=1e6;taxAdd('ord',5e4);ok(Math.abs(s.cash-(1e6-4016))<.01&&Math.abs(s.tax.paid-4016)<.01,'tax is taken as you earn');
   const tx0=s.tax.paid;capGain(1e4,s.day-100);ok(Math.abs(s.tax.st-1e4)<1e-9&&Math.abs(s.tax.paid-tx0-1200)<.01,'short-term gains taxed like income');capGain(1e4,s.day-400);ok(Math.abs(s.tax.lt-1e4)<1e-9,'long-term gains after a year');
@@ -2499,6 +2535,7 @@ function selfTest(){ // open with ?test=1 — never touches your real save
   const ty0=dateOf(s.day).y,tpaid=s.tax.paid;s.day+=365;taxAdd('ord',1);ok(s.tax.hist[ty0].tax===tpaid&&s.tax.paid===0,'a new tax year starts');
   s.cash=2e5;relist();s.re.list[0]={...s.re.list[0],t:'studio'};ACT.pbuy(s.re.list[0].uid);const hp2=s.props.at(-1);ACT.live(hp2.uid);hp2.paid=pval(hp2)*.5;const tp0=s.tax.paid;ACT.psell(hp2.uid);ok(s.tax.paid===tp0,'no tax on a home sold for under $250K of gain');
   tab='life';ok(VIEWS.life().includes('Taxes this year'),'tax summary');
+  newGame('State','street');s.city='coast';s.cash=1e6;taxAdd('ord',5e4);ok(Math.abs((1e6-s.cash)-(4016+(5e4-14600*s.eco.P)*.08))<.01,'state income tax where you live');capGain(-2e4,s.day-10);s.cash=1e6;newGame('State2','street');s.cash=1e6;capGain(-1e4,s.day-10);ok(s.cash===1e6,'no state refund on a loss with no income');
   newGame('Trail','street');s.day=nextTrading(s.day);s.min=600;s.cash=1e6;const tq=s.px.APEL;ACT.buy('APEL',10);ACT.btrail('stock:APEL','.1');const tr0=s.port.APEL.hw;
   shock('APEL',.2,true);brackets();ok(s.port.APEL&&s.port.APEL.hw>tr0*1.15,'a trailing stop follows the price up');shock('APEL',-.12,true);brackets();ok(!s.port.APEL&&s.log[0].t.startsWith('Stop loss'),'and sells on the way down');
   ACT.buy('APEL',10);ACT.btrail('stock:APEL','.1');const tw=s.port.APEL.hw;tq.op=tw*1.2;tq.hi=tw*1.3;tq.lo=tw*1.2;brackets(1);ok(s.port.APEL&&s.port.APEL.hw===tw*1.3,'fast simulation raises the trail on the day\'s high');tq.op=tw*1.25;tq.hi=tw*1.26;tq.lo=tw*1.1;brackets(1);ok(!s.port.APEL,'and sells when the low breaks it');
@@ -2605,6 +2642,10 @@ function selfTest(){ // open with ?test=1 — never touches your real save
   for(const e of EV6){if(!partner())married(meet('date',60));if(!e.c||e.c(s))for(const c of e.ch){const a=e.a?e.a(s):0;e.d(s,a);ok(typeof c[1](s,a)==='string','event '+e.id)}}
   s.cash=1000;s.fin.sav=5000;s.fin.fu=100;s.fin.fc=100*fundPx();s.fin.fd=s.day-400;const lv_fu=s.fin.fu;payOut(8000);ok(Math.abs(s.cash)<1e-6&&s.fin.sav===0&&Math.abs((lv_fu-s.fin.fu)*fundPx()-2000)<1e-6,'big bills draw on savings, then the fund');
   checkGoals();s=lv_s0;
+  const cy_s0=s;newGame('City','nerd');const cy_p=jobPay();s.city='metro';ok(Math.abs(jobPay()-cy_p*1.3)<1e-6,'big-city pay');s.city='suburb';
+  s.cash=1e5;ACT.move('town');ok(s.city==='town'&&s.cash<1e5&&s.re.list.every(l=>l.city==='town'),'moving to a small town');tab='home';ok(VIEWS.home().includes('Where you live'),'city picker');
+  s.wage=35*365*200*s.eco.P;s.startAge=SS_AGE;oldDay(age());ok(s.ss>0&&s.pension>=s.ss,'Social Security at 67');s.startAge=80;s.st.hea=20;ok(careCost()>0&&lifeCost()>=careCost(),'care costs in old age');
+  ok(heirOf(null).city==='town','the heir stays in town');s=cy_s0;
   tab='dash';ok(VIEWS.dash().includes('Goals'),'goals on home');goalsModal();
   const sp2=meet('spouse',70),k1=addChild(),k2=addChild(),k3=addChild();k1.b=s.day-40*365;k2.b=s.day-30*365;k3.b=s.day-5*365;k1.rel=90;
   deathModal();ok($('#mbox').innerHTML.includes('Continue as '+k1.n),'death lists the kids');ACT.heir(String(k1.uid));
