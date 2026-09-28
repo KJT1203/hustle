@@ -428,7 +428,7 @@ const EV=[
  ['Take it to a shelter',()=>'It will find a good home.']]},
 ];
 
-EV.push(...EV2,...EV3,...EV4,...EV5,...EV6,...EV7,...EV8,...EV9,...EV10);
+EV.push(...EV2,...EV3,...EV4,...EV5,...EV6,...EV7,...EV8,...EV9,...EV10,...EV11);
 const EVM=EM(EV.map(e=>[e.id,e]));
 
 // ---------- businesses: realistic returns, and profits that ride the economy ----------
@@ -682,7 +682,7 @@ function day(live){
   s.cash+=f.job+f.biz+f.spon+f.rent+f.own-f.exp-f.mort;taxAdd('ord',f.job+f.biz+f.spon+f.rent*.5);taxAdd('lt',f.own); // half of rent is sheltered by landlord deductions; company profits are taxed like dividends
   if(s.debt>0){s.debt=Math.max(0,s.debt*(1+.06/365)-loanPay());if(s.debt<1){s.debt=0;log('Student loans paid off.','good')}}
   for(const p of s.props)if(p.loan>0){p.loan-=p.pay-p.loan*(p.rate||.055)/365;if(p.loan<=1){p.loan=p.pay=0;log(`Paid off the mortgage on your ${pname(p)}.`,'good')}}
-  s.re.idx*=Math.exp((s.eco.pi+.012+.06*s.eco.g-2*(mrate()-.06))/365+.0035*gauss());
+  s.re.idx*=Math.exp((s.eco.pi+.012+.06*s.eco.g-2*(mrate()-.06))/365+housingDrift()+.0035*gauss());
   for(const c of s.cars){const k=CM[c.t];c.v=Math.max(k.price*.08,c.v*Math.exp(-k.dep/365+(k.vol?k.vol/19.1*gauss():0)))}
   if(s.day>=s.re.next)relist();
   for(const b of BIZ){const o=s.biz[b.id];if(!o?.n)continue;closeCheck(b,o);if(o.n&&!o.mgr){const g=bizInc(b,o);if(g<0){s.cash+=g;taxAdd('ord',g)}else o.pend=Math.min(o.pend+g,g*CAP)}} // losses come straight out of cash
@@ -1111,6 +1111,7 @@ const dur=sec=>sec<3600?`${Math.round(sec/60)} minutes`:sec<172800?`${Math.floor
 
 // ---------- actions ----------
 const ACT={
+  petplay:u=>{const m=petPlay(u);if(m)toast(esc(m))},
   setopt:(k,v)=>{const O=s.opt??={};if(k==='dec'){if([7,30,90].includes(+v))O.dec=+v}else if(k==='pause'||k==='quiet')O[k]=!O[k];ACT.help()},
   hours:k=>{if(HOURS[k]){s.hours=k;toast(`Work hours: ${HOURS[k].n.toLowerCase()}`)}},
   diet:k=>{if(DIETS[k]){s.diet=k;toast(`Food: ${DIETS[k].n.toLowerCase()}`)}},
@@ -1603,7 +1604,7 @@ hobby(){
   <div class="sec-h"><h2>Hobbies</h2><span>practice every couple of days</span></div>
   <div class="acards">${H}</div>
   <div class="sec-h"><h2>Pets</h2><span>${s.pets.length?`${s.pets.length} of 5`:'none yet'}</span></div>
-  ${s.pets.length?`<table class="ledger"><tbody>${s.pets.map(p=>`<tr><td><b>${esc(p.n)}</b> <span class="mut">${PTM[p.t].n.replace(' tank','')}, ${Math.floor((s.day-p.b)/365)} years old</span></td><td class="r">${fmt(PTM[p.t].up*P)}/day</td><td class="act"><button data-a="rehome" data-x="${p.uid}">Rehome</button></td></tr>`).join('')}</tbody></table>`:''}
+  ${s.pets.length?`<table class="ledger"><tbody>${s.pets.map(p=>`<tr><td><b>${esc(p.n)}</b> <span class="mut">${PTM[p.t].n.replace(' tank','')}, ${Math.floor((s.day-p.b)/365)} years old</span></td><td class="r">${fmt(PTM[p.t].up*P)}/day</td><td class="act">${p.t==='fish'?'':`<button data-a="petplay" data-x="${p.uid}" ${(p.cd||0)>s.day?'disabled':''}>${p.t==='dog'?'Walk':p.t==='horse'?'Ride':'Play'}</button>`}<button data-a="rehome" data-x="${p.uid}">Rehome</button></td></tr>`).join('')}</tbody></table>`:''}
   <div class="acards" style="margin-top:var(--space-xs)">${PETS.map(k=>`<button class="acard" data-a="adopt" data-x="${k.id}" ${s.pets.length>=5||s.cash<k.c*P?'disabled':''}><b>${k.id==='fish'?'Get a fish tank':'Adopt a '+k.n.toLowerCase()}</b><span>+${(k.hap*100).toFixed(1)} happiness a day${k.hea?', walks keep you healthier':''}${k.fame?', and people notice':''}. Lives about ${k.life} years.</span><small>${fmt(k.c*P)} · then ${fmt(k.up*P)} a day</small></button>`).join('')}</div>
   ${howto('Practice raises a skill quickly at first, then more slowly. Smarter people learn faster. At skill 30 a hobby can earn: gigs and freelance work pay by skill, paintings sell for more if you have followers, and a book pays royalties every day for a year. Cooking cuts your grocery bill, and coding, cooking and painting help interviews in tech, food and creative jobs. Pets cost a little every day, lift your mood, and one day they will leave you. Vet bills happen.')}`;
 },

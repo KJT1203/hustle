@@ -384,7 +384,7 @@ const worldBiz=b=>world('pandemic')?(['lemon','truck','cafe','gym','hotel','wash
 function worldDay(){
   if(s.world&&s.day>=s.world.end){log(`The ${WORLD[s.world.id].n.toLowerCase()} is over.`,'good');s.world=null}
   if(s.world)return;
-  for(const k in WORLD)if(R()<WORLD[k].rate/365){const W=WORLD[k];s.world={id:k,end:s.day+rint(...W.len)};log(`<b>${W.n}.</b> ${W.d}`,'bad');toast(W.n);chirp('@MarketWire','MarketWire',k==='pandemic'?'BREAKING: health officials declare a pandemic. markets in freefall':'tech is on fire. every startup is raising',1);
+  for(const k in WORLD)if(R()<WORLD[k].rate/365){const W=WORLD[k];s.world={id:k,start:s.day,end:s.day+rint(...W.len)};log(`<b>${W.n}.</b> ${W.d}`,k==='pandemic'?'bad':'info');toast(W.n);chirp('@MarketWire','MarketWire',{pandemic:'BREAKING: health officials declare a pandemic. markets in freefall',techboom:'tech is on fire. every startup is raising',housing:'house prices up double digits again. buyers lining up around the block'}[k],1);
     if(k==='pandemic'){crash(false);s.eco.g=Math.min(s.eco.g,-.8);if(!cond('flu')&&R()<.4)addCond('flu')}
     if(k==='techboom')for(const t of STOCKS)if(t.sec==='Tech'||t.sec==='Semis')s.px[t.t].gr=s.world.end;
     return}
@@ -633,3 +633,17 @@ function styleHtml(){const H=s.hours||'full',D=s.diet||'normal';
   return `<div class="sec-h"><h2>How you live</h2><span>change these any time</span></div>
   <div class="styles"><div><p class="mut">Work hours${s.job?'':' (when you have a job)'}</p><div class="seg2 wrap">${Object.entries(HOURS).map(([k,x])=>`<button class="${H===k?'on':''}" data-a="hours" data-x="${k}" title="${x.d}">${x.n}</button>`).join('')}</div><p class="mut sm">${hours().d}.</p></div>
   <div><p class="mut">Food</p><div class="seg2 wrap">${Object.entries(DIETS).map(([k,x])=>`<button class="${D===k?'on':''}" data-a="diet" data-x="${k}" title="${x.d}">${x.n}</button>`).join('')}</div><p class="mut sm">${diet().d}. ${dietCost()?`${dietCost()>0?'+':'−'}${fmt(Math.abs(dietCost()))} a day on groceries.`:''}</p></div></div>`}
+
+// ---------- a housing cycle: a couple of boom years, then a bust ----------
+WORLD.housing={n:'Housing boom',rate:1/30,len:[900,1400],d:'House prices are climbing fast. Everyone says they only go up.'};
+function housingDrift(){if(!world('housing'))return 0;const W=s.world,f=(s.day-(W.start??W.end-1100))/(W.end-(W.start??W.end-1100));
+  if(f>=.6&&!W.bust){W.bust=1;log('<b>The housing bubble burst.</b> Prices are falling and banks are nervous.','bad');toast('Housing bust');chirp('@MarketWire','MarketWire','home prices post their biggest monthly drop in years. is the bubble bursting?',1);s.eco.g=Math.min(s.eco.g,s.eco.g-.3)}
+  return f<.6?.0004:-.0008} // about +15% a year on the way up, -25% a year on the way down
+
+// ---------- time with your pets ----------
+function petPlay(u){const p=s.pets.find(x=>x.uid===+u);if(!p||(p.cd||0)>s.day)return;p.cd=s.day+3;add('hap',2);if(p.t==='dog'){add('hea',1);return `A long walk with ${p.n}. Good for both of you.`}if(p.t==='horse'){add('hea',1.5);return `A ride out with ${p.n}.`}return `${p.n} is delighted with the attention.`}
+const EV11=[
+{id:'petsick',w:s=>s.pets.some(p=>p.t!=='fish')?.7:0,c:s=>s.pets.some(p=>p.t!=='fish'),a:s=>pick(s.pets.filter(p=>p.t!=='fish'))?.uid,t:'A trip to the vet',d:(s,a)=>{const p=s.pets.find(x=>x.uid===a);return p?`${esc(p.n)} has been off their food, and the vet found something serious. Surgery would cost about <b>${fmt(2500*s.eco.P*(p.t==='horse'?4:1))}</b>.`:'A vet visit.'},def:0,ch:[
+ ['Pay for the surgery',(s,a)=>{const p=s.pets.find(x=>x.uid===a);if(!p)return 'The moment has passed.';s.cash-=2500*s.eco.P*(p.t==='horse'?4:1);if(R()<.8){p.dies+=rint(365,1460);add('hap',4);return `${p.n} pulled through, and has years left in them.`}s.pets.splice(s.pets.indexOf(p),1);add('hap',-12);return `The vets did everything they could. ${p.n} didn't make it.`}],
+ ['Keep them comfortable',(s,a)=>{const p=s.pets.find(x=>x.uid===a);if(!p)return 'The moment has passed.';p.dies=Math.min(p.dies,s.day+rint(30,120));add('hap',-4);return `You make the most of the time ${p.n} has left.`}]]},
+];
