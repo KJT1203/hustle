@@ -436,3 +436,4 @@ details summary{cursor:pointer;color:var(--color-accent);font-size:var(--text-sm
 .news{margin:var(--space-2xs) 0 0;padding-left:1.1rem;display:grid;gap:.2rem;font-size:var(--text-sm)}
 .who2{display:flex;gap:var(--space-sm);align-items:center}.who2 .avatar{flex:none}
 .gen .gh{grid-template-columns:auto 1fr auto!important;align-items:center!important}.gen .gh>div{display:grid}.gen .gh .mut{grid-column:auto!important}
+.who .avatar{flex:none}
