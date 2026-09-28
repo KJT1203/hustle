@@ -32,7 +32,7 @@ function healthDay(A){
     if(K.acute&&--c.left<=0){s.conds.splice(s.conds.indexOf(c),1);continue}
     if(c.id==='dep'&&R()<(tx?1/100:1/400)+(s.st.hap>60?1/200:0)){s.conds.splice(s.conds.indexOf(c),1);log('The depression has lifted.','good');continue}
     if(c.id==='cancer'){
-      if(c.tx>1&&s.day>=c.tx){if(R()<CSTAGE.cure[c.st-1]){s.conds.splice(s.conds.indexOf(c),1);add('hap',15);s.beat=1;mile('Beat cancer.');log('Treatment worked. You are cancer-free.','good');toast('Cancer-free!');continue}c.tx=0;log(`The treatment didn't clear the cancer. It is still stage ${c.st}.`,'bad');toast('Treatment failed')}
+      if(c.tx>1&&s.day>=c.tx){if(R()<CSTAGE.cure[c.st-1]){s.conds.splice(s.conds.indexOf(c),1);add('hap',15);s.beat=1;mile('Beat cancer.');log('Treatment worked. You are cancer-free.','good');toast('Cancer-free!');continue}c.tx=0;c.dx=s.day;log(`The treatment didn't clear the cancer. It is still stage ${c.st}.`,'bad');toast('Treatment failed')}
       else if(c.tx>1)add('hea',-.1);
       else if(s.day>=c.nx&&c.st<4){c.st++;c.nx=s.day+rint(220,420);if(!c.hid)log(`The cancer has spread to stage ${c.st}.`,'bad')}}
     if(!c.hid&&!c.tx&&['cancer','heart','diab','dep'].includes(c.id)&&s.day-(c.dx??c.d)>=30&&!(c.cd>s.day))autoTreat(c);
@@ -62,7 +62,7 @@ const CASES={
 const jailed=()=>s.legal.jail>s.day;
 const JAILX=new Set(['run','flt','found','suhire','act','gig','work','apply','learn','enroll','study','pp','post','deal','slot','rl','dice','flip','cbuy','pbuy','hob','hshow','adopt']);
 const crimes=(yrs=7)=>s.legal.rec.filter(r=>CASES[r.t].crim&&s.day-r.d<yrs*365);
-const CLEAN=new Set(['police','teacher','nurse','lawyer','pilot','resident','surgeon']);
+const CLEAN=new Set(['police','teacher','nurse','lawyer','pilot','resident','surgeon','army','officer']);
 function openCase(t,v=0){const c={id:uid(),t,v:Math.round(v),d:s.day};s.legal.cases.push(c);log(`<b>${CASES[t].n}.</b> ${CASES[t].d} You have 30 days to decide how to answer.`,'bad');toast(CASES[t].n);return c}
 function lawCost(c){return CASES[c.t].law*s.eco.P*(c.t==='sec'||c.t==='tax'?1+Math.min(3,c.v/2e5):1)}
 function goJail(days){if(days<1)return '';mile(`Went to jail for ${days} day${days>1?'s':''}.`);s.legal.jail=Math.max(s.legal.jail,s.day)+days;let m=` Sentenced to <b>${days} day${days>1?'s':''}</b> in jail.`;
@@ -115,7 +115,7 @@ const PTM=Object.fromEntries(PETS.map(p=>[p.id,p])),PETN=['Mochi','Biscuit','Lun
 function addPet(t,b=s.day){const K=PTM[t],used=new Set(s.pets.map(p=>p.n)),n=PETN.find(x=>!used.has(x)&&R()<.25)||pick(PETN),p={uid:uid(),t,n,b,dies:b+Math.round(K.life*(.75+R()*.5)*365)};s.pets.push(p);return p}
 const petSum=k=>s.pets.reduce((t,p)=>t+(PTM[p.t][k]||0),0);
 const petOf=p=>`${p.n} the ${PTM[p.t].n.toLowerCase().replace(' tank','')}`;
-function petsDay(){for(const p of [...s.pets])if(s.day>=p.dies){s.pets.splice(s.pets.indexOf(p),1);add('hap',-12);const m=`${p.n}, your ${PTM[p.t].n.toLowerCase().replace(' tank',' ')}, passed away at ${Math.floor((s.day-p.b)/365)}.`;log(esc(m),'bad');toast(esc(m))}
+function petsDay(){for(const p of [...s.pets])if(s.day>=p.dies){s.pets.splice(s.pets.indexOf(p),1);add('hap',-12);const m=`${p.n}, your ${PTM[p.t].n.toLowerCase().replace(' tank','')}, passed away at ${Math.floor((s.day-p.b)/365)}.`;log(esc(m),'bad');toast(esc(m))}
   if(s.pets.length&&R()<s.pets.length*.4/365){const v=Math.round(rint(200,2500)*s.eco.P);s.cash-=v;log(`A vet bill for ${esc(pick(s.pets).n)}: ${fmt(v)}.`,'bad')}}
 
 // ---------- the daily tick for all of the above ----------
@@ -204,7 +204,7 @@ const estateTax=w=>Math.max(0,w-13e6*s.eco.P)*.4; // 40% above a $13M exemption
 const EV3=[
 {id:'report',w:1.5,c:()=>kids().some(k=>k.k&&kidAge(k)>=6&&kidAge(k)<18),a:()=>pick(kids().filter(k=>k.k&&kidAge(k)>=6&&kidAge(k)<18))?.uid,t:'Report card',d:(s,a)=>{const k=per(a);if(!k)return 'A report card came home.';const g=k.k.sma;return `${esc(k.n)}'s report card is in: <b>${g>=75?'straight As':g>=60?'mostly As and Bs':g>=45?'Bs and Cs':g>=30?'mostly Cs, a D in maths':'failing two classes'}</b>.`},def:0,ch:[
  ['Praise the effort',(s,a)=>{const k=per(a);if(!k)return 'The moment has passed.';prel(k,5);k.k.hap=Math.min(100,k.k.hap+4);return `${k.n} beams.`}],
- ['Push them harder',(s,a)=>{const k=per(a);if(!k)return 'The moment has passed.';prel(k,-5);k.k.sma=Math.min(100,k.k.sma+2);k.k.hap-=4;return `${k.n} sulks, but studies more.`}]]},
+ ['Push them harder',(s,a)=>{const k=per(a);if(!k)return 'The moment has passed.';prel(k,-5);k.k.sma=Math.min(100,k.k.sma+2);k.k.hap=Math.max(0,k.k.hap-4);return `${k.n} sulks, but studies more.`}]]},
 {id:'ktrouble',w:s=>kids().some(k=>k.k&&kidAge(k)>=12&&kidAge(k)<18&&(k.k.tr.includes('rebel')||k.rel<40))?2:.3,c:()=>kids().some(k=>k.k&&kidAge(k)>=12&&kidAge(k)<18),a:()=>pick(kids().filter(k=>k.k&&kidAge(k)>=12&&kidAge(k)<18))?.uid,t:'A call from school',d:(s,a)=>`${esc(per(a)?.n||'Your kid')} was caught ${pick(['skipping class','spray-painting the gym','selling answers to a test','in a fight behind the bleachers'])}.`,def:1,ch:[
  ['Ground them',(s,a)=>{const k=per(a);if(!k)return 'The moment has passed.';prel(k,-8);k.k.sma=Math.min(100,k.k.sma+1);return `Phone confiscated. ${k.n} is furious.`}],
  ['Talk it through',(s,a)=>{const k=per(a);if(!k)return 'The moment has passed.';prel(k,4);k.k.hap=Math.min(100,k.k.hap+2);return `A long talk. ${k.n} actually listened, you think.`}]]},
@@ -273,19 +273,19 @@ function found(id){const I=IM[id],v=suSeed();if(!I||s.su||s.cash<v||jailed())ret
 function suDay(){const u=s.su,I=IM[u.idea],P=s.eco.P;
   u.cash-=suBurn(u);add('hap',-.04);add('hea',-.01);s.xp[I.fld]=(s.xp[I.fld]||0)+1;
   const nx0=SUST[u.st+1];u.prog=Math.min(nx0&&u.hires<nx0.team?nx0.at:Infinity,u.prog+(.2+s.st.sma/300+Math.min(.3,xpY(I.fld)*.03))*(1+Math.sqrt(u.hires)*.5)*(s.st.hap/60)*(s.eco.rec?.7:1)*(.5+R())); // investors won't talk to you without a team
-  if(u.st>=1&&R()<I.risk*.3/365){s.su=null;add('hap',-20);const k=pick(['A regulator shut the product down','The market you built for collapsed','Your co-founder walked out and took the customers','A giant copied you and gave it away free']);log(`<b>${esc(u.n)}</b> is finished. ${k}.`,'bad');toast(`${esc(u.n)} shut down`);(s.car2??={}).dead=(s.car2.dead||0)+1;return}
+  if(u.st>=1&&R()<I.risk*.3/365){s.su=null;add('hap',-20);mile(`${esc(u.n)} went under.`);const k=pick(['A regulator shut the product down','The market you built for collapsed','Your co-founder walked out and took the customers','A giant copied you and gave it away free']);log(`<b>${esc(u.n)}</b> is finished. ${k}.`,'bad');toast(`${esc(u.n)} shut down`);(s.car2??={}).dead=(s.car2.dead||0)+1;return}
   if(R()<1/200){const k=pick(['A competitor launched the same thing, cheaper','Your lead engineer quit','A big customer walked away','A server outage lost a week of work']);u.prog=Math.max(0,u.prog-rint(15,40));log(`${esc(u.n)}: ${k}.`,'bad')}
   const nx=SUST[u.st+1];
   if(nx&&u.prog>=nx.at&&!u.offer&&s.day>=u.retry){
     if(nx.n==='IPO'){if(u.hires<nx.team)return;const V=nx.val*I.mult*(.5+R())*(s.eco.rec?.6:1)*P;return suExit(V,'ipo')}
     if(u.hires<nx.team){}
     else if(R()<nx.odds*(1-I.risk*.5)+(u.prog-nx.at)/(nx.at*4)-(s.eco.rec?.25:0)+(world('techboom')?.15:0)){const pre=Math.round(nx.val*I.mult*(.6+R()*.9)*(s.eco.rec?.6:1)*(world('techboom')?1.5:1)*P),raise=Math.round(nx.raise*P*(.8+R()*.4));u.offer={pre,raise,d:s.day};log(`${esc(u.n)}: investors offer <b>${fmt(raise)}</b> at a ${fmt(pre)} valuation for a ${nx.n}.`,'good');toast(`${nx.n} offer for ${esc(u.n)}`)}
-    else if(++u.fails>=3){const back=Math.max(0,u.cash)*u.own;s.cash+=back;capGain(back-u.basis,u.d);s.su=null;add('hap',-20);(s.car2??={}).dead=(s.car2.dead||0)+1;log(`Nobody will fund <b>${esc(u.n)}</b>'s ${nx.n}. You wind it down and get back ${fmt(back)}.`,'bad');toast(`${esc(u.n)} wound down`);return}
+    else if(++u.fails>=3){const back=Math.max(0,u.cash)*u.own;s.cash+=back;capGain(back-u.basis,u.d);s.su=null;add('hap',-20);mile(`Wound down ${esc(u.n)}.`);(s.car2??={}).dead=(s.car2.dead||0)+1;log(`Nobody will fund <b>${esc(u.n)}</b>'s ${nx.n}. You wind it down and get back ${fmt(back)}.`,'bad');toast(`${esc(u.n)} wound down`);return}
     else{u.retry=s.day+90;u.prog-=(nx.at-SUST[u.st].at)*.2;log(`${esc(u.n)}: investors passed on your ${nx.n}. You rework the plan and can pitch again in 90 days. ${u.fails===2?'One more no and the company is finished.':''}`,'bad')}}
   if(u.offer&&s.day-u.offer.d>30){delete u.offer;u.retry=s.day+30;log(`${esc(u.n)}: the funding offer expired.`)}
   if(u.st>=1&&!u.acq&&R()<1/900){const v=Math.round(u.val*(.4+R()*.8));u.acq={v,d:s.day};log(`${esc(u.n)}: a big company offers to buy you for <b>${fmt(v)}</b>.`,'good');toast('Acquisition offer!')}
   if(u.acq&&s.day-u.acq.d>30)delete u.acq;
-  if(u.cash<0){s.su=null;add('hap',-20);log(`<b>${esc(u.n)}</b> ran out of money and shut down. Most startups do.`,'bad');toast(`${esc(u.n)} shut down`);(s.car2??={}).dead=(s.car2.dead||0)+1}
+  if(u.cash<0){s.su=null;add('hap',-20);mile(`${esc(u.n)} ran out of money.`);log(`<b>${esc(u.n)}</b> ran out of money and shut down. Most startups do.`,'bad');toast(`${esc(u.n)} shut down`);(s.car2??={}).dead=(s.car2.dead||0)+1}
 }
 function suRaise(){const u=s.su,o=u?.offer;if(!o)return;u.fails=0;u.cash+=o.raise;u.own*=o.pre/(o.pre+o.raise);u.val=o.pre+o.raise;u.st++;delete u.offer;add('hap',8);
   const m=`${esc(u.n)} closed its ${SUST[u.st].n}: ${fmt(o.raise)} at a ${fmt(u.val)} valuation. You own ${(u.own*100).toFixed(1)}%.`;log(m,'good');return m}
@@ -310,7 +310,7 @@ const EV4=[
 ];
 function suHtml(){const u=s.su;if(!u)return '';const I=IM[u.idea],nx=SUST[u.st+1],P=s.eco.P,rw=suRunway(u),hc=HIRE*P*90,cur=SUST[u.st];
   const offer=u.offer?`<div class="need"><div><div class="k hot">${nx.n} offer · ${30-(s.day-u.offer.d)} days left</div><div class="t">${fmt(u.offer.raise)} at a ${fmt(u.offer.pre)} valuation</div><div class="d">You would own ${(u.own*u.offer.pre/(u.offer.pre+u.offer.raise)*100).toFixed(1)}% afterwards, and the company would have ${fmt(u.cash+u.offer.raise)} to grow with.</div></div><div class="acts2"><button class="pri" data-a="suraise">Take the money</button><button data-a="sudecline">Pass</button></div></div>`:'';
-  const acq=u.acq?`<div class="need"><div><div class="k hot">Acquisition offer · ${30-(s.day-u.acq.d)} days left</div><div class="t">Sell for ${fmt(u.acq.v)}</div><div class="d">Your ${(u.own*100).toFixed(1)}% would come to <b class="num">${fmt(u.own*u.acq.v)}</b>, taxed as a long-term gain.</div></div><div class="acts2"><button class="pri" data-a="suacq">Sell</button><button data-a="suacqno">Decline</button></div></div>`:'';
+  const acq=u.acq?`<div class="need"><div><div class="k hot">Acquisition offer · ${30-(s.day-u.acq.d)} days left</div><div class="t">Sell for ${fmt(u.acq.v)}</div><div class="d">Your ${(u.own*100).toFixed(1)}% would come to <b class="num">${fmt(u.own*u.acq.v)}</b>, taxed as a capital gain (long-term after a year).</div></div><div class="acts2"><button class="pri" data-a="suacq">Sell</button><button data-a="suacqno">Decline</button></div></div>`:'';
   return `<div class="sec-h"><h2>${esc(u.n)}</h2><span>${I.n} · ${cur.n} · ${((s.day-u.d)/365).toFixed(1)} years old</span></div>
   ${offer||acq?`<div class="needs">${offer}${acq}</div>`:''}
   <div class="stats4 eco">${[[nx?`Progress to ${nx.n}`:'Progress',nx?`${Math.floor(u.prog)} / ${nx.at}`:'—'],['Company cash',fmt(u.cash)],['Runway',`<span class="${rw<90?'dn':''}">${rw} days</span>`],['You own',`${(u.own*100).toFixed(1)}%`],['Valuation',fmt(u.val)]].map(([l,v])=>`<div><span>${l}</span><b class="num">${v}</b></div>`).join('')}</div>
@@ -395,7 +395,7 @@ function worldDay(){
 const PERS={romantic:{n:'Romantic',d:'date nights mean the world to them'},ambitious:{n:'Ambitious',d:'admires drive, and minds when you have no work'},homebody:{n:'Homebody',d:'happiest at home with family'},adventurous:{n:'Adventurous',d:'lives for trips away'},jealous:{n:'Jealous',d:'hates it when you go out without them'}};
 const PJOBS=['retail','chef','admin','elec','police','design','dev','teacher','nurse','analyst','swe','lawyer','resident'];
 function partnerNew(p){if(p.pt)return p;p.pt=pick(Object.keys(PERS));p.gs??=rint(30,80);p.gl??=rint(30,80);const ok=PJOBS.filter(j=>JM[j].s<=p.gs+5);p.job=ok.length&&R()<.85?pick(ok.slice(-5)):null;return p}
-const spouseInc=()=>{const p=partner();return p?.role==='spouse'&&p.job?JM[p.job].pay*.5*s.eco.P:0}; // half of their pay goes into the household
+const spouseInc=()=>{const p=partner();return p?.role==='spouse'&&p.job?JM[p.job].pay*.5*city().pay:0}; // half of their pay goes into the household (job pay already follows prices)
 function married(p){p.role='spouse';p.wed=s.day;mile(`Married ${esc(p.n)}.`);p.wedNW=Math.max(0,netWorth());if(!s.inbox.some(i=>i.id==='wedding'))s.inbox.push({id:'wedding',d:s.day,a:p.uid})}
 function payOut(v){ // a big bill: cash first, then savings, then the index fund at today's price; whatever is left becomes debt
   let r=v;const c=Math.min(r,Math.max(0,s.cash));s.cash-=c;r-=c;const F=s.fin;
