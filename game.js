@@ -97,10 +97,11 @@ const PACTS={
  coffee:{n:'Grab a coffee',cd:3,c:()=>Math.round(6*s.eco.P),roles:['coworker'],fx:p=>{prel(p,rint(4,7));return `Coffee with ${p.n}. Office gossip acquired.`}},
  cover:{n:'Cover for them',cd:20,roles:['coworker'],fx:p=>{prel(p,10);s.perf=clamp(s.perf-1,0,100);add('hap',-1);return `${p.n} owes you one.`}},
  credit:{n:'Take credit for their work',cd:60,roles:['coworker'],fx:p=>{if(R()<.7){s.perf=clamp(s.perf+7,0,100);prel(p,-30);return `The boss is impressed. ${p.n} knows what you did.`}s.perf=clamp(s.perf-8,0,100);prel(p,-35);const b=boss();if(b)prel(b,-10);return `${p.n} had receipts. Everyone saw.`}},
+ bff:{n:'Make them your best friend',roles:['friend'],show:p=>p.rel>=75&&s.best!==p.uid,fx:p=>{s.best=p.uid;prel(p,5);return `${p.n} is your best friend now.`}},
  split:{n:'Break up',bad:1,roles:['date'],fx:p=>endRel(p)},
  divorce:{n:'Divorce',bad:1,roles:['spouse'],fx:p=>endRel(p)},
 };
-const PACT_ORDER=['lunch','pitch','coffee','cover','credit','call','time','homework','play','tutor','camp','school','fund','date','gift','propose','baby','ask','reconnect','split','divorce'];
+const PACT_ORDER=['lunch','pitch','coffee','cover','credit','call','time','homework','play','tutor','camp','school','fund','date','gift','propose','baby','ask','reconnect','bff','split','divorce'];
 const RANKS=['','Senior ','Lead ','Principal ','Head ','Chief '];
 // real-world costs; income is the owner's yearly profit per unit divided by 365 (a food truck nets about half its cost a year, a hotel about 13%)
 const BIZ=[
@@ -428,7 +429,7 @@ const EV=[
  ['Take it to a shelter',()=>'It will find a good home.']]},
 ];
 
-EV.push(...EV2,...EV3,...EV4,...EV5,...EV6,...EV7,...EV8,...EV9,...EV10,...EV11);
+EV.push(...EV2,...EV3,...EV4,...EV5,...EV6,...EV7,...EV8,...EV9,...EV10,...EV11,...EV12);
 const EVM=EM(EV.map(e=>[e.id,e]));
 
 // ---------- businesses: realistic returns, and profits that ride the economy ----------
@@ -528,7 +529,7 @@ const partner=()=>s.people.find(p=>p.role==='date'||p.role==='spouse');
 const kids=()=>s.people.filter(p=>p.role==='child');
 const kidsHome=()=>kids().filter(k=>ageOf(k)<18).length;
 const friendsN=()=>s.people.filter(p=>p.role==='friend').length;
-const peopleHap=()=>s.people.reduce((a,p)=>a+(PW[p.role]||0)*(p.rel-40)/(p.rel<40?80:60)*(p.role==='child'&&ageOf(p)>=18?.5:1),0);
+const peopleHap=()=>s.people.reduce((a,p)=>a+(PW[p.role]||0)*(p.uid===s.best?3:1)*(p.rel-40)/(p.rel<40?80:60)*(p.role==='child'&&ageOf(p)>=18?.5:1),0);
 const closeWord=r=>r>=80?'Very close':r>=60?'Close':r>=40?'Friendly':r>=20?'Distant':'Strained';
 function meet(role,rel,b){const used=new Set(s.people.map(p=>p.n)),n=PNAMES.find(x=>!used.has(x)&&R()<.2)||pick(PNAMES);const p={uid:uid(),n,role,rel,b:b??(-s.startAge*365+rint(-4,4)*365),met:s.day,c:{}};s.people.push(p);if(role==='date'||role==='spouse')partnerNew(p);return p}
 const addChild=()=>{const p=meet('child',80,s.day);p.k=kidNew();mile(`${esc(p.n)} was born.`);return p};
@@ -539,7 +540,7 @@ function parentDies(p){s.people.splice(s.people.indexOf(p),1);mile(`Lost ${esc(p
 function peopleDay(){
   teamDay();
   for(const p of [...s.people]){
-    p.rel=clamp(p.rel-(DECAY[p.role]||0),0,100);
+    p.rel=clamp(p.rel-(DECAY[p.role]||0)*(p.uid===s.best?.5:1),0,100);
     const a=ageOf(p)-(p.x||0);
     if(p.role==='boss'||p.role==='coworker')continue;
     if(p.role==='spouse'&&p.pt==='ambitious'&&!s.job&&!s.su&&!s.pension)prel(p,-.05);
@@ -572,7 +573,7 @@ const rentOf=p=>renting(p)?pval(p)*PM[p.t].yld/365:0;
 const carSum=k=>s.cars.reduce((t,c)=>t+CM[c.t][k],0);
 const bestCar=()=>s.cars.reduce((m,c)=>!m||CM[c.t].hap>CM[m.t].hap?c:m,null);
 const upkeep=()=>shopSum('up')+carSum('up')+s.props.reduce((t,p)=>t+pval(p)*.02/365,0); // 1% upkeep plus 1% property tax
-const salaryNow=()=>(s.job?jobPay():0)+(s.pension||0),rentNow=()=>homeP()?0:clamp(salaryNow()*.25,20*s.eco.P*city().cost,90*s.eco.P*city().cost); // renters spend about a quarter of their pay on housing
+const salaryNow=()=>(s.job?jobPay():0)+(s.pension||0),rentNow=()=>s.rc?commFee():homeP()?0:clamp(salaryNow()*.25,20*s.eco.P*city().cost,90*s.eco.P*city().cost); // renters spend about a quarter of their pay on housing
 const expenses=()=>rentNow()+(15+kidsHome()*47+(partner()?.role==='spouse'?20:0))*s.eco.P*city().cost+salaryNow()*.15+upkeep()+lifeCost(); // lifestyle grows with pay
 const canBorrow=L=>{const f=flows();return credit()>=620&&!(s.bk>s.day)&&mpay(L,myRate())+f.mort<=(f.job+f.biz+f.rent)*.4};
 function listing(){const nw=Math.max(netWorth(),60000),ok=PROPS.filter(p=>p.base<=nw*4),[loc,m]=pick(LOCS);return {uid:uid(),t:pick(ok.slice(-4)).id,loc,city:s.city||'suburb',m:m*(.92+R()*.16)*city().home,cond:R()<.2?rint(25,55):rint(85,100)}}
@@ -697,7 +698,7 @@ function day(live){
     if(st.left<=0){if(st.g<30){st.left=60;st.g=45;log(`Failed the final exams for ${degName(st)}. One more term.`,'bad');toast('Failed the finals. One more term.')}else graduate()}}
   const J=job();
   // stats drift toward a baseline, so an idle life is dull but survivable; choices push you above or below it
-  add('hap',(50+(trait('sunny')?6:0)-(trait('anxious')?6:0)-s.st.hap)*.004-(J?J.str*.02:0)-(s.study&&s.study.sc!=='online'?.03:0)+peopleHap()+mateHap()+city().hap+(diet().hap||0)+(s.job?hours().hap:0)-(s.job&&boss()?.bt==='toxic'?.04:0)+petSum('hap')+shopSum('hap')+(PM[homeP()?.t]?.hap||0)+(bestCar()?CM[bestCar().t].hap:0));
+  add('hap',(50+(trait('sunny')?6:0)-(trait('anxious')?6:0)-s.st.hap)*.004-(J?J.str*.02:0)-(s.study&&s.study.sc!=='online'?.03:0)+peopleHap()+mateHap()+city().hap+(s.rc?.01:0)+(diet().hap||0)+(s.job?hours().hap:0)-(s.job&&boss()?.bt==='toxic'?.04:0)+petSum('hap')+shopSum('hap')+(PM[homeP()?.t]?.hap||0)+(bestCar()?CM[bestCar().t].hap:0));
   add('hea',diet().hea+(s.job?hours().hea:0)+(85+(trait('sporty')?5:0)-Math.max(0,A-35)*1.2-s.st.hea)*.003+(s.st.hap>70?.01:0)-(s.st.hap<15?.04:0));
   if(A>30)add('loo',-.004);
   s.fol+=shopSum('fame')+carSum('fame')+s.props.reduce((t,p)=>t+(PM[p.t].fame||0),0);if(s.day-s.lastPost>30)s.fol*=.999;
@@ -709,7 +710,7 @@ function day(live){
   s.later=s.later.filter(p=>p.d>s.day||(runLater(p),false));
   s.inbox=s.inbox.filter(it=>{if(s.day-it.d<decDays())return true;const e=EVM[it.id];if(!e.c||e.c(s))log(`<b>${e.t}</b> ${e.ch[e.def][1](s,it.a)}<span class="auto">decided for you</span>`);return false});
   if(s.inbox.length<3&&R()<1/28)newEvent();
-  flDay();if(s.su)suDay();propDay();worldDay();fdnDay();oldDay(A);polDay();clubDay();creditDay();viceDay();milDay();
+  flDay();if(s.su)suDay();propDay();worldDay();fdnDay();oldDay(A);polDay();clubDay();creditDay();viceDay();milDay();trustDay();
   lifeDay(A);if(s.dead)return;
   const pd=s.st.hea<=0?1:A>60?Math.min(.5,((A-60)/30)**3*3)/365:0;
   if(R()<pd)die();else checkGoals();
@@ -1072,7 +1073,7 @@ const goalAmt=(g,v)=>g.m?fmt(v):g.id==='old'||g.id==='peak'||g.id==='gen3'?Math.
 
 // ---------- the heir: one of your kids, or a relative if you had none ----------
 function heirOf(k){
-  const w=Math.max(0,netWorth()),tax=estateTax(w),h={tree:s.tree,fdn:s.fdn||0,city:s.city,inherit:(w-tax)*(k?1:.5),tax,gen:s.gen+1,last:s.name,goals:s.goals,sma:s.st.sma,loo:s.st.loo,eco:s.eco};
+  const w=Math.max(0,netWorth()),tax=estateTax(w),h={tree:s.tree,fdn:s.fdn||0,city:s.city,inherit:(w-tax)*(k?1:.5)+(s.trust?.v||0),trust:s.trust?.v||0,tax,gen:s.gen+1,last:s.name,goals:s.goals,sma:s.st.sma,loo:s.st.loo,eco:s.eco};
   if(!k)return h;
   const skip=Math.max(0,18*365-(s.day-k.b)),carry=p=>({n:p.n,b:p.b-s.day-skip,rel:(p.rel+k.rel)/2});
   const K=k.k,x={};if(K){const age18=k.b+18*365;if(!K.path&&s.day+skip>=age18){const d=s.day;s.day+=skip;kidLaunch(k,1);s.day=d}
@@ -1111,6 +1112,8 @@ const dur=sec=>sec<3600?`${Math.round(sec/60)} minutes`:sec<172800?`${Math.floor
 
 // ---------- actions ----------
 const ACT={
+  trust:v=>{v=+v;if(!(v>0)||s.cash<v)return;const gt=trustAdd(v);log(`Moved ${fmt(v)} into the family trust${gt?`, paying ${fmt(gt)} in gift tax`:''}.`,'good');toast(`Trust: +${fmt(v)}`)},
+  comm:()=>{moveComm()},
   petplay:u=>{const m=petPlay(u);if(m)toast(esc(m))},
   setopt:(k,v)=>{const O=s.opt??={};if(k==='dec'){if([7,30,90].includes(+v))O.dec=+v}else if(k==='pause'||k==='quiet')O[k]=!O[k];ACT.help()},
   hours:k=>{if(HOURS[k]){s.hours=k;toast(`Work hours: ${HOURS[k].n.toLowerCase()}`)}},
@@ -1254,7 +1257,7 @@ const ACT={
     s.cash-=mort?v*.2:v;const p={...l,paid:v,bought:s.day,loan:mort?v*.8:0,pay:mort?mpay(v*.8,myRate()):0,rate:mort?myRate():0,from:s.day+rint(5,20)};
     s.props.push(p);s.re.list.splice(i,1,listing());if(!homeP()&&!PM[p.t].biz)s.home=p.uid;add('hap',5);
     mile(`Bought ${art(pname(p))}${s.home===p.uid?' and moved in':''}.`);log(`Bought ${art(pname(p))} for ${fmt(v)}${mort?' with a mortgage':''}${s.home===p.uid?', and moved in':''}.`,'good')},
-  live:u=>{const p=P(+u);if(!p||PM[p.t].biz||!here(p))return;const o=homeP();if(o)o.from=s.day+rint(5,20);s.home=p.uid;log(`Moved into your ${pname(p)}.`)},
+  live:u=>{const p=P(+u);if(!p||PM[p.t].biz||!here(p))return;s.rc=0;const o=homeP();if(o)o.from=s.day+rint(5,20);s.home=p.uid;log(`Moved into your ${pname(p)}.`)},
   moveout:u=>{const p=P(+u);if(!p||s.home!==p.uid)return;s.home=null;p.from=s.day+rint(5,20);log(`Moved out of your ${pname(p)}. It goes up for rent.`)},
   payoff:u=>{const p=P(+u);if(!p?.loan||s.cash<p.loan)return;s.cash-=p.loan;p.loan=p.pay=0;log(`Paid off the mortgage on your ${pname(p)}.`,'good')},
   psell:u=>{const i=s.props.findIndex(p=>p.uid===+u);if(i<0)return;const p=s.props[i],v=pval(p),gn=v*.97-p.paid;s.cash+=v*.97-p.loan;capGain(s.home===p.uid&&gn>0?Math.max(0,gn-250000*s.eco.P):gn,p.bought);s.props.splice(i,1);if(s.home===p.uid)s.home=null; // the home you live in: first $250K of gain is tax-free
@@ -1365,7 +1368,7 @@ function deathModal(){
   const w=netWorth(),nb=BIZ.reduce((t,b)=>t+(s.biz[b.id]?.n||0),0),ks=kids().sort((a,b)=>a.b-b.b),ng=Object.values(s.goals).filter(g=>g.gen===s.gen).length;
   modal(`<p class="kicker">Obituary</p><h2>${esc(s.name)}, ${Math.floor(age())}</h2>
   <table class="ledger"><tr><td>Net worth</td><td class="r num">${fmt(w)}</td></tr><tr><td>Businesses</td><td>${nb}</td></tr><tr><td>Followers</td><td>${big(s.fol)}</td></tr><tr><td>Career</td><td>${s.job?jobTitle():'—'}</td></tr><tr><td>Family</td><td>${partner()?(partner().role==='spouse'?'Married to ':'Seeing ')+esc(partner().n):'Single'}${kids().length?`, ${kids().length} kid${kids().length>1?'s':''}`:''}</td></tr><tr><td>Goals reached</td><td>${ng}</td></tr></table>
-  <p style="margin-top:var(--space-sm)">${estateTax(Math.max(0,w))?`Estate tax takes ${fmt(estateTax(w))} (40% above ${fmt(13e6*s.eco.P)}). `:''}${ks.length?`Your heir inherits <b class="num">${fmt(Math.max(0,w-estateTax(Math.max(0,w))))}</b>, plus their own college fund.`:`With no children, a relative inherits half: <b class="num">${fmt(Math.max(0,(w-estateTax(Math.max(0,w)))*.5))}</b>.`}${ks.length>1?' Pick which of your kids takes over. Each starts as the person they grew into: their smarts, health, traits, degree and job. Younger ones have more years ahead, and closer ones start happier.':''}</p>
+  <p style="margin-top:var(--space-sm)">${estateTax(Math.max(0,w))?`Estate tax takes ${fmt(estateTax(w))} (40% above ${fmt(exemptLeft())} of exemption left). `:''}${ks.length?`Your heir inherits <b class="num">${fmt(Math.max(0,w-estateTax(Math.max(0,w)))+(s.trust?.v||0))}</b>${s.trust?.v?`, including the ${fmt(s.trust.v)} family trust`:''}, plus their own college fund.`:`With no children, a relative inherits half: <b class="num">${fmt(Math.max(0,(w-estateTax(Math.max(0,w)))*.5))}</b>.`}${ks.length>1?' Pick which of your kids takes over. Each starts as the person they grew into: their smarts, health, traits, degree and job. Younger ones have more years ahead, and closer ones start happier.':''}</p>
   ${ks.length?`<div class="choices">${ks.map(k=>{const a=ageOf(k);return `<button data-a="heir" data-x="${k.uid}"><b>Continue as ${esc(k.n)}</b><br><small class="mut">${a<18?`${Math.floor(a)} now, takes over at 18`:`Age ${Math.floor(a)}`} · ${closeWord(k.rel)} to you${k.k?`<br>${kidStat(k)}`:''}</small></button>`}).join('')}</div>`:'<button class="pri big" data-a="heir">Continue as your heir</button>'}`);
 }
 function goalsModal(){
@@ -1384,7 +1387,7 @@ const sign=(n,cls=true)=>`<span class="num${cls?n>=0?' up':' dn':''}">${n>=0?'+'
 function lifeLine(){
   const pt=partner(),kn=kids().length,b=[s.job?`works as ${art(jobTitle())}`:s.pension?'is retired':'is between jobs',pt?`${pt.role==='spouse'?'is married to':'is seeing'} ${esc(pt.n)}`:'is single'];
   if(kn)b.push(`has ${kn===1?'one kid':kn+' kids'}`);
-  b.push(homeP()?`lives in ${art(PM[homeP().t].n.toLowerCase())} in ${homeP().loc}`:'rents a room');if((s.city||'suburb')!=='suburb')b[b.length-1]+=` in ${city().n.toLowerCase().replace(/^the /,'the ')}`;
+  b.push(s.rc?'lives in a retirement community':homeP()?`lives in ${art(PM[homeP().t].n.toLowerCase())} in ${homeP().loc}`:'rents a room');if((s.city||'suburb')!=='suburb')b[b.length-1]+=` in ${city().n.toLowerCase().replace(/^the /,'the ')}`;
   if(bestCar())b.push(`drives ${art(CM[bestCar().t].n.toLowerCase())}`);
   if(s.pets.length)b.push(s.pets.length===1?`has ${art(PTM[s.pets[0].t].n.toLowerCase().replace(' tank',''))} called ${esc(s.pets[0].n)}`:`has ${s.pets.length} pets`);
   if(jailed())b.push(`is in jail for ${s.legal.jail-s.day} more day${s.legal.jail-s.day>1?'s':''}`);
@@ -1470,7 +1473,7 @@ function personRow(p){
   const all=PACT_ORDER.filter(k=>PACTS[k].roles.includes(p.role)&&(!PACTS[k].show||PACTS[k].show(p))),main=['date','call','reconnect'].find(k=>all.includes(k)),open=openP===p.uid,lo=p.rel<30;
   const btn=k=>{const A=PACTS[k],w=Math.max(0,(p.c?.[k]||0)-s.day),cost=A.c?A.c(p):0,why=A.need?.(p);if(why)return `<span class="hint">${why}</span>`;
     return `<button class="${A.bad?'bad':k==='propose'||k==='baby'?'pri':''}" data-a="pp" data-x="${p.uid}" data-y="${k}" ${w||s.cash<cost?'disabled':''}>${typeof A.n==='function'?A.n(p):A.n}${cost?` · ${fmt(cost)}`:''}${w?` · ${w}d`:''}</button>`};
-  return `<div class="prow"><div class="who"><span class="av">${esc(p.n[0])}</span><div><div class="pn">${esc(p.n)}</div><div class="mut" style="font-size:var(--text-xs)">${ROLE[p.role]}${p.out?', moved out':''} · ${Math.max(0,Math.floor(ageOf(p)))}</div>${p.role==='child'&&p.k?`<div class="mut kstat">${kidStat(p)}</div>`:p.role==='boss'&&BOSSES[p.bt]?`<div class="mut kstat">${BOSSES[p.bt].n}</div>`:(p.role==='date'||p.role==='spouse')&&p.pt?`<div class="mut kstat">${persLine(p)}</div>`:''}</div></div>
+  return `<div class="prow"><div class="who"><span class="av">${esc(p.n[0])}</span><div><div class="pn">${esc(p.n)}</div><div class="mut" style="font-size:var(--text-xs)">${p.uid===s.best&&p.role==='friend'?'Best friend':ROLE[p.role]}${p.out?', moved out':''} · ${Math.max(0,Math.floor(ageOf(p)))}</div>${p.role==='child'&&p.k?`<div class="mut kstat">${kidStat(p)}</div>`:p.role==='boss'&&BOSSES[p.bt]?`<div class="mut kstat">${BOSSES[p.bt].n}</div>`:(p.role==='date'||p.role==='spouse')&&p.pt?`<div class="mut kstat">${persLine(p)}</div>`:''}</div></div>
    <div class="close"><div class="top2"><span class="${lo?'dn':'mut'}">${closeWord(p.rel)}</span><span class="num">${Math.round(p.rel)}</span></div>${meter(p.rel,lo?'low':'')}</div>
    <div class="acts3">${main?btn(main):''}${all.length>1?`<button data-a="pmore" data-x="${p.uid}" aria-expanded="${open}">${open?'Less':'More'}</button>`:''}</div>
    ${open?`<div class="pmore">${all.filter(k=>k!==main).map(btn).join('')}</div>`:''}</div>`;

@@ -200,7 +200,7 @@ function kidLaunch(p,quiet){const K=p.k;if(!K||K.path)return;const P=s.eco.P,cos
 }
 const kidStat=p=>{const K=p.k;return K?`Smarts ${Math.round(K.sma)} · Health ${Math.round(K.hea)} · Mood ${Math.round(K.hap)}${K.tr?.length?` · ${trTxt(K.tr)}`:''}${kidAge(p)<18&&K.sch==='private'?' · Private school':''}${K.fund>=1?` · Fund ${fmt(K.fund)}`:''}${K.job&&kidAge(p)>=18?` · ${JM[K.job].n}`:K.path==='college'?' · At college':K.path==='trade'?' · Trade course':''}${K.sp?` · Married to ${esc(K.sp)}`:''}${K.gk?.length?` · ${K.gk.length} kid${K.gk.length>1?'s':''}`:''}`:''};
 const kidsCost=()=>kids().filter(k=>k.k?.sch==='private'&&kidAge(k)<18).length*PRIVATE*s.eco.P;
-const estateTax=w=>Math.max(0,w-13e6*s.eco.P)*.4; // 40% above a $13M exemption
+const estateTax=w=>Math.max(0,w-exemptLeft())*.4; // 40% above what's left of the $13M lifetime exemption
 const EV3=[
 {id:'report',w:1.5,c:()=>kids().some(k=>k.k&&kidAge(k)>=6&&kidAge(k)<18),a:()=>pick(kids().filter(k=>k.k&&kidAge(k)>=6&&kidAge(k)<18))?.uid,t:'Report card',d:(s,a)=>{const k=per(a);if(!k)return 'A report card came home.';const g=k.k.sma;return `${esc(k.n)}'s report card is in: <b>${g>=75?'straight As':g>=60?'mostly As and Bs':g>=45?'Bs and Cs':g>=30?'mostly Cs, a D in maths':'failing two classes'}</b>.`},def:0,ch:[
  ['Praise the effort',(s,a)=>{const k=per(a);if(!k)return 'The moment has passed.';prel(k,5);k.k.hap=Math.min(100,k.k.hap+4);return `${k.n} beams.`}],
@@ -339,6 +339,7 @@ function legacyHtml(){const T=[...(s.tree||[]),lifeRec()],top=Math.max(1,...T.ma
     <p>${r.cause?`Lived to ${r.age}, died ${esc(r.cause)}.`:`${r.age} and counting.`} ${esc(r.job)}, ${r.edu.toLowerCase()}. ${r.sp?`Married to ${esc(r.sp)}`:'Single'}${r.kids?`, ${r.kids} kid${r.kids>1?'s':''}`:''}.</p>
     ${known?`<p class="mut">${known}</p>`:''}
     ${r.mile?.length&&!now?`<details><summary>Their story</summary><ol class="story">${r.mile.map(m=>`<li><span class="num">${m.a}</span><span>${m.t}</span></li>`).join('')}</ol></details>`:''}</div>`}).join('')}</div>
+  ${trustHtml()}
   ${givingHtml()}`}
 
 // ---------- giving: donations are tax-deductible up to 60% of the year's income; a foundation keeps giving after you're gone ----------
@@ -446,7 +447,7 @@ function cityHtml(){const cur=s.city||'suburb',c=moveCost();
 // ---------- old age: Social Security from 67 for anyone who worked, and care when health fails ----------
 const SS_AGE=67;
 function ssBenefit(){const yrs=(s.wage||0)>0?Math.min(35,xpT()):0,avg=(s.wage||0)/Math.max(35*365,1);return Math.round(Math.min(130*s.eco.P,avg*.42+(yrs>=10?10*s.eco.P:0)))} // about 40% of your average pay over 35 years, capped
-const careCost=()=>age()>=75&&s.st.hea<35?160*s.eco.P:0;
+const careCost=()=>!s.rc&&age()>=75&&s.st.hea<35?160*s.eco.P:0; // a retirement community includes care
 function oldDay(A){
   if(s.job)s.wage=(s.wage||0)+jobPay();
   if(A>=SS_AGE&&!s.ss&&(s.wage||0)>0){s.ss=ssBenefit();s.pension=(s.pension||0)+s.ss;log(`Social Security starts: ${fmt(s.ss)} a day for life.`,'good');toast('Social Security starts')}
@@ -632,7 +633,8 @@ const dietCost=()=>diet().c*s.eco.P*(1+(partner()?.role==='spouse'?.6:0)+kidsHom
 function styleHtml(){const H=s.hours||'full',D=s.diet||'normal';
   return `<div class="sec-h"><h2>How you live</h2><span>change these any time</span></div>
   <div class="styles"><div><p class="mut">Work hours${s.job?'':' (when you have a job)'}</p><div class="seg2 wrap">${Object.entries(HOURS).map(([k,x])=>`<button class="${H===k?'on':''}" data-a="hours" data-x="${k}" title="${x.d}">${x.n}</button>`).join('')}</div><p class="mut sm">${hours().d}.</p></div>
-  <div><p class="mut">Food</p><div class="seg2 wrap">${Object.entries(DIETS).map(([k,x])=>`<button class="${D===k?'on':''}" data-a="diet" data-x="${k}" title="${x.d}">${x.n}</button>`).join('')}</div><p class="mut sm">${diet().d}. ${dietCost()?`${dietCost()>0?'+':'−'}${fmt(Math.abs(dietCost()))} a day on groceries.`:''}</p></div></div>`}
+  <div><p class="mut">Food</p><div class="seg2 wrap">${Object.entries(DIETS).map(([k,x])=>`<button class="${D===k?'on':''}" data-a="diet" data-x="${k}" title="${x.d}">${x.n}</button>`).join('')}</div><p class="mut sm">${diet().d}. ${dietCost()?`${dietCost()>0?'+':'−'}${fmt(Math.abs(dietCost()))} a day on groceries.`:''}</p></div></div>
+  ${s.rc?`<p class="mut" style="margin-top:var(--space-xs)">You live in a retirement community: meals and care included for ${fmt(commFee())} a day.</p>`:age()>=65?`<div class="quick" style="margin-top:var(--space-xs)"><button data-a="comm">Move into a retirement community · ${fmt(commFee())} a day, care included${homeP()?', selling your home':''}</button></div>`:''}`}
 
 // ---------- a housing cycle: a couple of boom years, then a bust ----------
 WORLD.housing={n:'Housing boom',rate:1/30,len:[900,1400],d:'House prices are climbing fast. Everyone says they only go up.'};
@@ -646,4 +648,27 @@ const EV11=[
 {id:'petsick',w:s=>s.pets.some(p=>p.t!=='fish')?.7:0,c:s=>s.pets.some(p=>p.t!=='fish'),a:s=>pick(s.pets.filter(p=>p.t!=='fish'))?.uid,t:'A trip to the vet',d:(s,a)=>{const p=s.pets.find(x=>x.uid===a);return p?`${esc(p.n)} has been off their food, and the vet found something serious. Surgery would cost about <b>${fmt(2500*s.eco.P*(p.t==='horse'?4:1))}</b>.`:'A vet visit.'},def:0,ch:[
  ['Pay for the surgery',(s,a)=>{const p=s.pets.find(x=>x.uid===a);if(!p)return 'The moment has passed.';s.cash-=2500*s.eco.P*(p.t==='horse'?4:1);if(R()<.8){p.dies+=rint(365,1460);add('hap',4);return `${p.n} pulled through, and has years left in them.`}s.pets.splice(s.pets.indexOf(p),1);add('hap',-12);return `The vets did everything they could. ${p.n} didn't make it.`}],
  ['Keep them comfortable',(s,a)=>{const p=s.pets.find(x=>x.uid===a);if(!p)return 'The moment has passed.';p.dies=Math.min(p.dies,s.day+rint(30,120));add('hap',-4);return `You make the most of the time ${p.n} has left.`}]]},
+];
+
+// ---------- a family trust: gifts to your heirs now, using up the lifetime exemption; growth after that escapes estate tax ----------
+const EXEMPT=13e6;
+const trust=()=>s.trust??={v:0,used:0};
+const exemptLeft=()=>Math.max(0,EXEMPT*s.eco.P-trust().used);
+function trustAdd(v){const T=trust();v=Math.min(v,Math.max(0,s.cash));if(v<1)return 0;const room=exemptLeft(),over=Math.max(0,v-room),gt=over*.4;
+  if(s.cash<v+gt){v=Math.max(0,(s.cash+room*.4)/1.4);return trustAdd(v)} // leave room for the gift tax
+  s.cash-=v+gt;T.v+=v;T.used+=v;T.gt=(T.gt||0)+gt;return gt}
+function trustDay(){const T=s.trust;if(T?.v)T.v*=1+.06/365}
+function trustHtml(){const T=trust(),P=s.eco.P,c=s.cash,amts=[.1,.25].map(f=>Math.round(c*f)).filter(v=>v>=1e4*P);
+  return `<div class="sec-h"><h2>Family trust</h2><span>${T.v?`${fmt(T.v)} held for your heirs`:'empty'}</span></div>
+  <p class="mut">Money you move into the trust is a gift to your heirs: it leaves your net worth, grows about 6% a year, and passes to your heir with no estate tax. Gifts use up your ${fmt(EXEMPT*P)} lifetime exemption first (${fmt(exemptLeft())} left); beyond that, you pay 40% gift tax up front. The earlier you give, the more of the growth escapes the estate tax.${T.gt?` You've paid ${fmt(T.gt)} in gift tax.`:''}</p>
+  ${amts.length?`<div class="quick" style="margin-top:var(--space-xs)">${amts.map(v=>`<button data-a="trust" data-x="${v}">Move ${fmt(v)} into the trust${v>exemptLeft()?` (+${fmt((v-exemptLeft())*.4)} gift tax)`:''}</button>`).join('')}</div>`:''}`}
+
+// ---------- old age: a retirement community, and grandkids who visit ----------
+const commFee=()=>140*s.eco.P*city().cost; // a day, with meals and care included
+function moveComm(){if(s.rc||age()<65)return;const h=homeP();if(h){const i=s.props.indexOf(h),v=pval(h),gn=v*.97-h.paid;s.cash+=v*.97-h.loan;capGain(gn>0?Math.max(0,gn-250000*s.eco.P):gn,h.bought);s.props.splice(i,1);s.home=null}
+  s.rc=1;add('hap',6);if(friendsN()<10){const p=meet('friend',50,s.day-rint(65,85)*365);mile(`Moved into a retirement community and met ${esc(p.n)}.`)}else mile('Moved into a retirement community.');log(`You moved into a retirement community${h?` and sold your ${pname(h)}`:''}. Meals and care are included for ${fmt(commFee())} a day.`,'good')}
+const EV12=[
+{id:'gkvisit',w:s=>age()>=55&&kids().some(k=>k.k?.gk?.length)?2:0,c:s=>age()>=55&&kids().some(k=>k.k?.gk?.length),a:s=>pick(kids().filter(k=>k.k?.gk?.length))?.uid,t:'The grandkids are visiting',d:(s,a)=>{const k=per(a);return k?`${esc(k.n)} is bringing ${k.k.gk.length===1?esc(k.k.gk[0].n):'the grandkids'} for the weekend.`:'The grandkids are coming.'},def:0,ch:[
+ ['Spoil them rotten',(s,a)=>{const k=per(a);if(!k)return 'The moment has passed.';const v=Math.round(300*s.eco.P*k.k.gk.length);s.cash-=v;prel(k,6);add('hap',9);return `Ice cream, toys and zero bedtimes. ${fmt(v)} well spent.`}],
+ ['A quiet weekend in',(s,a)=>{const k=per(a);if(k)prel(k,3);add('hap',5);return 'Board games and stories. Lovely.'}]]},
 ];
