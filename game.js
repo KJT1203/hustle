@@ -429,7 +429,7 @@ const EV=[
 // ---------- health: conditions come with age and lifestyle; some start hidden and only a check-up finds them ----------
 // r(A) is the chance a year of getting it at age A. Treated conditions cost a little each day (med); untreated ones drain health and happiness, and the worst can kill.
 const CONDS={
- flu:{n:'Flu',acute:1,r:A=>1.1*(1+Math.max(0,60-s.st.hea)/40),len:[5,10],hea:.4,hap:.2,tx:'See a doctor',tc:150,d:'Rest it off, or see a doctor to get over it in a couple of days.'},
+ flu:{n:'Flu',acute:1,r:A=>1.1*(1+Math.max(0,60-s.st.hea)/40)*(world('pandemic')?3:1),len:[5,10],hea:.4,hap:.2,tx:'See a doctor',tc:150,d:'Rest it off, or see a doctor to get over it in a couple of days.'},
  inj:{n:'Sports injury',acute:1,r:()=>.12,len:[40,70],hea:.12,hap:.08,tx:'Physiotherapy',tc:2500,d:'Heals on its own in a couple of months, or in about 10 days with physio.'},
  back:{n:'Back pain',r:A=>A<28?0:.02*(1+(A-28)/20)*(job()?.str<=2?1.6:1),hea:.02,hap:.06,tx:'Physiotherapy',tc:1800,d:'Nags every day. Physio fixes it about two times in three.'},
  dep:{n:'Depression',r:()=>.03+(s.st.hap<30?1.5*(30-s.st.hap)/30:0),hap:.14,med:20,tx:'Start therapy',d:'Drags your mood down every day. Therapy costs about $20 a day and usually lifts it within a few months.'},
@@ -701,7 +701,7 @@ function suDay(){const u=s.su,I=IM[u.idea],P=s.eco.P;
   if(nx&&u.prog>=nx.at&&!u.offer&&s.day>=u.retry){
     if(nx.n==='IPO'){if(u.hires<nx.team)return;const V=nx.val*I.mult*(.5+R())*(s.eco.rec?.6:1)*P;return suExit(V,'ipo')}
     if(u.hires<nx.team){}
-    else if(R()<nx.odds*(1-I.risk*.5)+(u.prog-nx.at)/(nx.at*4)-(s.eco.rec?.25:0)){const pre=Math.round(nx.val*I.mult*(.6+R()*.9)*(s.eco.rec?.6:1)*P),raise=Math.round(nx.raise*P*(.8+R()*.4));u.offer={pre,raise,d:s.day};log(`${esc(u.n)}: investors offer <b>${fmt(raise)}</b> at a ${fmt(pre)} valuation for a ${nx.n}.`,'good');toast(`${nx.n} offer for ${esc(u.n)}`)}
+    else if(R()<nx.odds*(1-I.risk*.5)+(u.prog-nx.at)/(nx.at*4)-(s.eco.rec?.25:0)+(world('techboom')?.15:0)){const pre=Math.round(nx.val*I.mult*(.6+R()*.9)*(s.eco.rec?.6:1)*(world('techboom')?1.5:1)*P),raise=Math.round(nx.raise*P*(.8+R()*.4));u.offer={pre,raise,d:s.day};log(`${esc(u.n)}: investors offer <b>${fmt(raise)}</b> at a ${fmt(pre)} valuation for a ${nx.n}.`,'good');toast(`${nx.n} offer for ${esc(u.n)}`)}
     else if(++u.fails>=3){const back=Math.max(0,u.cash)*u.own;s.cash+=back;capGain(back-u.basis,u.d);s.su=null;add('hap',-20);(s.car2??={}).dead=(s.car2.dead||0)+1;log(`Nobody will fund <b>${esc(u.n)}</b>'s ${nx.n}. You wind it down and get back ${fmt(back)}.`,'bad');toast(`${esc(u.n)} wound down`);return}
     else{u.retry=s.day+90;u.prog-=(nx.at-SUST[u.st].at)*.2;log(`${esc(u.n)}: investors passed on your ${nx.n}. You rework the plan and can pitch again in 90 days. ${u.fails===2?'One more no and the company is finished.':''}`,'bad')}}
   if(u.offer&&s.day-u.offer.d>30){delete u.offer;u.retry=s.day+30;log(`${esc(u.n)}: the funding offer expired.`)}
@@ -745,7 +745,73 @@ function flHtml(){const F=s.fl,cap=flCap();if(!cap)return '';
 const teamHtml=()=>{const b=boss(),m=mates();if(!s.job||!b&&!m.length)return '';return `<div class="sec-h"><h2>Your team</h2>${b&&BOSSES[b.bt]?`<span>${esc(b.n)} is a ${BOSSES[b.bt].n.toLowerCase()} boss: ${BOSSES[b.bt].d}</span>`:''}</div><div class="plist">${[b,...m].filter(Boolean).map(personRow).join('')}</div>`};
 const foundHtml=()=>s.su?'':`<div class="sec-h"><h2>Start a company</h2><span>a full-time career: you quit your job to found it</span></div>
   <div class="acards">${IDEAS.map(I=>`<button class="acard" data-a="found" data-x="${I.id}" ${s.cash<suSeed()||jailed()?'disabled':''}><b>${I.n}</b><span>${I.d}.${xpY(I.fld)>=1?` Your ${FIELD[I.fld]} experience helps.`:''}</span><small>${s.cash<suSeed()?`Needs ${fmt(1e4*s.eco.P)} to start`:`Found with ${fmt(suSeed())}`}</small></button>`).join('')}</div>`;
-EV.push(...EV2,...EV3,...EV4);
+
+// ---------- the family tree: a record of every generation, carried from heir to heir ----------
+function lifeRec(){const w=netWorth(),pt=partner();return {gen:s.gen,n:s.name,age:Math.floor(age()),cause:s.dead?(s.cause||'of old age'):null,nw:Math.round(w),real:Math.round(w/s.eco.P),
+  job:s.job?jobTitle():s.su?`Founder of ${s.su.n}`:s.pension?'Retired':'Out of work',kids:kids().length,sp:pt?.role==='spouse'?pt.n:null,tr:s.tr||[],edu:EDU[s.edu].n,
+  exits:(s.car2?.acq||0)+(s.car2?.ipo||0),rec:s.legal.rec.length,given:Math.round(s.given||0),goals:Object.values(s.goals).filter(g=>g.gen===s.gen).length}}
+function legacyHtml(){const T=[...(s.tree||[]),lifeRec()],top=Math.max(1,...T.map(r=>r.real)),founder=T[0].n,tot=T.reduce((a,r)=>a+r.real,0);
+  return `<section class="lede solo"><div><h2 class="headline">The family of ${esc(founder)}</h2><p class="dek">${T.length===1?`The first generation. Everything starts with ${esc(s.name)}.`:`${T.length} generations so far. Together they built <b class="num">${fmt(tot)}</b> in today's money, and reached ${Object.keys(s.goals).length} of ${GOALS.length} family goals.`}${s.given?` They have given away <b class="num">${fmt(T.reduce((a,r)=>a+r.given,0))}</b>.`:''}</p></div></section>
+  <div class="sec-h"><h2>Fortune by generation</h2><span>net worth in today's money${T.length>1?', at death':''}</span></div>
+  <div class="gbars">${T.map(r=>`<div><span class="mut">${r.gen}</span><i style="width:${Math.max(1,Math.sqrt(Math.max(0,r.real)/top)*100)}%"></i><b class="num">${fmt(r.real)}</b></div>`).join('')}</div>
+  <div class="sec-h"><h2>Every generation</h2></div>
+  <div class="scroll"><table class="ledger"><thead><tr><th>Gen</th><th>Name</th><th>Lived</th><th>Career</th><th class="r">Fortune</th><th>Family</th><th>Known for</th></tr></thead><tbody>
+  ${T.map((r,i)=>`<tr${i===T.length-1?' class="now"':''}><td class="num">${r.gen}</td><td><b>${esc(r.n)}</b>${i===T.length-1?' <span class="mut">(you)</span>':''}</td><td>${r.cause?`${r.age}, died ${esc(r.cause)}`:`${r.age} and counting`}</td><td>${esc(r.job)}<div class="sub">${r.edu}</div></td><td class="r num">${fmt(r.nw)}</td>
+   <td>${r.sp?`Married to ${esc(r.sp)}`:'Single'}${r.kids?`, ${r.kids} kid${r.kids>1?'s':''}`:''}</td><td class="mut">${[trTxt(r.tr),r.exits?`${r.exits} startup exit${r.exits>1?'s':''}`:'',r.given>=1e6?`gave ${fmt(r.given)}`:'',r.rec?`${r.rec} conviction${r.rec>1?'s':''}`:'',r.goals?`${r.goals} goal${r.goals>1?'s':''}`:''].filter(Boolean).join(' · ')||'—'}</td></tr>`).join('')}
+  </tbody></table></div>
+  ${givingHtml()}`}
+
+// ---------- giving: donations are tax-deductible up to 60% of the year's income; a foundation keeps giving after you're gone ----------
+function donate(v,to){v=Math.min(v,Math.max(0,s.cash));if(v<1)return 0;s.cash-=v;taxRoll();const T=s.tax,room=donRoom(),ded=Math.min(v,room);T.don=(T.don||0)+ded;if(ded)taxAdd('ord',-ded);
+  if(to==='fdn'){s.fdn=(s.fdn||0)+v}else{s.given=(s.given||0)+v;add('hap',Math.min(15,2+Math.log10(v)*1.5));s.fol+=Math.round(Math.sqrt(v)/5)}return ded}
+function fdnDay(){if(!s.fdn)return;const g=s.fdn*.05/365;s.fdn*=1+.07/365;s.fdn-=g;s.given=(s.given||0)+g;add('hap',Math.min(.02,Math.log10(1+g)*.004));s.fol+=g/2000}
+const donRoom=()=>{const T=s.tax;return Math.max(0,(T.ord+(T.don||0))*.6-(T.don||0))}; // 60% of the year's income before deductions
+function givingHtml(){const P=s.eco.P,c=s.cash,room=donRoom();
+  const amts=[.01,.1,.25].map(f=>Math.round(c*f)).filter(v=>v>=100);
+  return `<div class="sec-h"><h2>Giving</h2><span>${s.given?`${fmt(s.given)} given this lifetime`:'nothing given yet'}</span></div>
+  <p class="mut">Donations lift your mood and your name, and cut your income tax: up to ${fmt(room)} more this year is deductible (60% of your income).${s.fdn?'':` Put ${fmt(1e6*P)} or more into a family foundation and it grants 5% a year forever, even after you die.`}</p>
+  <div class="quick" style="margin-top:var(--space-xs)">${amts.map(v=>`<button data-a="give" data-x="${v}">Donate ${fmt(v)}</button>`).join('')||'<span class="mut">Save a little first.</span>'}${c>=1e6*P||s.fdn?`<button class="pri" data-a="give" data-x="${Math.round(Math.max(1e6*P,c*.1))}" data-y="fdn">${s.fdn?'Add':'Endow a foundation with'} ${fmt(Math.max(1e6*P,c*.1))}</button>`:''}</div>
+  ${s.fdn?`<p class="mut" style="margin-top:var(--space-2xs)">The family foundation holds <b class="num">${fmt(s.fdn)}</b> and grants about <b class="num">${fmt(s.fdn*.05)}</b> a year. It isn't part of your net worth, and it passes to your heir.</p>`:''}`}
+
+// ---------- property condition: wear, fixer-uppers and renovation ----------
+const cmul=p=>(.7+.3*(p.cond??100)/100)*(p.rv?1.08:1);
+const lval=l=>PM[l.t].base*l.m*s.re.idx*cmul(l);
+const renoCost=p=>PM[p.t].base*p.m*s.re.idx*(.02+.18*(100-(p.cond??100))/100+(p.rv?0:.05));
+const condWord=c=>(c??100)>=85?'Good':(c??100)>=60?'Worn':'Needs work';
+function propDay(){for(const p of s.props){
+  if(p.reno){if(s.day>=p.reno){p.cond=100;p.rv=1;delete p.reno;if(s.home!==p.uid)p.from=s.day+rint(10,30);log(`The renovation of your ${pname(p)} is finished. It's worth ${fmt(pval(p))} now.`,'good')}continue}
+  p.cond=Math.max(0,(p.cond??100)-(renting(p)?1.5:.8)/365);
+  if(renting(p)&&!p.reno&&R()<1/(3*365)){p.from=s.day+Math.round(rint(10,40)*(s.eco.rec?2:1));log(`Your tenants at ${pname(p)} moved out. Finding new ones.`)}}}
+const EV5=[
+{id:'latepay',w:s=>s.props.some(p=>renting(p))?1.2:0,c:s=>s.props.some(p=>renting(p)),a:s=>pick(s.props.filter(p=>renting(p)))?.uid,t:'Rent is late',d:(s,a)=>`The tenants at your ${P(a)?pname(P(a)):'rental'} have stopped paying. They say they lost their jobs.`,def:1,ch:[
+ ['Evict them',(s,a)=>{const p=P(a);if(!p)return 'The moment has passed.';const v=Math.round(2500*s.eco.P);s.cash-=v;p.from=s.day+rint(45,90);add('hap',-2);return `Lawyers cost ${fmt(v)}, and the place sits empty for a while.`}],
+ ['Offer a payment plan',(s,a)=>{const p=P(a);if(!p)return 'The moment has passed.';p.from=s.day+30;if(R()<.7)s.later.push({d:s.day+120,k:'cash',v:Math.round(rentOf({...p,from:0})*30),m:'Your tenants caught up on the back rent:'});add('hap',2);return 'A month without rent. They promise to catch up.'}]]},
+{id:'damage',w:s=>s.props.some(p=>renting(p))?1:0,c:s=>s.props.some(p=>renting(p)),a:s=>pick(s.props.filter(p=>renting(p)))?.uid,t:'Trashed',d:(s,a)=>`A neighbor sends photos: your tenants at ${P(a)?pname(P(a)):'your rental'} threw a party that went very wrong.`,def:0,ch:[
+ ['Keep the deposit and repair it',(s,a)=>{const p=P(a);if(!p)return 'The moment has passed.';p.cond=Math.max(0,(p.cond??100)-8);return 'The deposit covers most of it. Most.'}],
+ ['Take them to court',(s,a)=>{const p=P(a);if(!p)return 'The moment has passed.';p.cond=Math.max(0,(p.cond??100)-15);if(R()<.6){const v=Math.round(5000*s.eco.P);s.cash+=v;return `You won ${fmt(v)} in damages.`}return 'The judge sided with them. You pay for the repairs.'}]]},
+{id:'roof',w:s=>s.props.length?1:0,c:s=>s.props.length>0,a:s=>pick(s.props)?.uid,t:'The roof',d:(s,a)=>{const p=P(a);return p?`The roof on your ${pname(p)} is leaking. A proper fix is <b>${fmt(pval(p)*.015)}</b>.`:'A leak.'},def:1,ch:[
+ ['Fix it properly',(s,a)=>{const p=P(a);if(!p)return 'The moment has passed.';s.cash-=pval(p)*.015;return 'Good as new.'}],
+ ['Patch it',(s,a)=>{const p=P(a);if(!p)return 'The moment has passed.';s.cash-=pval(p)*.003;p.cond=Math.max(0,(p.cond??100)-12);return 'It holds, for now. The place looks tired.'}]]},
+];
+
+// ---------- world events: rare shocks that hit health, the economy, markets and property at once ----------
+const WORLD={
+ pandemic:{n:'Pandemic',rate:1/40,len:[400,700],d:'Illness spreads fast, restaurants and gyms empty out, and apps boom.'},
+ techboom:{n:'Tech boom',rate:1/25,len:[600,1100],d:'Tech stocks run hot and investors throw money at startups.'},
+};
+const world=k=>s.world?.id===k&&s.day<s.world.end;
+const worldBiz=b=>world('pandemic')?(['lemon','truck','cafe','gym','hotel','wash'].includes(b.id)?.55:b.id==='app'?1.25:1):1;
+function worldDay(){
+  if(s.world&&s.day>=s.world.end){log(`The ${WORLD[s.world.id].n.toLowerCase()} is over.`,'good');s.world=null}
+  if(s.world)return;
+  for(const k in WORLD)if(R()<WORLD[k].rate/365){const W=WORLD[k];s.world={id:k,end:s.day+rint(...W.len)};log(`<b>${W.n}.</b> ${W.d}`,'bad');toast(W.n);chirp('@MarketWire','MarketWire',k==='pandemic'?'BREAKING: health officials declare a pandemic. markets in freefall':'tech is on fire. every startup is raising',1);
+    if(k==='pandemic'){crash(false);s.eco.g=Math.min(s.eco.g,-.8);if(!cond('flu')&&R()<.4)addCond('flu')}
+    if(k==='techboom')for(const t of STOCKS)if(t.sec==='Tech'||t.sec==='Semis')s.px[t.t].gr=s.world.end;
+    return}
+  if(R()<1/(15*365)&&s.props.length){const hit=s.props.filter(()=>R()<.5);if(!hit.length)return;for(const p of hit)p.cond=Math.max(0,(p.cond??100)-rint(10,35));add('hap',-5);
+    const m=`A storm tore through town and damaged ${hit.length===1?`your ${pname(hit[0])}`:`${hit.length} of your properties`}.`;log(m,'bad');toast('Storm damage')}
+}
+EV.push(...EV2,...EV3,...EV4,...EV5);
 const EVM=EM(EV.map(e=>[e.id,e]));
 
 // ---------- businesses: realistic returns, and profits that ride the economy ----------
@@ -813,9 +879,10 @@ function taxParts(T=s.tax){ // capital losses net against gains, and up to $3,00
   if(st+lt<0){ord+=Math.max(st+lt,-3000*s.eco.P);st=lt=0}ord=Math.max(0,ord+Math.max(0,st));return {ord,lt:Math.max(0,lt)}}
 function taxDue(T=s.tax){const{ord,lt}=taxParts(T);return bracketTax(ord,BRK)+bracketTax(lt,LTB,ord)}
 function taxAdd(kind,amt){ // book income (or a deduction or loss, if negative) and settle the tax difference now
-  if(!amt||!s.tax)return;const T=s.tax,y=dateOf(s.day).y;
-  if(T.y!==y){if(T.y){const inc=taxParts(T);T.hist[T.y]={inc:inc.ord+inc.lt,tax:T.paid};if(T.paid>1)log(`Tax year ${T.y} closed: ${fmt(T.paid)} on ${fmt(inc.ord+inc.lt)} of taxable income.`)}Object.assign(T,{y,ord:0,st:0,lt:0,gam:0,paid:0})}
+  if(!amt||!s.tax)return;const T=s.tax;taxRoll();
   const before=taxDue();T[kind]+=amt;const d=taxDue()-before;s.cash-=d;T.paid+=d}
+function taxRoll(){const T=s.tax,y=dateOf(s.day).y; // close last year's books when a new tax year starts
+  if(T.y!==y){if(T.y){const inc=taxParts(T);T.hist[T.y]={inc:inc.ord+inc.lt,tax:T.paid};if(T.paid>1)log(`Tax year ${T.y} closed: ${fmt(T.paid)} on ${fmt(inc.ord+inc.lt)} of taxable income.`)}Object.assign(T,{y,ord:0,st:0,lt:0,gam:0,paid:0,don:0})}}
 function capGain(g,since){taxAdd(since!=null&&s.day-since<=365?'st':'lt',g)} // held a year or less: taxed like income
 const margRate=()=>{const{ord}=taxParts(),P=s.eco.P;for(const[hi,r]of BRK)if(ord<hi*P)return r;return .37};
 const avgDay=(d0,n0,n)=>d0==null?s.day:(d0*n0+s.day*n)/(n0+n); // the average purchase day of a holding, for the holding period
@@ -867,7 +934,7 @@ function peopleDay(){
 }
 const bmul=n=>1.5**MILES.filter(m=>n>=m).length; // each milestone adds half again: bigger chains still pay, with diminishing returns
 const mgrCost=b=>b.cost*2; // hiring and training a manager to run every unit of one business
-const bizInc=(b,o)=>b.inc*o.n*bmul(o.n)*s.legacy*(s.day<s.boost?1.25:1)*bizPf(b);
+const bizInc=(b,o)=>b.inc*o.n*bmul(o.n)*s.legacy*(s.day<s.boost?1.25:1)*bizPf(b)*worldBiz(b);
 const grw=b=>b.gr||GROW; // how much each extra unit costs over the last
 const bcost=(b,n,q)=>{const g=grw(b);return b.cost*g**n*(g**q-1)/(g-1)};
 const bmax=(b,n)=>{const g=grw(b);return Math.floor(Math.log(s.cash*(g-1)/(b.cost*g**n)+1)/Math.log(g))};
@@ -876,11 +943,11 @@ const shopSum=k=>SHOP.reduce((t,i)=>t+(s.own[i.id]?i[k]:0),0);
 const sponsor=()=>s.fol<1000?0:s.fol*.0015*(.5+s.st.loo/100);
 const MN=30*365,mpay=(L,rate=mrate())=>L*(rate/365)/(1-(1+rate/365)**-MN);
 const uid=()=>s.nid=(s.nid||0)+1;
-const pval=p=>PM[p.t].base*p.m*s.re.idx;
+const pval=p=>PM[p.t].base*p.m*s.re.idx*cmul(p);
 const pname=p=>`${PM[p.t].n}, ${p.loc}`;
 const P=u=>s.props.find(p=>p.uid===u);
 const homeP=()=>s.home&&P(s.home);
-const renting=p=>p.uid!==s.home&&s.day>=p.from;
+const renting=p=>p.uid!==s.home&&s.day>=p.from&&!p.reno;
 const rentOf=p=>renting(p)?pval(p)*PM[p.t].yld/365:0;
 const carSum=k=>s.cars.reduce((t,c)=>t+CM[c.t][k],0);
 const bestCar=()=>s.cars.reduce((m,c)=>!m||CM[c.t].hap>CM[m.t].hap?c:m,null);
@@ -888,7 +955,7 @@ const upkeep=()=>shopSum('up')+carSum('up')+s.props.reduce((t,p)=>t+pval(p)*.02/
 const salaryNow=()=>(s.job?jobPay():0)+(s.pension||0),rentNow=()=>homeP()?0:clamp(salaryNow()*.25,20*s.eco.P,90*s.eco.P); // renters spend about a quarter of their pay on housing
 const expenses=()=>rentNow()+(15+kidsHome()*47+(partner()?.role==='spouse'?20:0))*s.eco.P+salaryNow()*.15+upkeep()+lifeCost(); // lifestyle grows with pay
 const canBorrow=L=>{const f=flows();return mpay(L)+f.mort<=(f.job+f.biz+f.rent)*.4};
-function listing(){const nw=Math.max(netWorth(),60000),ok=PROPS.filter(p=>p.base<=nw*4),[loc,m]=pick(LOCS);return {uid:uid(),t:pick(ok.slice(-4)).id,loc,m:m*(.92+R()*.16)}}
+function listing(){const nw=Math.max(netWorth(),60000),ok=PROPS.filter(p=>p.base<=nw*4),[loc,m]=pick(LOCS);return {uid:uid(),t:pick(ok.slice(-4)).id,loc,m:m*(.92+R()*.16),cond:R()<.2?rint(25,55):rint(85,100)}}
 function relist(){s.re.list=Array.from({length:6},listing);s.re.next=s.day+30}
 function upgrade(){ // bring older saves up to date
   if(!s.cx){s.wallet={};initCrypto();const m=s.port.MOON;if(m){s.wallet.MOON={u:m.sh,c:m.cost};delete s.port.MOON}delete s.px.MOON}
@@ -972,7 +1039,7 @@ function newGame(name,bg,h={}){
      job:b.job||null,jobDays:0,rank:0,biz:{},port:{},px:{},mkt:{bull:true,h:MVOL.bull**2/YR,eps:0,cb:0,div:1,ic:1,ih:1,rc:1e13},orders:[],fol:b.fol||0,feed:[],own:{},people:[],degs:b.edu?[{p:'dip',sc:'cc',mj:'Computer science',hon:false}]:[],debt:0,xp:{},perf:50,raise:0,pension:0,wallet:{},cz:{chip:100,net:0,played:0,rh:[],ban:0},props:[],cars:[],home:null,re:{idx:1,list:[],next:0},cd:{},inbox:[],later:[],log:[],fl:flNew(),su:null,pets:[],conds:[],ins:'basic',legal:{rec:[],cases:[],jail:0},hob:{},
      gen:h.gen||1,boost:0,lastPost:0,dead:0,lastSeen:Date.now(),goals:{...h.goals},min:480,eco:h.eco?{...h.eco}:ecoNew(),fin:finNew(),tax:taxNew(),mloan:0,shorts:{},opts:[]};applyPrices();
   s.legacy=1+.25*(s.gen-1);
-  s.tr=h.tr||rollTraits().slice(0,1);
+  s.tr=h.tr||rollTraits().slice(0,1);s.tree=h.tree||[];s.fdn=h.fdn||0;
   if(h.ks){for(const k in h.ks)s.st[k]=Math.round(clamp(h.ks[k],0,100));s.cash+=h.fund||0;s.debt=h.loan||0;if(h.degs){s.degs=h.degs;s.edu=h.edu}if(h.job){s.job=h.job;s.xp=h.xp||{}}if(h.study)s.study=h.study} // the heir is the person their childhood made
   else if(h.gen){s.st.sma=Math.round(s.st.sma*.7+h.sma*.3);s.st.loo=Math.round(s.st.loo*.7+h.loo*.3)} // a little of the family runs in the blood
   if(h.pets)s.pets=h.pets.map(p=>({...p,uid:uid()}));
@@ -1019,7 +1086,7 @@ function day(live){
   s.later=s.later.filter(p=>p.d>s.day||(runLater(p),false));
   s.inbox=s.inbox.filter(it=>{if(s.day-it.d<30)return true;const e=EVM[it.id];if(!e.c||e.c(s))log(`<b>${e.t}</b> ${e.ch[e.def][1](s,it.a)}<span class="auto">decided for you</span>`);return false});
   if(s.inbox.length<3&&R()<1/28)newEvent();
-  flDay();if(s.su)suDay();
+  flDay();if(s.su)suDay();propDay();worldDay();fdnDay();
   lifeDay(A);if(s.dead)return;
   const pd=s.st.hea<=0?1:A>60?Math.min(.5,((A-60)/30)**3*3)/365:0;
   if(R()<pd)die();else checkGoals();
@@ -1318,7 +1385,7 @@ function newEvent(){
   let r=R()*ok.reduce((t,e)=>t+W(e),0);
   for(const e of ok)if((r-=W(e))<=0){s.inbox.push({id:e.id,d:s.day,a:e.a?e.a(s):0});toast('A new decision is waiting');return}
 }
-function die(){s.dead=1;log(`${esc(s.name)} passed away at ${Math.floor(age())}${s.cause?' '+s.cause:''}.`,'bad');save();lbPost(true);deathModal()}
+function die(){s.dead=1;(s.tree??=[]).push(lifeRec());log(`${esc(s.name)} passed away at ${Math.floor(age())}${s.cause?' '+s.cause:''}.`,'bad');save();lbPost(true);deathModal()}
 
 // ---------- goals: a family trophy case, kept across generations ----------
 const nOwned=()=>BIZ.filter(b=>s.biz[b.id]?.n).length,maxBiz=()=>Math.max(0,...Object.values(s.biz).map(o=>o.n)),has=c=>[c?1:0,1];
@@ -1354,6 +1421,8 @@ const GOALS=[
  {id:'rocket',n:'To the moon',d:'Open a Rocket Company',p:()=>has(s.biz.rocket?.n)},
  {id:'old',n:'Long life',d:'Live to 85',p:()=>[age(),85]},
  {id:'gen3',n:'Dynasty',d:'Reach the third generation',p:()=>[s.gen,3]},
+ {id:'give',n:'Philanthropist',d:'Give $1M to charity in one lifetime',p:()=>[s.given||0,1e6],m:1},
+ {id:'fdn',n:'A family foundation',d:'Endow a foundation that gives forever',p:()=>has(s.fdn>0)},
  {id:'nw4',n:'Billionaire',d:'Reach a net worth of $1B',p:()=>[netWorth(),1e9],m:1},
 ];
 function checkGoals(quiet){
@@ -1368,7 +1437,7 @@ const goalAmt=(g,v)=>g.m?fmt(v):g.id==='old'||g.id==='peak'||g.id==='gen3'?Math.
 
 // ---------- the heir: one of your kids, or a relative if you had none ----------
 function heirOf(k){
-  const w=Math.max(0,netWorth()),tax=estateTax(w),h={inherit:(w-tax)*(k?1:.5),tax,gen:s.gen+1,last:s.name,goals:s.goals,sma:s.st.sma,loo:s.st.loo,eco:s.eco};
+  const w=Math.max(0,netWorth()),tax=estateTax(w),h={tree:s.tree,fdn:s.fdn||0,inherit:(w-tax)*(k?1:.5),tax,gen:s.gen+1,last:s.name,goals:s.goals,sma:s.st.sma,loo:s.st.loo,eco:s.eco};
   if(!k)return h;
   const skip=Math.max(0,18*365-(s.day-k.b)),carry=p=>({n:p.n,b:p.b-s.day-skip,rel:(p.rel+k.rel)/2});
   const K=k.k,x={};if(K){const age18=k.b+18*365;if(!K.path&&s.day+skip>=age18){const d=s.day;s.day+=skip;kidLaunch(k,1);s.day=d}
@@ -1407,6 +1476,8 @@ const dur=sec=>sec<3600?`${Math.round(sec/60)} minutes`:sec<172800?`${Math.floor
 
 // ---------- actions ----------
 const ACT={
+  reno:u=>{const p=P(+u);if(!p||p.reno)return;const c=renoCost(p);if(s.cash<c)return;s.cash-=c;p.reno=s.day+60;toast(`Renovation started: ${fmt(c)}, about 60 days.`)},
+  give:(v,to)=>{v=+v;if(!(v>0)||s.cash<v)return;const ded=donate(v,to);log(to==='fdn'?`Put ${fmt(v)} into the family foundation.`:`Donated ${fmt(v)} to charity.`,'good');toast(`${to==='fdn'?'Foundation':'Donation'}: ${fmt(v)}${ded?`, ${fmt(ded)} tax-deductible`:''}`)},
   flt:id=>{const F=s.fl,i=F.offers.findIndex(o=>o.id===+id);if(i<0||F.jobs.length>=flCap())return;const o=F.offers.splice(i,1)[0];F.jobs.push({...o,left:o.days});toast(`Contract started: ${o.n}`)},
   fldrop:id=>{const F=s.fl,i=F.jobs.findIndex(o=>o.id===+id);if(i<0)return;F.jobs.splice(i,1);F.rep=Math.max(0,F.rep-10);toast('Contract dropped. Your reputation took a hit.')},
   found:(id,y)=>{const I=IM[id];if(!I||s.su||s.cash<suSeed())return;if(y!=='yes')return modal(`<p class="kicker">Start a company</p><h2>Found a ${I.n.toLowerCase()} startup?</h2><p>You put in <b class="num">${fmt(suSeed())}</b> of your own money${s.job?` and quit your job as ${jobTitle()}`:''}. The company burns cash every day. Grow it until investors fund the next round, or it runs out of money and dies. Most startups do. The few that make it end in an acquisition or an IPO.</p><div class="row"><button class="pri" data-a="found" data-x="${id}" data-y="yes">Found it</button><button data-a="close">Not yet</button></div>`);closeModal();const u=found(id);if(u)toast(`${esc(u.n)} is born`)},
@@ -1522,7 +1593,7 @@ const ACT={
     s.cd.post=s.day+4;s.lastPost=s.day;add('hap',bad?-5:2);
     toast(`${P.n}: ${gain>=0?'+':''}${big(gain)} followers${viral?', it went viral':bad?', and it backfired':''}`);
     if(viral)log(`Your ${P.n.toLowerCase()} went viral! +${big(gain)} followers`,'good')},
-  pbuy:(u,x)=>{const i=s.re.list.findIndex(l=>l.uid===+u);if(i<0)return;const l=s.re.list[i],v=PM[l.t].base*l.m*s.re.idx,mort=x==='m';
+  pbuy:(u,x)=>{const i=s.re.list.findIndex(l=>l.uid===+u);if(i<0)return;const l=s.re.list[i],v=lval(l),mort=x==='m';
     if(s.cash<(mort?v*.2:v)||(mort&&!canBorrow(v*.8)))return;
     s.cash-=mort?v*.2:v;const p={...l,paid:v,bought:s.day,loan:mort?v*.8:0,pay:mort?mpay(v*.8):0,rate:mort?mrate():0,from:s.day+rint(5,20)};
     s.props.push(p);s.re.list.splice(i,1,listing());if(!homeP()&&!PM[p.t].biz)s.home=p.uid;add('hap',5);
@@ -1827,6 +1898,7 @@ function taxHtml(){
   <p class="mut" style="margin-top:var(--space-2xs)">Your next dollar of income is taxed at <b>${Math.round(margRate()*100)}%</b>${inc>0&&cur?`, and you're paying ${pctA((T.paid)/Math.max(1,inc))} of your taxable income overall`:''}. Hold investments longer than a year and the gain is taxed at 0-20% instead. Money you put in your retirement account comes off your taxable income.${last?` Last year you paid ${fmt(last.tax)}.`:''}</p>`;
 }
 const VIEWS={
+legacy(){return legacyHtml()},
 health(){
   const f=s.conds.filter(c=>!c.hid),I=INS[s.ins],m=medYear(),P=s.eco.P,doc=AM.doc,w=cdLeft('doc');
   const st=c=>CONDS[c.id].acute?`${c.left} day${c.left===1?'':'s'} to go`:c.tx>1?`In treatment · ${c.tx-s.day}d left`:c.tx===1?'<span class="up">Treated</span>':'<span class="dn">Untreated</span>';
@@ -2059,19 +2131,19 @@ casino(){
 home(){
   const f=flows(),idx=s.re.idx;let val=0,debt=0;for(const p of s.props){val+=pval(p);debt+=p.loan}
   return `<section class="lede"><div><h2 class="headline">Property</h2>
-    <p class="dek">${s.props.length?`You own ${s.props.length===1?'one property':s.props.length+' properties'} worth <b class="num">${fmt(val)}</b>${debt?`, with <b class="num">${fmt(debt)}</b> still owed to the bank`:''}. Tenants pay you <b class="num">${fmt(f.rent)}</b> a day.`:'You own nothing yet, so rent costs you $30 a day. A small flat on a mortgage can cost less than that.'}</p></div>
+    <p class="dek">${s.props.length?`You own ${s.props.length===1?'one property':s.props.length+' properties'} worth <b class="num">${fmt(val)}</b>${debt?`, with <b class="num">${fmt(debt)}</b> still owed to the bank`:''}. Tenants pay you <b class="num">${fmt(f.rent)}</b> a day.`:`You own nothing yet, so rent costs you ${fmt(rentNow())} a day. A small flat on a mortgage can cost less than that.`}</p></div>
     <div class="side"><p class="mut"><span class="figure ${idx>=1?'up':'dn'}">${pct(idx-1)}</span><br>house prices this lifetime</p></div></section>
-  ${s.props.length?`<h3>Your properties</h3><div class="scroll"><table class="ledger"><thead><tr><th>Property</th><th class="r">Paid</th><th class="r">Worth now</th><th class="r">Owed</th><th class="r">Rent a day</th><th>Status</th><th></th></tr></thead><tbody>
+  ${s.props.length?`<h3>Your properties</h3><div class="scroll"><table class="ledger"><thead><tr><th>Property</th><th class="r">Paid</th><th class="r">Worth now</th><th class="r">Owed</th><th class="r">Rent a day</th><th>Condition</th><th>Status</th><th></th></tr></thead><tbody>
    ${s.props.map(p=>{const v=pval(p),k=PM[p.t],home=s.home===p.uid;return `<tr><td><b>${pname(p)}</b></td><td class="r num">${fmt(p.paid)}</td><td class="r num ${v>=p.paid?'up':'dn'}">${fmt(v)}</td><td class="r num">${p.loan?fmt(p.loan):'—'}</td><td class="r num">${home?'—':fmt(v*k.yld/365)}</td>
-    <td>${home?'Your home':s.day<p.from?`Finding a tenant, ${p.from-s.day}d`:'Rented out'}</td>
-    <td class="act">${home?`<button data-a="moveout" data-x="${p.uid}">Move out</button>`:k.biz?'':`<button data-a="live" data-x="${p.uid}">Live here</button>`}${p.loan?`<button data-a="payoff" data-x="${p.uid}" ${s.cash<p.loan?'disabled':''}>Pay off</button>`:''}<button class="bad" data-a="psell" data-x="${p.uid}">Sell for ${fmt(v*.97-p.loan)}</button></td></tr>`}).join('')}
+    <td class="${(p.cond??100)<60?'dn':''}">${condWord(p.cond)}${p.rv?' · renovated':''}</td><td>${p.reno?`Renovating, ${p.reno-s.day}d`:home?'Your home':s.day<p.from?`Finding a tenant, ${p.from-s.day}d`:'Rented out'}</td>
+    <td class="act">${!p.reno&&((p.cond??100)<95||!p.rv)?`<button data-a="reno" data-x="${p.uid}" ${s.cash<renoCost(p)?'disabled':''}>${(p.cond??100)<85?'Renovate':'Upgrade'} · ${fmt(renoCost(p))}</button>`:''}${home?`<button data-a="moveout" data-x="${p.uid}">Move out</button>`:k.biz?'':`<button data-a="live" data-x="${p.uid}">Live here</button>`}${p.loan?`<button data-a="payoff" data-x="${p.uid}" ${s.cash<p.loan?'disabled':''}>Pay off</button>`:''}<button class="bad" data-a="psell" data-x="${p.uid}">Sell for ${fmt(v*.97-p.loan)}</button></td></tr>`}).join('')}
    </tbody></table></div>`:''}
   <h3>For sale</h3>
   <div class="scroll"><table class="ledger"><thead><tr><th>Listing</th><th class="r">Price</th><th class="r">Rent a day</th><th class="r">Mortgage a day</th><th></th></tr></thead><tbody>
-  ${s.re.list.map(l=>{const k=PM[l.t],v=k.base*l.m*idx,ok=s.cash>=v*.2&&canBorrow(v*.8);return `<tr class="${s.cash>=v||ok?'':'dim'}"><td><b>${k.n}, ${l.loc}</b>${k.biz?' <span class="mut">· investment only</span>':''}</td><td class="r num">${fmt(v)}</td><td class="r num">${fmt(v*k.yld/365)}</td><td class="r num">${fmt(mpay(v*.8))}</td>
+  ${s.re.list.map(l=>{const k=PM[l.t],v=lval(l),ok=s.cash>=v*.2&&canBorrow(v*.8);return `<tr class="${s.cash>=v||ok?'':'dim'}"><td><b>${k.n}, ${l.loc}</b>${k.biz?' <span class="mut">· investment only</span>':''}${(l.cond??100)<60?' <span class="tag">fixer-upper</span>':''}</td><td class="r num">${fmt(v)}</td><td class="r num">${fmt(v*k.yld/365)}</td><td class="r num">${fmt(mpay(v*.8))}</td>
    <td class="act"><button data-a="pbuy" data-x="${l.uid}" ${s.cash<v?'disabled':''}>Buy outright</button><button class="pri" data-a="pbuy" data-x="${l.uid}" data-y="m" ${ok?'':'disabled'}>Mortgage, ${fmt(v*.2)} down</button></td></tr>`}).join('')}
   </tbody></table></div>
-  ${howto(`New listings in ${s.re.next-s.day} days. Mortgages take 20% down and run 30 years at a fixed rate that follows the economy, ${pctA(mrate())} today, and the bank only lends while repayments stay under 40% of your income. Selling costs 3% in fees. Anything you don't live in gets rented out once a tenant is found.`)}`;
+  ${howto(`New listings in ${s.re.next-s.day} days. Mortgages take 20% down and run 30 years at a fixed rate that follows the economy, ${pctA(mrate())} today, and the bank only lends while repayments stay under 40% of your income. Selling costs 3% in fees. Anything you don't live in gets rented out once a tenant is found, and tenants move on every few years. Places wear slowly, and faster when rented; a worn place is worth less and rents for less. Fixer-uppers sell cheap: renovating takes 60 days, restores the condition and adds a modern finish worth 8%.`)}`;
 },
 garage(){
   let val=0;for(const c of s.cars)val+=c.v;const b=bestCar();
@@ -2119,10 +2191,10 @@ const ic=d=>`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke=
 const ICON={bank:ic('<path d="M3 10l9-6 9 6M5 10v8M10 10v8M14 10v8M19 10v8M3 20h18"/>'),home:ic('<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/>'),user:ic('<circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4.5-6 8-6s7 2 8 6"/>'),work:ic('<rect x="3" y="7" width="18" height="13" rx="1"/><path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M3 12h18"/>'),
  store:ic('<path d="M4 9l1.5-5h13L20 9M4 9v11h16V9M4 9h16M9 20v-6h6v6"/>'),chart:ic('<path d="M4 19h16M6 15l4-5 3 3 5-7"/>'),coin:ic('<circle cx="12" cy="12" r="8"/><path d="M10 8h3a2 2 0 0 1 0 4h-3m0 0h3.5a2 2 0 0 1 0 4H10m0-8v8"/>'),building:ic('<path d="M5 21V4h9v17M14 9h5v12M8 8h3M8 12h3M8 16h3M3 21h18"/>'),
  car:ic('<path d="M5 16l1.5-5.5A2 2 0 0 1 8.4 9h7.2a2 2 0 0 1 1.9 1.5L19 16M4 16h16v3H4zM7 19v1.5M17 19v1.5"/>'),bag:ic('<path d="M6 8h12l-1 12H7zM9 8a3 3 0 0 1 6 0"/>'),chat:ic('<path d="M4 5h16v11H9l-5 4z"/>'),cap:ic('<path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"/>'),heart:ic('<path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.5-7 10-7 10z"/>'),
- dice:ic('<rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="9" cy="9" r="1"/><circle cx="15" cy="15" r="1"/><circle cx="15" cy="9" r="1"/><circle cx="9" cy="15" r="1"/>'),pulse:ic('<path d="M3 12h4l2-5 4 10 2-5h6"/>'),leaf:ic('<path d="M5 19c0-8 5-14 14-14 0 9-6 14-14 14zM5 19l7-7"/>'),pause:ic('<path d="M8 5v14M16 5v14"/>')};
-const TABS={dash:['Home','home'],bank:['Bank','bank'],life:['Life','user'],work:['Work','work'],people:['People','heart'],school:['Education','cap'],health:['Health','pulse'],hobby:['Hobbies','leaf'],biz:['Business','store'],stock:['Markets','chart'],crypto:['Crypto','coin'],home:['Property','building'],garage:['Garage','car'],shop:['Lifestyle','bag'],chirp:['Chirp','chat'],casino:['Casino','dice']};
-const GROUPS=[['',['dash']],['You',['life','work','people','school','health','hobby']],['Money',['biz','stock','crypto','bank','home']],['Spend',['garage','shop']],['Fun',['chirp','casino']]];
-const BAR=[['Home',['dash'],'home'],['Life',['life','work','people','school','health','hobby'],'user'],['Money',['biz','stock','crypto','bank','home'],'chart'],['Spend',['garage','shop'],'bag'],['Fun',['chirp','casino'],'dice']];
+ dice:ic('<rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="9" cy="9" r="1"/><circle cx="15" cy="15" r="1"/><circle cx="15" cy="9" r="1"/><circle cx="9" cy="15" r="1"/>'),tree:ic('<circle cx="12" cy="5" r="2"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="18" r="2"/><path d="M12 7v5M12 12H6v4M12 12h6v4"/>'),pulse:ic('<path d="M3 12h4l2-5 4 10 2-5h6"/>'),leaf:ic('<path d="M5 19c0-8 5-14 14-14 0 9-6 14-14 14zM5 19l7-7"/>'),pause:ic('<path d="M8 5v14M16 5v14"/>')};
+const TABS={dash:['Home','home'],bank:['Bank','bank'],life:['Life','user'],work:['Work','work'],people:['People','heart'],school:['Education','cap'],health:['Health','pulse'],hobby:['Hobbies','leaf'],legacy:['Family tree','tree'],biz:['Business','store'],stock:['Markets','chart'],crypto:['Crypto','coin'],home:['Property','building'],garage:['Garage','car'],shop:['Lifestyle','bag'],chirp:['Chirp','chat'],casino:['Casino','dice']};
+const GROUPS=[['',['dash']],['You',['life','work','people','school','health','hobby','legacy']],['Money',['biz','stock','crypto','bank','home']],['Spend',['garage','shop']],['Fun',['chirp','casino']]];
+const BAR=[['Home',['dash'],'home'],['Life',['life','work','people','school','health','hobby','legacy'],'user'],['Money',['biz','stock','crypto','bank','home'],'chart'],['Spend',['garage','shop'],'bag'],['Fun',['chirp','casino'],'dice']];
 const KEYTABS=['dash','life','work','people','school','biz','stock','crypto','home','garage'];
 const TOUR=[
  {tab:'dash',t:'Welcome to The Hustle',x:'Time runs on Auto: a day passes in about 5 seconds while you’re idle, slows to 30 seconds while you’re playing, and slows further while you trade on Markets. Fast skips ahead at a second a day. Time keeps passing while the game is closed, at a day every 15 minutes. The game is paused while this guide is open. The ? button replays it, and holds settings and keyboard shortcuts.',hi:['#guideBtn']},
@@ -2300,7 +2372,7 @@ function selfTest(){ // open with ?test=1 — never touches your real save
   const r0=dt.rel;for(let i=0;i<100;i++)peopleDay();ok(dt.rel<r0,'relationships fade');
   ACT.pp(dt.uid,'divorce');ok(dt.role==='spouse'&&!$('#modal').hidden,'divorce asks first');ACT.pp(dt.uid,'divorce!');ok(dt.role==='ex'&&$('#modal').hidden,'divorce');
   ok(jobMiss(JM.surgeon).length&&canJob(JM.crew),'job requirements');s.job=null;ACT.apply('crew');ok(iv&&!$('#modal').hidden,'interview opens');ACT.answer('exp');ok(s.job==='crew'||s.cd.job_crew>s.day,'interview resolves');
-  s.job='crew';s.perf=40;ACT.work('hard');ok(s.perf===45,'work hard');
+  s.job='crew';s.perf=40;ACT.work('hard');ok(s.perf===40+(boss()?.bt==='micro'?7:5),'work hard');
   s.study=null;s.st.sma=90;s.cash=1e7;ACT.learn('ba');ok(enr&&!$('#modal').hidden,'enroll opens');ACT.mj('Nursing');ACT.enroll('online','cash');ok(s.study?.mj==='Nursing','enrolled');
   s.study.g=90;for(let i=0;i<2000&&s.study;i++)day();ok(s.degs.some(d=>d.p==='ba'&&d.mj==='Nursing')&&s.edu>=2&&canJob(JM.nurse),'graduated as nurse');
   s.cash=0;s.debt=0;ACT.learn('ma');ACT.enroll('online','loan');ok(s.study&&s.debt>0,'student loan');const d0=s.debt;for(let i=0;i<30;i++)day();ok(s.debt<d0,'loan repays');
@@ -2473,6 +2545,19 @@ function selfTest(){ // open with ?test=1 — never touches your real save
   ACT.found('app','yes');ACT.sukill('yes');ok(!s.su,'shut it down');
   s.job='crew';day();s.cash=1e6;for(const e of EV4)if(!e.c||e.c(s))for(const c of e.ch){const a=e.a?e.a(s):0;e.d(s,a);ok(typeof c[1](s,a)==='string','event '+e.id)}
   LATER.ethics();s=cq_s0;
+  const lg_s0=s;newGame('Tree','nerd');tab='legacy';ok(VIEWS.legacy().includes('The family of Tree'),'family tree');
+  die();ok(s.tree.length===1&&s.tree[0].cause,'a death is recorded');$('#modal').hidden=true;
+  newGame('Tree Jr.','street',heirOf(null));ok(s.tree.length===1&&VIEWS.legacy().includes('Tree Jr.')&&VIEWS.legacy().includes('2 generations'),'the tree carries over');
+  taxRoll();s.tax.ord=1e5;s.cash=1e5;const lg_c=s.cash,lg_d=donate(1e4);ok(lg_d===1e4&&s.given===1e4&&s.cash>lg_c-1e4,'donations are deductible');
+  s.cash=1e6;ok(Math.abs(donate(1e5)-5e4)<1e-6,'the deduction caps at 60% of income');
+  s.cash=2e6;ACT.give(String(1e6),'fdn');ok(s.fdn===1e6,'a foundation');const lg_g=s.given;fdnDay();ok(s.given>lg_g&&heirOf(null).fdn>0,'the foundation grants, and passes on');
+  newGame('Prop','rich');s.cash=5e6;s.re.list[0].cond=40;const lg_l=s.re.list[0];ok(lval(lg_l)<PM[lg_l.t].base*lg_l.m*s.re.idx*.9,'fixer-uppers sell cheap');ACT.pbuy(String(lg_l.uid));const lg_p=s.props.at(-1);ok(lg_p.cond===40,'bought a fixer-upper');
+  const lg_rc=renoCost(lg_p),lg_v0=pval(lg_p);ACT.reno(String(lg_p.uid));ok(lg_p.reno&&rentOf(lg_p)===0,'renovating');s.day=lg_p.reno;propDay();ok(lg_p.cond===100&&lg_p.rv&&pval(lg_p)-lg_v0>lg_rc,'a renovation adds more than it costs');
+  tab='home';ok(VIEWS.home().includes('Condition'),'condition column');
+  const lg_l2=s.re.list[1];ACT.pbuy(String(lg_l2.uid));const lg_p2=s.props.at(-1);lg_p2.from=0;ok(renting(lg_p2),'a rental');
+  for(const e of EV5)if(!e.c||e.c(s))for(const c of e.ch){const a=e.a?e.a(s):0;e.d(s,a);ok(typeof c[1](s,a)==='string','event '+e.id)}
+  s.world={id:'pandemic',end:s.day+10};ok(worldBiz(BM.cafe)<1&&worldBiz(BM.app)>1&&CONDS.flu.r(30)>3,'a pandemic empties cafes and spreads flu');s.day+=11;worldDay();ok(!s.world,'the pandemic ends');
+  for(let i=0;i<365*80;i++){s.day++;worldDay()}ok(Number.isFinite(s.eco.g),'decades of world events');s=lg_s0;
   tab='dash';ok(VIEWS.dash().includes('Goals'),'goals on home');goalsModal();
   const sp2=meet('spouse',70),k1=addChild(),k2=addChild(),k3=addChild();k1.b=s.day-40*365;k2.b=s.day-30*365;k3.b=s.day-5*365;k1.rel=90;
   deathModal();ok($('#mbox').innerHTML.includes('Continue as '+k1.n),'death lists the kids');ACT.heir(String(k1.uid));
