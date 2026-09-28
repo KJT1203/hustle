@@ -241,6 +241,10 @@ function selfTest(){ // open with ?test=1 — never touches your real save
   const st_s0=s;newGame('Story','nerd');ok(s.mile.length===1&&s.mile[0].t.includes('Turned 18'),'a life story starts');for(let i=0;i<70;i++)day();married(meet('date',70));addChild();tab='life';ok(s.sth.length>=2&&VIEWS.life().includes('Your life so far')&&VIEWS.life().includes('Married'),'the story and the stats chart');
   die();$('#modal').hidden=true;newGame('Story Jr.','street',heirOf(null));tab='legacy';ok(VIEWS.legacy().includes('Their story'),'past lives keep their story');s=st_s0;
   const tp_s0=s;newGame('Tips','rich');s.job=null;ok(tips().some(x=>x.k==='job')&&VIEWS.dash().includes('Next steps'),'next steps on Home');s.ins='none';s.job='crew';ok(tips().length<=3,'at most three');s=tp_s0;
+  const bz_s0=s;newGame('Biz','rich');s.cash=1e6;ACT.bbuy('truck','3');const bz_o=s.biz.truck;ok(bizVal(BM.truck,bz_o)>0&&Math.abs(netWorth()-(s.cash+bizWorth()+finVal()+walletVal()))<1,'businesses are worth a multiple of profit');
+  ACT.mgr('truck');bz_o.n=25;const bz_v=bizVal(BM.truck,bz_o);s.cash=1e7;ACT.bfr('truck');ok(bz_o.fr&&bizVal(BM.truck,bz_o)>bz_v,'franchising lifts value');
+  const bz_c=s.cash;ACT.bsell('truck');ok(!$('#modal').hidden&&s.biz.truck,'selling asks first');ACT.bsell('truck','yes');ok(!s.biz.truck&&s.cash>bz_c,'sold the chain');
+  meet('spouse',60).b=s.day-30*365+355;for(const e of EV9)if(!e.c||e.c(s))for(const c of e.ch){const a=e.a?e.a(s):0;e.d(s,a);ok(typeof c[1](s,a)==='string','event '+e.id)}s=bz_s0;
   tab='dash';ok(VIEWS.dash().includes('Goals'),'goals on home');goalsModal();
   const sp2=meet('spouse',70),k1=addChild(),k2=addChild(),k3=addChild();k1.b=s.day-40*365;k2.b=s.day-30*365;k3.b=s.day-5*365;k1.rel=90;
   deathModal();ok($('#mbox').innerHTML.includes('Continue as '+k1.n),'death lists the kids');ACT.heir(String(k1.uid));

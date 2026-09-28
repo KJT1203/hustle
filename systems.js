@@ -584,3 +584,19 @@ function storyHtml(){const M=s.mile||[];
   return `<div class="sec-h"><h2>Your life so far</h2><span>${M.length?`${M.length} moment${M.length>1?'s':''}`:'just getting started'}</span></div>
   ${statsChart(s.sth||[])}
   ${M.length?`<ol class="story">${M.slice().reverse().slice(0,showAll.story?80:10).map(m=>`<li><span class="num">${m.a}</span><span>${m.t}</span></li>`).join('')}</ol>${M.length>10?`<div class="more-row"><button class="link2" data-a="storyall">${showAll.story?'Show less':`Show all ${M.length}`}</button></div>`:''}`:''}`}
+
+// ---------- what a business is worth: a multiple of its yearly profit, like a buyer would pay ----------
+const BIZMULT={lemon:1,truck:2.5,cafe:3.2,wash:4,gym:4.8,app:6,hotel:6.8,bank:7.6,rocket:8.4};
+function bizVal(b,o){if(!o?.n)return 0;const yr=bizInc(b,o)*365,m=(BIZMULT[b.id]||3)+(o.fr?1:0),eco=clamp(1+s.eco.g*.2,.75,1.15);
+  return Math.max(o.spent*.15,yr*m*eco*(o.mgr?1:.75))} // a business that runs without you sells for more; one losing money is worth its equipment
+const bizWorth=()=>BIZ.reduce((t,b)=>t+bizVal(b,s.biz[b.id]),0);
+const frCost=b=>mgrCost(b)*10;
+const EV9=[
+{id:'bday',w:s=>s.people.some(p=>(p.role==='spouse'||p.role==='child'&&ageOf(p)<18)&&((s.day-p.b)%365+365)%365>=340)?4:0,c:s=>s.people.some(p=>(p.role==='spouse'||p.role==='child'&&ageOf(p)<18)&&((s.day-p.b)%365+365)%365>=340),a:s=>pick(s.people.filter(p=>(p.role==='spouse'||p.role==='child'&&ageOf(p)<18)&&((s.day-p.b)%365+365)%365>=340))?.uid,t:'A birthday',d:(s,a)=>{const p=per(a);return p?`${esc(p.n)} turns ${Math.floor(ageOf(p))+1} soon.`:'A birthday is coming up.'},def:1,ch:[
+ ['Throw a party',(s,a)=>{const p=per(a);if(!p)return 'The moment has passed.';const v=Math.round((p.role==='spouse'?800:400)*s.eco.P);s.cash-=v;prel(p,12);add('hap',4);return `${p.n} had the best day. It cost ${fmt(v)}.`}],
+ ['A card and a hug',(s,a)=>{const p=per(a);if(p)prel(p,3);return 'Small, sweet, appreciated.'}]]},
+{id:'holiday',w:s=>dateOf(s.day).m===11&&s.people.some(p=>['spouse','child','parent','sibling'].includes(p.role))?5:0,c:s=>dateOf(s.day).m===11,t:'The holidays',d:()=>'December again. How are you spending the holidays?',def:2,ch:[
+ ['A big family gathering',()=>{const fam=s.people.filter(p=>['spouse','child','parent','sibling'].includes(p.role)),v=Math.round((300+fam.length*150)*s.eco.P);s.cash-=v;for(const p of fam)prel(p,6);add('hap',8);return `Chaos, food and everyone together. It cost ${fmt(v)}.`}],
+ ['Get away somewhere warm',()=>{const v=Math.round(3000*s.eco.P);s.cash-=v;add('hap',10);const pt=partner();if(pt)prel(pt,6);return `Sun instead of snow, for ${fmt(v)}.`}],
+ ['Keep it quiet',()=>{add('hap',2);return 'A calm, quiet week.'}]]},
+];

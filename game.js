@@ -428,7 +428,7 @@ const EV=[
  ['Take it to a shelter',()=>'It will find a good home.']]},
 ];
 
-EV.push(...EV2,...EV3,...EV4,...EV5,...EV6,...EV7,...EV8);
+EV.push(...EV2,...EV3,...EV4,...EV5,...EV6,...EV7,...EV8,...EV9);
 const EVM=EM(EV.map(e=>[e.id,e]));
 
 // ---------- businesses: realistic returns, and profits that ride the economy ----------
@@ -553,7 +553,7 @@ function peopleDay(){
 }
 const bmul=n=>1.5**MILES.filter(m=>n>=m).length; // each milestone adds half again: bigger chains still pay, with diminishing returns
 const mgrCost=b=>b.cost*2; // hiring and training a manager to run every unit of one business
-const bizInc=(b,o)=>b.inc*o.n*bmul(o.n)*s.legacy*(s.day<s.boost?1.25:1)*bizPf(b)*worldBiz(b);
+const bizInc=(b,o)=>b.inc*o.n*bmul(o.n)*s.legacy*(s.day<s.boost?1.25:1)*bizPf(b)*worldBiz(b)*(o.fr?1.3:1);
 const grw=b=>b.gr||GROW; // how much each extra unit costs over the last
 const bcost=(b,n,q)=>{const g=grw(b);return b.cost*g**n*(g**q-1)/(g-1)};
 const bmax=(b,n)=>{const g=grw(b);return Math.floor(Math.log(s.cash*(g-1)/(b.cost*g**n)+1)/Math.log(g))};
@@ -648,7 +648,7 @@ function bjEnd(){const b=s.cz.bj,p=hv(b.p),nat=b.p.length===2&&p===21;
   const ret=p>21?0:nat&&!dnat?b.bet*2.5:dnat&&!nat?0:d>21||p>d?b.bet*2:p===d?b.bet:0;
   b.msg=p>21?'Bust.':nat&&!dnat?'Blackjack! Paid 3 to 2.':dnat&&!nat?'Dealer has blackjack.':ret>b.bet?(d>21?'Dealer busts. You win.':'You win.'):ret===b.bet?'Push. Your bet comes back.':'Dealer wins.';
   b.done=1;settle(b.bet,ret,'blackjack','bj')}
-function netWorth(){let w=s.cash+(s.fin&&s.mkt.div?finVal():0)-(s.mloan||0);for(const t in s.shorts||{})w-=s.shorts[t].sh*s.px[t].p;if(s.opts?.length)w+=optVal();for(const t in s.port)w+=s.port[t].sh*s.px[t].p;for(const id in s.biz)w+=s.biz[id].spent*.5;for(const id in s.own)w+=SM[id].cost*.6;for(const p of s.props)w+=pval(p)-p.loan;for(const c of s.cars)w+=c.v;return w+walletVal()+suWorth()+clubVal()-(s.debt||0)}
+function netWorth(){let w=s.cash+(s.fin&&s.mkt.div?finVal():0)-(s.mloan||0);for(const t in s.shorts||{})w-=s.shorts[t].sh*s.px[t].p;if(s.opts?.length)w+=optVal();for(const t in s.port)w+=s.port[t].sh*s.px[t].p;w+=bizWorth();for(const id in s.own)w+=SM[id].cost*.6;for(const p of s.props)w+=pval(p)-p.loan;for(const c of s.cars)w+=c.v;return w+walletVal()+suWorth()+clubVal()-(s.debt||0)}
 function log(t,k='info'){s.log.unshift({d:s.day,t,k});if(s.log.length>80)s.log.pop()}
 function chirp(h,n,x,v){s.feed.unshift({h,n,x,v,l:0,tl:rint(3,40)*(v?40:1),d:s.day});if(s.feed.length>60)s.feed.pop()}
 function toast(m){if(catching)return;const t=document.createElement('div');t.className='toast';t.innerHTML=m;$('#toasts').append(t);setTimeout(()=>t.remove(),2800)}
@@ -1110,6 +1110,10 @@ const dur=sec=>sec<3600?`${Math.round(sec/60)} minutes`:sec<172800?`${Math.floor
 
 // ---------- actions ----------
 const ACT={
+  bsell:(id,y)=>{const b=BM[id],o=s.biz[id];if(!b||!o?.n)return;const v=Math.round(bizVal(b,o)*.95);
+    if(y!=='yes')return modal(`<h2>Sell your ${o.n>1?`${o.n} ${plural(b.n)}`:b.n}?</h2><p>A buyer offers about <b class="num">${fmt(v)}</b> after fees: ${BIZMULT[id]+(o.fr?1:0)} times a year's profit${o.mgr?'':', less a discount because it only runs with you there'}. You put ${fmt(o.spent)} into it.</p><div class="row"><button class="bad" data-a="bsell" data-x="${id}" data-y="yes">Sell</button><button data-a="close">Keep it</button></div>`);
+    closeModal();s.cash+=v+(o.pend||0);capGain(v-o.spent,o.d??s.day-400);delete s.biz[id];mile(`Sold the ${b.n.toLowerCase()} business for ${fmt(v)}.`);log(`Sold your ${b.n} business for ${fmt(v)}.`,'good');toast(`Sold for ${fmt(v)}`)},
+  bfr:id=>{const b=BM[id],o=s.biz[id];if(!b||!o||o.n<25||!o.mgr||o.fr||s.cash<frCost(b))return;s.cash-=frCost(b);o.fr=1;mile(`Franchised the ${b.n.toLowerCase()} business.`);log(`Your ${b.n} is a franchise now: royalties add 30% to its income.`,'good');toast('Franchised!')},
   storyall:()=>{showAll.story=!showAll.story},
   bankrupt:y=>{if(!(s.cash<0&&netWorth()<0))return;if(y!=='yes')return modal(`<h2>Declare bankruptcy?</h2><p>Your negative balance is wiped out, but you lose your stocks, crypto, index fund, savings, businesses, rentals and all but one car. You keep your home and your retirement account. Your credit score drops to about 380 and the bankruptcy stays on file for 7 years, so no mortgages until then.</p><div class="row"><button class="bad" data-a="bankrupt" data-x="yes">Declare bankruptcy</button><button data-a="close">Not yet</button></div>`);closeModal();bankruptcy()},
   rehab:()=>{if(vice('alc')<=60&&vice('gam')<=60)return;const o=oopOf(rehabCost()).out;if(s.cash<o)return;const v=billMed(rehabCost());s.vice={alc:0,gam:0};s.rehab=s.day+30;add('hap',6);log(`Checked into rehab for 30 days. You paid ${fmt(v)} after insurance.`,'good');toast('Off to rehab. You will come back clean.')},
@@ -1467,7 +1471,8 @@ function bizRow(b,i,last){
   if(!n&&s.cash<b.cost)return `<div class="brow locked"><div><div class="nm">${b.n}</div><div class="ms">Earns ${fmt(b.inc*s.legacy)} a day each</div></div><span class="own num">0</span><span class="inc num">—</span><span>Opens at ${fmt(b.cost)}</span><div class="acts3"><button disabled>${fmt(b.cost-s.cash)} to go</button></div></div>`;
   const g=n?bizInc(b,o):0,nm=MILES.find(m=>m>n),mx=bmax(b,n),q=Math.min(bmode==='max'?mx:+bmode,mx),mc=mgrCost(b),full=n&&!o.mgr&&o.pend>=g*CAP*.999;
   const buy=q>=1?`<button class="pri" data-a="bbuy" data-x="${b.id}" data-y="${q}">Buy ${q} · ${fmt(bcost(b,n,q))}</button>`:`<button disabled>Buy 1 · ${fmt(bcost(b,n,1))}</button>`;
-  return `<div class="brow"><div><div class="nm">${b.n}</div><div class="ms">${nm?`${meter(n/nm*100)}<span>${n} / ${nm} to +50%</span>`:'<span>Every milestone reached</span>'}</div></div>
+  const val=bizVal(b,o),frOk=n>=25&&o.mgr&&!o.fr;
+  return `<div class="brow"><div><div class="nm">${b.n}${o.fr?' <span class="tag">franchised</span>':''}</div><div class="ms">${nm?`${meter(n/nm*100)}<span>${n} / ${nm} to +50%</span>`:'<span>Every milestone reached</span>'}</div>${n?`<div class="bx mut">Worth about ${fmt(val)} · <button class="link2" data-a="bsell" data-x="${b.id}">Sell</button>${frOk?` · <button class="link2" data-a="bfr" data-x="${b.id}" ${s.cash<frCost(b)?'disabled':''}>Franchise for ${fmt(frCost(b))}</button>`:''}</div>`:''}</div>
    <span class="own num">${n}<small class="m"> owned</small></span><span class="inc num ${g?'up':''}">${fmt(g)}<small class="m"> a day</small></span>
    <div class="till">${!n?'<span class="mut">Not open yet</span>':o.mgr?'<span class="mut">Managed, pays itself</span>':`<div class="top2"><span class="${full?'full':'mut'}">${full?'Full':'Filling'}</span><span class="num">${fmt(o.pend)}</span></div>${meter(o.pend/(g*CAP)*100,'warn')}`}</div>
    <div class="acts3">${n&&!o.mgr?`<button data-a="col" data-x="${b.id}" ${o.pend<.01?'disabled':''}>Collect</button><button data-a="mgr" data-x="${b.id}" ${s.cash<mc?'disabled':''}>Manager ${fmt(mc)}</button>`:''}${buy}</div></div>`;
@@ -1597,7 +1602,7 @@ hobby(){
 bank(){return bankView()},
 dash(){
   const f=flows(),N=needs(),net=f.job+f.biz+f.pend+f.spon+f.rent+f.own-f.exp-f.mort-f.tax,h=s.nwh||[];
-  const parts=[['Cash',Math.max(0,s.cash)],['Businesses',Object.values(s.biz).reduce((a,o)=>a+o.spent*.5,0)],['Stocks',Object.entries(s.port).reduce((a,[k,o])=>a+o.sh*s.px[k].p,0)+optVal()],['Crypto',walletVal()],['Bank',s.fin.sav+s.fin.fu*fundPx()+s.fin.bonds.reduce((a,b)=>a+bondVal(b),0)],['Retirement',iraVal()],['Property',s.props.reduce((a,p)=>a+Math.max(0,pval(p)-p.loan),0)],['Cars',s.cars.reduce((a,c)=>a+c.v,0)],['Lifestyle',Object.keys(s.own).reduce((a,k)=>a+SM[k].cost*.6,0)]].map((x,i)=>[...x,`var(--cat-${i+1})`]).filter(x=>x[1]>=1);
+  const parts=[['Cash',Math.max(0,s.cash)],['Businesses',bizWorth()],['Stocks',Object.entries(s.port).reduce((a,[k,o])=>a+o.sh*s.px[k].p,0)+optVal()],['Crypto',walletVal()],['Bank',s.fin.sav+s.fin.fu*fundPx()+s.fin.bonds.reduce((a,b)=>a+bondVal(b),0)],['Retirement',iraVal()],['Property',s.props.reduce((a,p)=>a+Math.max(0,pval(p)-p.loan),0)],['Cars',s.cars.reduce((a,c)=>a+c.v,0)],['Lifestyle',Object.keys(s.own).reduce((a,k)=>a+SM[k].cost*.6,0)]].map((x,i)=>[...x,`var(--cat-${i+1})`]).filter(x=>x[1]>=1);
   const tot=parts.reduce((a,x)=>a+x[1],0)||1,gl=goalsLeft().slice(0,3);
   return `<section class="lede solo"><div><h2 class="headline">${esc(s.name)}, ${Math.floor(age())}</h2><p class="dek">${esc(s.name)} ${lifeLine()}</p></div></section>
   <div class="sec-h"><h2>Needs you</h2><span>${N.length?`${N.length} thing${N.length>1?'s':''}`:'all clear'}</span></div>
