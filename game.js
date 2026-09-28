@@ -13,7 +13,7 @@ const hue=h=>[...h].reduce((a,c)=>a*31+c.charCodeAt(0)>>>0,7)%360;
 const EDU=[{n:'High school'},{n:'Diploma',cost:6000,days:180,sma:10},{n:"Bachelor's degree",cost:35000,days:360,sma:12},{n:"Master's degree",cost:80000,days:240,sma:10},{n:'PhD',cost:120000,days:480,sma:15}];
 // fld = career field (experience builds per field); x = years needed in a field; xt = total years; h = health; f = followers
 const JOBS=[
- {id:'crew',n:'Fast Food Crew',fld:'food',e:0,s:0,pay:60,str:2},
+ {id:'crew',n:'Fast Food Worker',fld:'food',e:0,s:0,pay:60,str:2},
  {id:'rider',n:'Delivery Rider',fld:'delivery',e:0,s:0,pay:72,str:3},
  {id:'retail',n:'Retail Associate',fld:'retail',e:0,s:25,pay:88,str:2},
  {id:'chef',n:'Line Chef',fld:'food',e:0,s:25,pay:118,str:4,x:{food:1}},
@@ -1381,6 +1381,25 @@ const howto=x=>`<div class="howto"><button class="link2" data-a="howto" aria-exp
 const pendAll=()=>BIZ.reduce((t,b)=>t+(s.biz[b.id]?.pend||0),0);
 const plural=w=>/(sh|ch|s)$/.test(w)?w+'es':/[^aeiou]y$/.test(w)?w.slice(0,-1)+'ies':w+'s';
 const LOWFIX={hea:['doc','gym'],hap:['trip','spa','med','fam','out']};
+// ---------- next steps: a few suggestions that fit where you are in life, most useful first ----------
+function tips(){const T=[],P=s.eco.P,A=age(),f=flows(),bb=bestBuy(),idle=s.cash-Math.max(2e3*P,f.exp*60);
+  const t=(k,ti,d,btn)=>T.push({k,ti,d,btn});
+  if(!s.job&&!s.study&&!s.su&&!(s.pol?.cur&&!OM[s.pol.cur].part)&&!s.pension&&A<62)t('job','Find a job','A steady salary is the fastest way to get going. Interview for anything on the board you qualify for.','<button data-a="tab" data-x="work">Job board</button>');
+  if(!nOwned()&&bb)t('biz',`Open a ${bb.b.n}`,`It costs ${fmt(bb.c)} and earns about ${fmt(bizInc(bb.b,{n:bb.k}))} a day.`,'<button data-a="tab" data-x="biz">Businesses</button>');
+  if(s.edu<1&&!s.study&&A<40&&s.day>60)t('edu','Get a diploma','Most better jobs ask for one. Study online so you can keep working.','<button data-a="tab" data-x="school">Education</button>');
+  if(s.cash<0&&credit()<640)t('credit','Get your balance above zero',`Every day in the red costs you credit (now ${credit()}) and interest at ${pctA(debtAPR())}.`,'<button data-a="tab" data-x="bank">Bank</button>');
+  if(s.ins==='none')t('ins','Get health insurance','One bad diagnosis can cost more than everything you own.','<button data-a="tab" data-x="health">Health</button>');
+  if(A>=30&&s.day-((s.cd.doc||0)-30)>730&&s.cash>AM.doc.c*3)t('doc','Get a check-up',"It's been a while. Some illnesses only show up on tests, and they're cheaper to treat early.",'<button data-a="act" data-x="doc">Check-up · '+fmt(AM.doc.c)+'</button>');
+  if(idle>2e4*P&&!s.fin.fu&&!Object.keys(s.port).length)t('fund','Put idle cash to work',`${fmt(idle)} is sitting in cash, losing ${pctA(s.eco.pi)} a year to inflation. The index fund grows with the whole market.`,'<button data-a="tab" data-x="bank">Bank</button>');
+  if(s.job&&!s.fin.iraPct&&A>=22)t('ira','Save for retirement','Put 6% of your pay into the retirement account and your employer adds half as much again.','<button data-a="irapct" data-x=".06">Save 6%</button>');
+  if(!homeP()&&s.re.list.some(l=>!PM[l.t].biz&&s.cash>=lval(l)*.2&&canBorrow(lval(l)*.8)))t('home','Buy instead of renting',`You pay ${fmt(rentNow())} a day in rent. A mortgage on a place of your own builds equity instead.`,'<button data-a="tab" data-x="home">Property</button>');
+  if(kidsHome()&&!kids().some(k=>k.k?.fund>0)&&s.cash>3e4*P)t('fund529','Start a college fund','It grows about 5% a year and pays tuition first when they turn 18.','<button data-a="tab" data-x="people">People</button>');
+  if(s.st.hap<40)t('hap','Look after your mood','Low happiness drags down your work, your grades and your health. Take a trip, see people, or pick up a hobby.','<button data-a="tab" data-x="life">Life</button>');
+  if(!Object.keys(s.hob).length&&s.day>90)t('hob','Pick up a hobby','A hobby lifts your mood, and once you are good it can pay: gigs, commissions, prizes.','<button data-a="tab" data-x="hobby">Hobbies</button>');
+  if(s.fol>=4e3&&!s.pol?.cur&&!s.pol?.camp&&A>=21&&!s.pol?.held?.council)t('pol','Run for city council',`With ${big(s.fol)} followers you have a real shot. It's part time, so you keep your job.`,'<button data-a="tab" data-x="office">Politics</button>');
+  if(s.cash>1e5*P&&!s.su&&!s.fl.jobs.length&&xpT()>=3&&!s.car2?.dead)t('found','Think about a startup','You have savings and a few years of experience. Most startups fail, but the ones that work change everything.','<button data-a="tab" data-x="work">Work</button>');
+  return T.slice(0,3)}
+const tipHtml=x=>`<div class="need tip"><div><div class="k">Next step</div><div class="t">${x.ti}</div><div class="d">${x.d}</div></div><div class="acts2">${x.btn}</div></div>`;
 function needs(){
   const L=[];
   for(const it of s.inbox){const e=EVM[it.id];if(!e.c||e.c(s))L.push({k:'dec',it,e})}
@@ -1583,6 +1602,7 @@ dash(){
   return `<section class="lede solo"><div><h2 class="headline">${esc(s.name)}, ${Math.floor(age())}</h2><p class="dek">${esc(s.name)} ${lifeLine()}</p></div></section>
   <div class="sec-h"><h2>Needs you</h2><span>${N.length?`${N.length} thing${N.length>1?'s':''}`:'all clear'}</span></div>
   <div class="needs">${N.length?N.map(needHtml).join(''):'<p class="mut" style="padding:var(--space-sm) 0">Nothing needs you right now. Your money is working.</p>'}</div>
+  ${(T=>T.length?`<div class="sec-h"><h2>Next steps</h2><span>suggestions</span></div><div class="needs">${T.map(tipHtml).join('')}</div>`:'')(tips())}
   <div class="sec-h"><h2>Quick actions</h2></div>
   <div class="quick"><button class="pri" data-a="gig" ${gigsLeft()?'':'disabled'}>Take a gig · +${fmt(gig())} · ${gigsLeft()} left today</button>${ACTS.filter(a=>!a.show||a.show()).map(a=>{const w=cdLeft(a.id);return `<button data-a="act" data-x="${a.id}" ${w||s.cash<a.c?'disabled':''}>${a.n}${a.c?` · ${fmt(a.c)}`:''}${w?` · in ${w}d`:''}</button>`}).join('')}${cdLeft('post')?'':'<button data-a="post" data-x="meme">Post a meme</button>'}</div>
   <section class="snap">

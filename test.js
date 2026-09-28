@@ -240,6 +240,7 @@ function selfTest(){ // open with ?test=1 — never touches your real save
   s=cr_s0;
   const st_s0=s;newGame('Story','nerd');ok(s.mile.length===1&&s.mile[0].t.includes('Turned 18'),'a life story starts');for(let i=0;i<70;i++)day();married(meet('date',70));addChild();tab='life';ok(s.sth.length>=2&&VIEWS.life().includes('Your life so far')&&VIEWS.life().includes('Married'),'the story and the stats chart');
   die();$('#modal').hidden=true;newGame('Story Jr.','street',heirOf(null));tab='legacy';ok(VIEWS.legacy().includes('Their story'),'past lives keep their story');s=st_s0;
+  const tp_s0=s;newGame('Tips','rich');s.job=null;ok(tips().some(x=>x.k==='job')&&VIEWS.dash().includes('Next steps'),'next steps on Home');s.ins='none';s.job='crew';ok(tips().length<=3,'at most three');s=tp_s0;
   tab='dash';ok(VIEWS.dash().includes('Goals'),'goals on home');goalsModal();
   const sp2=meet('spouse',70),k1=addChild(),k2=addChild(),k3=addChild();k1.b=s.day-40*365;k2.b=s.day-30*365;k3.b=s.day-5*365;k1.rel=90;
   deathModal();ok($('#mbox').innerHTML.includes('Continue as '+k1.n),'death lists the kids');ACT.heir(String(k1.uid));
