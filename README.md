@@ -1,6 +1,6 @@
 # hustle.
 
-An idle life simulator: `index.html`, `style.css` and `game.js`, no build step. You turn 18, and the clock starts. A full life takes about a day of play.
+An idle life simulator with no build step: `index.html`, `style.css`, `game.js` (the core: markets, economy, money, screens and the game loop) and `systems.js` (health, the law, hobbies, pets, kids, careers, the family tree, partners, cities and politics). `test.js` holds the self-test and only loads with `?test=1`. You turn 18, and the clock starts. A full life takes about a day of play.
 
 **Time**: the top bar shows the date and time. On **Auto**, a game day passes in about 5 seconds while you're idle, slows to about 30 seconds while you're clicking or typing, and slows again to trading pace (a stock market session in about 30 seconds) while you're on Markets or Crypto. **Fast** runs a day a second. Time keeps passing while the game is closed, at a day every 15 real minutes with no cap (overnight is about a month, a week about two years), and a summary greets you when you're back. Everything in the economy is priced per game day, so the pace changes how long things take for you, not how much they earn.
 
