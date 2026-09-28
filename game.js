@@ -662,7 +662,8 @@ function netWorth(){let w=s.cash+(s.fin&&s.mkt.div?finVal():0)-(s.mloan||0);for(
 function log(t,k='info'){s.log.unshift({d:s.day,t,k});if(s.log.length>80)s.log.pop()}
 function chirp(h,n,x,v){s.feed.unshift({h,n,x,v,l:0,tl:rint(3,40)*(v?40:1),d:s.day});if(s.feed.length>60)s.feed.pop()}
 const decDays=()=>Math.min(s?.opt?.dec||30,s?.staff?.pa?7:90),opt=k=>!!s?.opt?.[k];
-function toast(m){if(catching||opt('quiet'))return;const t=document.createElement('div');t.className='toast';t.innerHTML=m;$('#toasts').append(t);setTimeout(()=>t.remove(),2800)}
+function toast(m){if(catching||opt('quiet'))return;const box=$('#toasts');for(const x of box.children)if(x.innerHTML===m)return; // no duplicates on screen
+  while(box.children.length>=3)box.firstElementChild.remove();const t=document.createElement('div');t.className='toast';t.innerHTML=m;box.append(t);setTimeout(()=>t.remove(),2800)}
 
 function newGame(name,bg,h={}){
   const b=BG[bg]||{cash:0,st:{hea:75,hap:60,sma:40,loo:50}};
