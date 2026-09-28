@@ -7,8 +7,8 @@ const CONDS={
  inj:{n:'Sports injury',acute:1,r:()=>.12,len:[40,70],hea:.12,hap:.08,tx:'Physiotherapy',tc:2500,d:'Heals on its own in a couple of months, or in about 10 days with physio.'},
  back:{n:'Back pain',r:A=>A<28?0:.02*(1+(A-28)/20)*(job()?.str<=2?1.6:1),hea:.02,hap:.06,tx:'Physiotherapy',tc:1800,d:'Nags every day. Physio fixes it about two times in three.'},
  dep:{n:'Depression',r:()=>.03+(s.st.hap<30?1.5*(30-s.st.hap)/30:0),hap:.14,med:20,tx:'Start therapy',d:'Drags your mood down every day. Therapy costs about $20 a day and usually lifts it within a few months.'},
- diab:{n:'Type 2 diabetes',hid:730,r:A=>A<30?0:.004*(1+(A-30)/10)*(s.st.hea<50?2:1),hea:.035,thea:.005,med:8,tx:'Start medication',d:'Slowly wears down your health. Daily medication keeps it in check.'},
- heart:{n:'Heart disease',r:A=>A<40?0:.0015*((A-40)/10+1)**2*(s.st.hea<40?2:1),hea:.05,thea:.01,hz:.08,thz:.01,med:6,tx:'Bypass surgery',tc:90000,d:'Left alone, about one in twelve people die of it each year. Surgery and medication cut that to one in a hundred.'},
+ diab:{n:'Type 2 diabetes',hid:730,r:A=>A<30?0:.004*(1+(A-30)/10)*(s.st.hea<50?2:1)*diet().risk,hea:.035,thea:.005,med:8,tx:'Start medication',d:'Slowly wears down your health. Daily medication keeps it in check.'},
+ heart:{n:'Heart disease',r:A=>A<40?0:.0015*((A-40)/10+1)**2*(s.st.hea<40?2:1)*diet().risk*(s.hours==='over'&&s.job?1.3:1),hea:.05,thea:.01,hz:.08,thz:.01,med:6,tx:'Bypass surgery',tc:90000,d:'Left alone, about one in twelve people die of it each year. Surgery and medication cut that to one in a hundred.'},
  cancer:{n:'Cancer',hid:1,r:A=>A<35?0:.0015*((A-35)/10+1)**2,hea:.03,d:'It spreads in stages. Caught at stage 1, treatment works 95% of the time. By stage 4, only one in five.'},
 };
 const CSTAGE={cost:[40e3,90e3,200e3,350e3],cure:[.95,.8,.5,.2],hz:[0,.01,.1,.8]};
@@ -119,7 +119,7 @@ function petsDay(){for(const p of [...s.pets])if(s.day>=p.dies){s.pets.splice(s.
   if(s.pets.length&&R()<s.pets.length*.4/365){const v=Math.round(rint(200,2500)*s.eco.P);s.cash-=v;log(`A vet bill for ${esc(pick(s.pets).n)}: ${fmt(v)}.`,'bad')}}
 
 // ---------- the daily tick for all of the above ----------
-const lifeCost=()=>careCost()+insPrem()+medDaily()+kidsCost()+petSum('up')*s.eco.P-Math.min(.2,hobSk('cook')/500)*(15+kidsHome()*47)*s.eco.P;
+const lifeCost=()=>dietCost()+careCost()+insPrem()+medDaily()+kidsCost()+petSum('up')*s.eco.P-Math.min(.2,hobSk('cook')/500)*(15+kidsHome()*47)*s.eco.P;
 function lifeDay(A){
   if(jailed())add('hap',-.25);else if(s.legal.jail&&s.legal.jail===s.day){log('Released from jail.','good');toast('Released from jail')}
   for(const id in s.hob){const h=s.hob[id];if(s.day-h.last>30)h.sk=Math.max(0,h.sk-.03)}
@@ -623,3 +623,13 @@ const EV10=[
  ['Claim on the home insurance and rebuild',()=>{const p=homeP();if(!p)return 'The moment has passed.';const v=Math.round(pval(p)*.01);s.cash-=v;p.cond=Math.max(p.cond??100,90);add('hap',-6);return `The insurer paid for most of it. Your deductible was ${fmt(v)}.`}],
  ['Patch it up yourself',()=>{const p=homeP();if(!p)return 'The moment has passed.';p.cond=Math.max(0,(p.cond??100)-40);add('hap',-8);return 'You saved money, but the place is a mess now.'}]]},
 ];
+
+// ---------- everyday choices: how many hours you work and how you eat ----------
+const HOURS={part:{n:'Part time',d:'About half the pay. More time, less stress, and slower to promote',pay:.55,hap:.03,perf:-8,hea:0},full:{n:'Full time',d:'The standard week',pay:1,hap:0,perf:0,hea:0},over:{n:'Overtime',d:'A quarter more pay and a faster climb, at a cost to mood and health',pay:1.25,hap:-.04,perf:8,hea:-.012}};
+const DIETS={cheap:{n:'Cheap and fast',d:'Instant noodles and takeout',c:-6,hea:-.012,risk:1.5},normal:{n:'Normal',d:'A bit of everything',c:0,hea:0,risk:1},healthy:{n:'Healthy',d:'Fresh food, cooked at home',c:9,hea:.01,risk:.7},chef:{n:'Private chef',d:'Someone else cooks, beautifully',c:220,hea:.015,risk:.6,hap:.02}};
+const hours=()=>HOURS[s.hours||'full'],diet=()=>DIETS[s.diet||'normal'];
+const dietCost=()=>diet().c*s.eco.P*(1+(partner()?.role==='spouse'?.6:0)+kidsHome()*.4);
+function styleHtml(){const H=s.hours||'full',D=s.diet||'normal';
+  return `<div class="sec-h"><h2>How you live</h2><span>change these any time</span></div>
+  <div class="styles"><div><p class="mut">Work hours${s.job?'':' (when you have a job)'}</p><div class="seg2 wrap">${Object.entries(HOURS).map(([k,x])=>`<button class="${H===k?'on':''}" data-a="hours" data-x="${k}" title="${x.d}">${x.n}</button>`).join('')}</div><p class="mut sm">${hours().d}.</p></div>
+  <div><p class="mut">Food</p><div class="seg2 wrap">${Object.entries(DIETS).map(([k,x])=>`<button class="${D===k?'on':''}" data-a="diet" data-x="${k}" title="${x.d}">${x.n}</button>`).join('')}</div><p class="mut sm">${diet().d}. ${dietCost()?`${dietCost()>0?'+':'−'}${fmt(Math.abs(dietCost()))} a day on groceries.`:''}</p></div></div>`}

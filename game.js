@@ -502,7 +502,7 @@ const stateBase=(T=s.tax)=>{const{ord,lt}=taxParts(T);return Math.max(0,ord+lt-B
 function taxRoll(){const T=s.tax,y=dateOf(s.day).y; // close last year's books when a new tax year starts
   if(T.y!==y){if(T.y){const inc=taxParts(T);T.hist[T.y]={inc:inc.ord+inc.lt,tax:T.paid};if(T.paid>1)log(`Tax year ${T.y} closed: ${fmt(T.paid)} on ${fmt(inc.ord+inc.lt)} of taxable income.`)}Object.assign(T,{y,ord:0,st:0,lt:0,gam:0,paid:0,don:0})}}
 function capGain(g,since){taxAdd(since!=null&&s.day-since<=365?'st':'lt',g)} // held a year or less: taxed like income
-const margRate=()=>{const{ord}=taxParts(),P=s.eco.P;for(const[hi,r]of BRK)if(ord<hi*P)return r+cityTax();return .37+cityTax()};
+const margRate=()=>{const{ord}=taxParts(),P=s.eco.P;for(const[hi,r]of BRK)if(ord<hi*P)return r+(r>0?cityTax():0);return .37+cityTax()}; // under the standard deduction, state tax doesn't apply either
 const avgDay=(d0,n0,n)=>d0==null?s.day:(d0*n0+s.day*n)/(n0+n); // the average purchase day of a holding, for the holding period
 
 // ---------- state ----------
@@ -512,7 +512,7 @@ let s=null,tab='dash',sel='NOVA',csel='SATS',speed=1,holding=false,wiped=false,h
 const age=()=>s.startAge+s.day/365;
 const add=(k,v)=>s.st[k]=clamp(s.st[k]+((k==='hap'||k==='sma'||k==='loo')&&v>0?v*clamp((100-s.st[k])/(k==='hap'?50:k==='loo'?60:70),.05,1)**2:v),0,100); // gains in happiness, smarts and looks shrink as they climb
 const job=()=>s.job&&JM[s.job];
-const jobPay=()=>job().pay*(1+.15*s.rank)*(1+(s.raise||0))*city().pay;
+const jobPay=()=>job().pay*(1+.15*s.rank)*(1+(s.raise||0))*city().pay*hours().pay;
 const jobTitle=()=>job().rk?job().rk[Math.min(s.rank,5)]:RANKS[Math.min(s.rank,5)]+job().n;
 const promoNeed=()=>Math.round(55+s.rank*5-bossAdj()),topRank=()=>s.rank>=5;
 const fire=()=>{s.job=null;s.rank=0;s.jobDays=0;s.raise=0};
@@ -687,7 +687,7 @@ function day(live){
   for(const b of BIZ){const o=s.biz[b.id];if(!o?.n)continue;closeCheck(b,o);if(o.n&&!o.mgr){const g=bizInc(b,o);if(g<0){s.cash+=g;taxAdd('ord',g)}else o.pend=Math.min(o.pend+g,g*CAP)}} // losses come straight out of cash
   if(s.cash<0){s.cash*=1+debtAPR()/365;add('hap',-.05)}
   if(s.job){const J=job();s.jobDays++;s.xp[J.fld]=(s.xp[J.fld]||0)+1;
-    s.perf=clamp(s.perf+((40+(trait('driven')?8:0)+s.st.sma*.3+(s.st.hap-50)*.2-J.str*2)-s.perf)*(boss()?.bt==='absent'?.012:.02),0,100);
+    s.perf=clamp(s.perf+((40+(trait('driven')?8:0)+hours().perf+s.st.sma*.3+(s.st.hap-50)*.2-J.str*2)-s.perf)*(boss()?.bt==='absent'?.012:.02),0,100);
     if(s.jobDays%120===0&&!topRank()){if(s.perf>=promoNeed()){s.rank++;s.perf-=10;mile(`Promoted to ${jobTitle()}.`);{const pt=partner();if(pt?.pt==='ambitious')prel(pt,8)}log(`Promoted to <b>${jobTitle()}</b>! Now ${fmt(jobPay())} a day.`,'good');toast('Promotion!')}else log(`Passed over for promotion. You needed a performance of ${promoNeed()}.`,'bad')}
     if(s.job&&s.eco.u>.05&&R()<(s.eco.u-.045)*2/365){const j=jobTitle(),sev=jobPay()*30;fire();s.cash+=sev;taxAdd('ord',sev);add('hap',-12);mile(`Laid off from ${j}.`);log(`Laid off from ${j} as the economy slows. Severance: ${fmt(sev)}.`,'bad');toast(`Laid off from ${j}`)}
     if(s.job&&s.perf<20&&R()<.01){const j=jobTitle();fire();mile(`Fired from ${j}.`);add('hap',-15);log(`Fired from ${j} for poor performance.`,'bad');toast(`Fired from ${j}.`)}}
@@ -696,8 +696,8 @@ function day(live){
     if(st.left<=0){if(st.g<30){st.left=60;st.g=45;log(`Failed the final exams for ${degName(st)}. One more term.`,'bad');toast('Failed the finals. One more term.')}else graduate()}}
   const J=job();
   // stats drift toward a baseline, so an idle life is dull but survivable; choices push you above or below it
-  add('hap',(50+(trait('sunny')?6:0)-(trait('anxious')?6:0)-s.st.hap)*.004-(J?J.str*.02:0)-(s.study&&s.study.sc!=='online'?.03:0)+peopleHap()+mateHap()+city().hap-(s.job&&boss()?.bt==='toxic'?.04:0)+petSum('hap')+shopSum('hap')+(PM[homeP()?.t]?.hap||0)+(bestCar()?CM[bestCar().t].hap:0));
-  add('hea',(85+(trait('sporty')?5:0)-Math.max(0,A-35)*1.2-s.st.hea)*.003+(s.st.hap>70?.01:0)-(s.st.hap<15?.04:0));
+  add('hap',(50+(trait('sunny')?6:0)-(trait('anxious')?6:0)-s.st.hap)*.004-(J?J.str*.02:0)-(s.study&&s.study.sc!=='online'?.03:0)+peopleHap()+mateHap()+city().hap+(diet().hap||0)+(s.job?hours().hap:0)-(s.job&&boss()?.bt==='toxic'?.04:0)+petSum('hap')+shopSum('hap')+(PM[homeP()?.t]?.hap||0)+(bestCar()?CM[bestCar().t].hap:0));
+  add('hea',diet().hea+(s.job?hours().hea:0)+(85+(trait('sporty')?5:0)-Math.max(0,A-35)*1.2-s.st.hea)*.003+(s.st.hap>70?.01:0)-(s.st.hap<15?.04:0));
   if(A>30)add('loo',-.004);
   s.fol+=shopSum('fame')+carSum('fame')+s.props.reduce((t,p)=>t+(PM[p.t].fame||0),0);if(s.day-s.lastPost>30)s.fol*=.999;
   for(const p of s.feed)if(p.l<p.tl)p.l+=Math.ceil((p.tl-p.l)*.35);
@@ -1110,6 +1110,8 @@ const dur=sec=>sec<3600?`${Math.round(sec/60)} minutes`:sec<172800?`${Math.floor
 
 // ---------- actions ----------
 const ACT={
+  hours:k=>{if(HOURS[k]){s.hours=k;toast(`Work hours: ${HOURS[k].n.toLowerCase()}`)}},
+  diet:k=>{if(DIETS[k]){s.diet=k;toast(`Food: ${DIETS[k].n.toLowerCase()}`)}},
   bsell:(id,y)=>{const b=BM[id],o=s.biz[id];if(!b||!o?.n)return;const v=Math.round(bizVal(b,o)*.95);
     if(y!=='yes')return modal(`<h2>Sell your ${o.n>1?`${o.n} ${plural(b.n)}`:b.n}?</h2><p>A buyer offers about <b class="num">${fmt(v)}</b> after fees: ${BIZMULT[id]+(o.fr?1:0)} times a year's profit${o.mgr?'':', less a discount because it only runs with you there'}. You put ${fmt(o.spent)} into it.</p><div class="row"><button class="bad" data-a="bsell" data-x="${id}" data-y="yes">Sell</button><button data-a="close">Keep it</button></div>`);
     closeModal();s.cash+=v+(o.pend||0);capGain(v-o.spent,o.d??s.day-400);delete s.biz[id];mile(`Sold the ${b.n.toLowerCase()} business for ${fmt(v)}.`);log(`Sold your ${b.n} business for ${fmt(v)}.`,'good');toast(`Sold for ${fmt(v)}`)},
@@ -1630,6 +1632,7 @@ life(){
   <div class="sec-h"><h2>Activities</h2><span>each one has a cooldown</span></div>
   <div class="acards">${ACTS.filter(a=>!a.show||a.show()).map(a=>{const w=cdLeft(a.id);return `<button class="acard" data-a="act" data-x="${a.id}" ${w||s.cash<a.c?'disabled':''}><b>${a.n}</b><span>${a.d}</span><small>${a.c?fmt(a.c):'Free'}${w?` · ready in ${w}d`:''}</small></button>`}).join('')}</div>
   ${travelHtml()}
+  ${styleHtml()}
   <div class="sec-h"><h2>Money in and out</h2><span>a day</span></div>
   <table class="ledger budget"><tbody>${rows.map(([n,v])=>`<tr><td>${n}</td><td class="r">${sign(v)}</td></tr>`).join('')}<tr><td><b>Net</b></td><td class="r"><b>${sign(rows.reduce((a,r)=>a+r[1],0))}</b></td></tr></tbody></table>
   ${legalHtml()}
