@@ -829,7 +829,7 @@ const EV15=[
 ];
 
 // ---------- a portrait: drawn from the name, it ages and wears your mood ----------
-function avatar(name,ag,hap=60,sz=56){let h=0;for(const c of name||'?')h=(h*31+c.charCodeAt(0))>>>0;const r=k=>((h>>>k)&255)/255;
+function avatar(name,ag,hap=60,sz=56){let h=0;for(const c of name||'?')h=(h*31+c.charCodeAt(0))>>>0;const r=k=>((h>>>k)&255)/256; // always below 1, so list picks stay in range
   const SK=['#f2d3b3','#e5b98f','#c68c5e','#a06a42','#6f4a2e'],HR=['#2b1d14','#5a3a22','#8c5a2b','#c9a15a','#1a1a1a','#7a2e1b'],skin=SK[Math.floor(r(1)*SK.length)],grey=ag>=62?'#d8d8d8':ag>=48?'#9a9a9a':null,hair=grey||HR[Math.floor(r(5)*HR.length)],style=Math.floor(r(9)*4);
   const smile=hap>=65?'M22 38 Q28 44 34 38':hap>=40?'M22 39 Q28 41 34 39':'M22 41 Q28 36 34 41',hairP=['M12 26 Q14 8 28 8 Q42 8 44 26 Q40 16 28 16 Q16 16 12 26Z','M11 30 Q10 6 28 7 Q46 6 45 30 Q44 18 36 15 Q28 20 18 15 Q12 18 11 30Z','M12 24 Q20 6 36 9 Q46 12 44 24 Q36 14 12 24Z','M10 36 Q8 8 28 8 Q48 8 46 36 L42 36 Q42 16 28 16 Q14 16 14 36Z'][style];
   return `<svg class="avatar" width="${sz}" height="${sz}" viewBox="0 0 56 56" aria-hidden="true"><circle cx="28" cy="28" r="27" fill="var(--color-paper-2)"/><ellipse cx="28" cy="29" rx="15" ry="17" fill="${skin}"/>${ag<62||r(13)>.4?`<path d="${hairP}" fill="${hair}"/>`:''}<circle cx="22" cy="28" r="1.8" fill="#222"/><circle cx="34" cy="28" r="1.8" fill="#222"/>${ag>=58?'<path d="M18 33 l3 1 M38 33 l-3 1" stroke="#0003" stroke-width="1"/>':''}<path d="${smile}" stroke="#5a2a1a" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>`}
