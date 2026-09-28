@@ -569,7 +569,7 @@ const here=p=>(p.city||'suburb')===(s.city||'suburb');
 const P=u=>s.props.find(p=>p.uid===u);
 const homeP=()=>s.home&&P(s.home);
 const renting=p=>p.uid!==s.home&&s.day>=p.from&&!p.reno;
-const rentOf=p=>renting(p)?pval(p)*PM[p.t].yld/365:0;
+const rentOf=p=>renting(p)?pval(p)*PM[p.t].yld/365*stlMul(p):0;
 const carSum=k=>s.cars.reduce((t,c)=>t+CM[c.t][k],0);
 const bestCar=()=>s.cars.reduce((m,c)=>!m||CM[c.t].hap>CM[m.t].hap?c:m,null);
 const upkeep=()=>shopSum('up')+carSum('up')+s.props.reduce((t,p)=>t+pval(p)*.02/365,0); // 1% upkeep plus 1% property tax
@@ -601,7 +601,7 @@ function upgrade(){ // bring older saves up to date
   for(const k of STOCKS){const q=s.px[k.t];if(q.k)continue; // daily candles used to be drawn from closes alone
     q.k=q.h.map((c,i)=>{const o=i?q.h[i-1]:c;return [o,Math.max(o,c)*(1+.005*hsh(i,1)),Math.min(o,c)*(1-.005*hsh(i,2))]});[q.op,q.hi,q.lo]=q.k.at(-1)}
 }
-function flows(){const f={job:(s.job&&!jailed()&&!(s.rehab>s.day)?jobPay():0)+(s.pension||0)+(s.su?.st>=2?suDraw():0)+spouseInc()+polPay(),biz:0,pend:0,spon:sponsor(),exp:expenses(),rent:s.props.reduce((t,p)=>t+rentOf(p),0),mort:s.props.reduce((t,p)=>t+(p.loan>0?p.pay:0),0)+loanPay(),own:ownInc()};f.tax=s.tax?Math.max(0,(f.job+f.biz+f.pend+f.spon+f.rent*.5)*margRate()+f.own*.15):0;for(const b of BIZ){const o=s.biz[b.id];if(o?.n)f[o.mgr?'biz':'pend']+=bizInc(b,o)}return f}
+function flows(){const f={job:(s.job&&!jailed()&&!(s.rehab>s.day)?jobPay():0)+(s.pension||0)+(s.su?.st>=2?suDraw():0)+spouseInc()+polPay(),biz:0,pend:0,spon:sponsor()+chInc()+(s.roy&&s.day<s.roy.end?s.roy.v:0),exp:expenses(),rent:s.props.reduce((t,p)=>t+rentOf(p),0),mort:s.props.reduce((t,p)=>t+(p.loan>0?p.pay:0),0)+loanPay(),own:ownInc()};f.tax=s.tax?Math.max(0,(f.job+f.biz+f.pend+f.spon+f.rent*.5)*margRate()+f.own*.15):0;for(const b of BIZ){const o=s.biz[b.id];if(o?.n)f[o.mgr?'biz':'pend']+=bizInc(b,o)}return f}
 const pfmt=n=>n>=1?fmt(n):'$'+(n<1e-6?n.toExponential(1):n.toPrecision(3));
 const qfmt=n=>n>=1?'$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):pfmt(n); // share prices to the cent, like a broker
 const units=u=>u>=1000?big(u):u>=1?u.toFixed(2):u.toPrecision(3);
@@ -710,7 +710,7 @@ function day(live){
   s.later=s.later.filter(p=>p.d>s.day||(runLater(p),false));
   s.inbox=s.inbox.filter(it=>{if(s.day-it.d<decDays())return true;const e=EVM[it.id];if(!e.c||e.c(s))log(`<b>${e.t}</b> ${e.ch[e.def][1](s,it.a)}<span class="auto">decided for you</span>`);return false});
   if(s.inbox.length<3&&R()<1/28)newEvent();
-  flDay();if(s.su)suDay();propDay();worldDay();fdnDay();oldDay(A);polDay();clubDay();creditDay();viceDay();milDay();trustDay();
+  flDay();if(s.su)suDay();propDay();worldDay();fdnDay();oldDay(A);polDay();clubDay();creditDay();viceDay();milDay();trustDay();stlDay();chDay();
   lifeDay(A);if(s.dead)return;
   const pd=s.st.hea<=0?1:A>60?Math.min(.5,((A-60)/30)**3*3)/365:0;
   if(R()<pd)die();else checkGoals();
@@ -1113,6 +1113,10 @@ const dur=sec=>sec<3600?`${Math.round(sec/60)} minutes`:sec<172800?`${Math.floor
 
 // ---------- actions ----------
 const ACT={
+  stl:u=>{const p=P(+u);if(!p||p.uid===s.home||PM[p.t].biz)return;p.stl=p.stl?0:1;toast(p.stl?'Now a holiday let: more rent, more wear, more empty nights':'Back to a long let')},
+  chstart:()=>{const C=s.ch??=chNew();if(C.on||s.cash<500*s.eco.P)return;s.cash-=500*s.eco.P;C.on=1;C.last=s.day;mile('Started a channel.');toast('Your channel is live')},
+  chpost:()=>{const m=chPost();if(m)toast(m)},
+  abroad:()=>{const m=abroad();if(m){log(m,'good');toast(m)}},
   trust:v=>{v=+v;if(!(v>0)||s.cash<v)return;const gt=trustAdd(v);log(`Moved ${fmt(v)} into the family trust${gt?`, paying ${fmt(gt)} in gift tax`:''}.`,'good');toast(`Trust: +${fmt(v)}`)},
   comm:()=>{moveComm()},
   petplay:u=>{const m=petPlay(u);if(m)toast(esc(m))},
@@ -1626,7 +1630,7 @@ dash(){
   <section class="snap">
    <div><div class="sec-row"><h2>Net worth</h2>${h.length>1?`<span class="${h.at(-1)>=h[0]?'up':'dn'}">${h.at(-1)>=h[0]?'+':''}${fmt(h.at(-1)-h[0])} over ${h.length-1} weeks</span>`:''}</div>
     ${h.length>1?nwChart(h):'<p class="mut" style="margin-top:var(--space-xs)">The chart fills in after a couple of weeks.</p>'}
-    <p class="mut" style="margin-top:var(--space-2xs)">Earning ${sign(net)} a day: salary ${fmt(f.job)}, businesses ${fmt(f.biz+f.pend)}${f.rent?`, rent ${fmt(f.rent)}`:''}${f.spon?`, sponsors ${fmt(f.spon)}`:''}${f.own?`, companies ${fmt(f.own)}`:''}, costs −${fmt(f.exp+f.mort)}, tax about −${fmt(f.tax)}.</p></div>
+    <p class="mut" style="margin-top:var(--space-2xs)">Earning ${sign(net)} a day: salary ${fmt(f.job)}, businesses ${fmt(f.biz+f.pend)}${f.rent?`, rent ${fmt(f.rent)}`:''}${f.spon?`, sponsors and ads ${fmt(f.spon)}`:''}${f.own?`, companies ${fmt(f.own)}`:''}, costs −${fmt(f.exp+f.mort)}, tax about −${fmt(f.tax)}.</p></div>
    <div><h2>Where it sits</h2><div class="stack">${parts.map(x=>`<span style="width:${x[1]/tot*100}%;background:${x[2]}"></span>`).join('')}</div>
     <div class="legend">${parts.map(x=>`<div><i style="background:${x[2]}"></i>${x[0]}<b>${fmt(x[1])}</b></div>`).join('')}</div></div>
   </section>
@@ -1637,7 +1641,7 @@ dash(){
   ${lbHtml()}`;
 },
 life(){
-  const f=flows(),rows=[[spouseInc()?'Salary, pension and your spouse':'Salary and pension',f.job],['Managed businesses',f.biz],['Tills to collect',f.pend],['Sponsorships',f.spon],['Companies you control',f.own],['Rent from tenants',f.rent],['Loan payments',-f.mort],['Income tax, about',-f.tax],[`Living costs${homeP()?'':', rent included'}`,-f.exp]].filter(r=>Math.abs(r[1])>=.01);
+  const f=flows(),rows=[[spouseInc()?'Salary, pension and your spouse':'Salary and pension',f.job],['Managed businesses',f.biz],['Tills to collect',f.pend],['Sponsors, ads and royalties',f.spon],['Companies you control',f.own],['Rent from tenants',f.rent],['Loan payments',-f.mort],['Income tax, about',-f.tax],[`Living costs${homeP()?'':', rent included'}`,-f.exp]].filter(r=>Math.abs(r[1])>=.01);
   return `<section class="lede solo"><div><h2 class="headline">${esc(s.name)}, ${Math.floor(age())}</h2><p class="dek">${esc(s.name)} ${lifeLine()}</p>${s.tr?.length?`<p class="mut">${s.tr.map(t=>`<b>${TRAITS[t].n}</b>: ${TRAITS[t].d}`).join(' · ')}</p>`:''}</div></section>
   ${storyHtml()}
   <div class="sec-h"><h2>Activities</h2><span>each one has a cooldown</span></div>
@@ -1678,7 +1682,7 @@ school(){
   </section>
   ${st?`<div class="sec-h"><h2>Studying now</h2></div><div class="needs"><div class="need"><div><div class="k hot">${schoolOf(st).n}</div><div class="t">${degName(st)}</div>
     <div class="d">${st.left} days left · grade ${grade(st.g)}${P.stipend?` · paid ${fmt(P.stipend)} a day`:''}</div>${meter((1-st.left/st.days)*100)}</div>
-    <div class="acts2">${sbtn('hard')}${sbtn('party')}${sbtn('tutor')}<button class="bad" data-a="dropout">Drop out</button></div></div></div>`:''}
+    <div class="acts2">${sbtn('hard')}${sbtn('party')}${sbtn('tutor')}${st.sc!=='online'&&!st.abroad?`<button data-a="abroad" ${s.cash<abroadCost()?'disabled':''}>Semester abroad · ${fmt(abroadCost())}</button>`:''}<button class="bad" data-a="dropout">Drop out</button></div></div></div>`:''}
   <div class="sec-h"><h2>Programs</h2><span>${st?'finish your current program to start another':`${open} open to you`}</span></div>
   <div class="scroll"><table class="ledger"><thead><tr><th>Program</th><th>Where</th><th>Needs</th><th class="r">Days</th><th class="r">Tuition from</th><th></th></tr></thead><tbody>
   ${PROGS.map(P=>{const miss=progMiss(P),done=!P.mj&&s.degs.some(d=>d.p===P.id),from=Math.min(...schoolsFor(P).map(sc=>tuition(P,sc)));if((miss.length||done)&&!showAll.school)return '';
@@ -1774,6 +1778,7 @@ chirp(){
      <p class="dek">${esc(s.name)} posts as ${s.handle} to <b class="num">${big(s.fol)}</b> followers. ${sp?`Sponsors pay <b class="num">${fmt(sp)}</b> a day.`:'Sponsors start paying at 1K followers.'}</p></div></section>
    <div class="compose"><p class="mut">${w?`You can post again in ${w} day${w>1?'s':''}.`:'What will you post?'}</p>
     ${Object.entries(POSTS).map(([k,P])=>`<button data-a="post" data-x="${k}" ${!w&&(!P.need||P.need())?'':'disabled'}>${P.n}</button>`).join('')}</div>
+   ${chHtml()}
    ${howto('Selfies ride on looks. Hot takes ride on smarts and can backfire. Memes go viral more often. Flexes need $25K net worth. Promoting a business lifts its income 25% for 10 days. At 1K followers, sponsors start paying you every day.')}
    <ol class="feed">${s.feed.map(p=>`<li class="post ${p.me?'mine':''}"><span class="av">${esc(p.n[0].toUpperCase())}</span><div>
      <div class="by"><b>${esc(p.n)}</b>${p.v?' <span class="ver" title="Verified">✓</span>':''} <span class="mut">${p.h} · ${s.day-p.d?`${s.day-p.d}d`:'now'}</span>${p.tag?`<span class="tag ${p.bad?'dn':''}">${p.tag}</span>`:''}</div>
@@ -1823,7 +1828,7 @@ home(){
   ${cityHtml()}
   ${s.props.length?`<h3>Your properties</h3><div class="scroll"><table class="ledger"><thead><tr><th>Property</th><th class="r">Paid</th><th class="r">Worth now</th><th class="r">Owed</th><th class="r">Rent a day</th><th>Condition</th><th>Status</th><th></th></tr></thead><tbody>
    ${s.props.map(p=>{const v=pval(p),k=PM[p.t],home=s.home===p.uid;return `<tr><td><b>${pname(p)}</b></td><td class="r num">${fmt(p.paid)}</td><td class="r num ${v>=p.paid?'up':'dn'}">${fmt(v)}</td><td class="r num">${p.loan?fmt(p.loan):'—'}</td><td class="r num">${home?'—':fmt(v*k.yld/365)}</td>
-    <td class="${(p.cond??100)<60?'dn':''}">${condWord(p.cond)}${p.rv?' · renovated':''}</td><td>${p.reno?`Renovating, ${p.reno-s.day}d`:home?'Your home':s.day<p.from?`Finding a tenant, ${p.from-s.day}d`:'Rented out'}</td>
+    <td class="${(p.cond??100)<60?'dn':''}">${condWord(p.cond)}${p.rv?' · renovated':''}</td><td>${p.reno?`Renovating, ${p.reno-s.day}d`:home?'Your home':s.day<p.from?`Finding a tenant, ${p.from-s.day}d`:p.stl?'Holiday let':'Rented out'}${!home&&!k.biz?`<div class="sub"><button class="link2" data-a="stl" data-x="${p.uid}">${p.stl?'Switch to a long let':'Make it a holiday let'}</button></div>`:''}</td>
     <td class="act">${!p.reno&&((p.cond??100)<95||!p.rv)?`<button data-a="reno" data-x="${p.uid}" ${s.cash<renoCost(p)?'disabled':''}>${(p.cond??100)<85?'Renovate':'Upgrade'} · ${fmt(renoCost(p))}</button>`:''}${home?`<button data-a="moveout" data-x="${p.uid}">Move out</button>`:k.biz||!here(p)?'':`<button data-a="live" data-x="${p.uid}">Live here</button>`}${p.loan?`<button data-a="payoff" data-x="${p.uid}" ${s.cash<p.loan?'disabled':''}>Pay off</button>`:''}<button class="bad" data-a="psell" data-x="${p.uid}">Sell for ${fmt(v*.97-p.loan)}</button></td></tr>`}).join('')}
    </tbody></table></div>`:''}
   <h3>For sale</h3>

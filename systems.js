@@ -60,7 +60,7 @@ const CASES={
  nbr:{n:"Your neighbor's lawsuit",fine:v=>v,conv:.45,law:3e3,d:'Your neighbor took the fence dispute to court.'},
 };
 const jailed=()=>s.legal.jail>s.day;
-const JAILX=new Set(['run','flt','found','suhire','act','gig','work','apply','learn','enroll','study','pp','post','deal','slot','rl','dice','flip','cbuy','pbuy','hob','hshow','adopt']);
+const JAILX=new Set(['chpost','abroad','run','flt','found','suhire','act','gig','work','apply','learn','enroll','study','pp','post','deal','slot','rl','dice','flip','cbuy','pbuy','hob','hshow','adopt']);
 const crimes=(yrs=7)=>s.legal.rec.filter(r=>CASES[r.t].crim&&s.day-r.d<yrs*365);
 const CLEAN=new Set(['police','teacher','nurse','lawyer','pilot','resident','surgeon','army','officer']);
 function openCase(t,v=0){const c={id:uid(),t,v:Math.round(v),d:s.day};s.legal.cases.push(c);log(`<b>${CASES[t].n}.</b> ${CASES[t].d} You have 30 days to decide how to answer.`,'bad');toast(CASES[t].n);return c}
@@ -123,7 +123,7 @@ const lifeCost=()=>dietCost()+careCost()+insPrem()+medDaily()+kidsCost()+petSum(
 function lifeDay(A){
   if(jailed())add('hap',-.25);else if(s.legal.jail&&s.legal.jail===s.day){log('Released from jail.','good');toast('Released from jail')}
   for(const id in s.hob){const h=s.hob[id];if(s.day-h.last>30)h.sk=Math.max(0,h.sk-.03)}
-  if(s.roy){if(s.day<s.roy.end){s.cash+=s.roy.v;taxAdd('ord',s.roy.v)}else delete s.roy}
+  if(s.roy&&s.day>=s.roy.end)delete s.roy; // royalties are paid with the day's other income
   for(const c of [...s.legal.cases])if(s.day-c.d>=30){const m=resolveCase(c,'pd');log(`<b>${CASES[c.t].n}</b> You never answered, so it went to trial with a public defender. ${m}`,'bad')}
   petsDay();add('hea',petSum('hea'));s.fol+=petSum('fame');
   healthDay(A);
@@ -681,7 +681,31 @@ const NEWS=[
  {v:5,t:['A family tree of every generation','Fixer-uppers, renovations and tenants','Giving and a family foundation','Pandemics, tech booms and storms','Partners with personalities, weddings and prenups','Five cities with their own pay, costs and taxes','Social Security']},
  {v:6,t:['Politics: from city council to president','Own a sports team','Credit scores and bankruptcy','Habits, addiction and rehab','Travel, up to a flight to space','Military service and the GI Bill','A life story timeline','Next steps suggestions on Home']},
  {v:7,t:['Businesses valued at a multiple of profit: sell or franchise a chain','Work hours and diet','Settings in the ? menu','A housing boom and bust','Walk your dog, and vet decisions','A family trust, a best friend, and retirement communities']},
+ {v:8,t:['Holiday lets for your rentals','Start a podcast or video channel','A semester abroad']},
 ];
 const NEWSV=NEWS.at(-1).v;
 function newsHtml(){const seen=s.seenV||1,L=NEWS.filter(n=>n.v>seen);if(!L.length)return '';s.seenV=NEWSV;
   return `<h3 style="margin-top:var(--space-sm)">What's new since you last played</h3><ul class="news">${L.flatMap(n=>n.t).map(t=>`<li>${t}</li>`).join('')}</ul>`}
+
+// ---------- short-term lets: more rent, more wear, more empty weeks, and cities that push back ----------
+const stl=p=>!!p.stl;
+function stlDay(){for(const p of s.props)if(p.stl){if(renting(p))p.cond=Math.max(0,(p.cond??100)-2/365); // twice the wear of a long let
+  if(R()<1/(25*365)&&s.props.some(q=>q.stl)){for(const q of s.props)if(q.stl){q.stl=0}log('The city banned short-term lets. Your holiday rentals are back to ordinary tenants.','bad');toast('Short-term lets banned');break}}}
+const stlMul=p=>p.stl?1.6*.72:1; // 60% more a night, but about 28% of nights sit empty
+
+// ---------- a channel of your own: episodes build an audience, and ads pay by the view ----------
+const chNew=()=>({on:0,subs:0,eps:0,last:0});
+function chDay(){const C=s.ch;if(!C?.on)return;const fresh=s.day-C.last<14;C.subs=Math.max(0,C.subs*(fresh?1.0005:.998))} // ad money is paid with the day's other income
+function chPost(){const C=s.ch??=chNew();if(!C.on||cdLeft('ep'))return;s.cd.ep=s.day+5;C.eps++;C.last=s.day;const q=(s.st.sma+s.st.loo)/2+(hobSk('music')+hobSk('write'))/4,g=Math.round((20+Math.sqrt(s.fol)*2)*(q/50)*(.5+R()));C.subs+=g;s.fol+=Math.round(g*.3);add('hap',1);
+  if(R()<.03*q/50){const v=Math.round(g*20+C.subs*.5);C.subs+=v;s.fol+=Math.round(v*.3);return `Episode ${C.eps} went viral! +${big(g+v)} subscribers.`}return `Episode ${C.eps} is out. +${big(g)} subscribers.`}
+const chInc=()=>s.ch?.on?s.ch.subs*.004*s.eco.P*(s.day-s.ch.last<14?1:.4):0;
+function chHtml(){const C=s.ch||chNew(),w=cdLeft('ep');
+  return `<div class="sec-h"><h2>Your channel</h2><span>${C.on?`${big(C.subs)} subscribers · ${C.eps} episode${C.eps===1?'':'s'}`:'not started'}</span></div>
+  ${C.on?`<p class="mut">Ads pay about <b class="num">${fmt(chInc())}</b> a day. Post at least every two weeks or the algorithm forgets you and subscribers drift away. Smarts, looks, and skill at music or writing make better episodes.</p>
+  <div class="quick" style="margin-top:var(--space-xs)"><button class="pri" data-a="chpost" ${w?'disabled':''}>Post an episode${w?` · in ${w}d`:''}</button></div>`
+  :`<p class="mut">Start a podcast or video channel. It grows with every episode, pays ad money by the subscriber, and feeds your Chirp following.</p><div class="quick" style="margin-top:var(--space-xs)"><button data-a="chstart" ${s.cash<500*s.eco.P?'disabled':''}>Start a channel · ${fmt(500*s.eco.P)} for gear</button></div>`}`}
+
+// ---------- a semester abroad ----------
+const abroadCost=()=>8000*s.eco.P;
+function abroad(){const st=s.study;if(!st||st.abroad||s.cash<abroadCost()||st.sc==='online')return;s.cash-=abroadCost();st.abroad=1;st.g=clamp(st.g+4,0,100);add('sma',3);add('hap',15);s.fol+=rint(30,150);mile('Spent a semester abroad.');
+  if(friendsN()<10){const p=meet('friend',55);return `A semester abroad: new languages, late nights, and a friend for life in ${p.n}.`}return 'A semester abroad. You come home a little different.'}

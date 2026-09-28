@@ -254,6 +254,9 @@ function selfTest(){ // open with ?test=1 — never touches your real save
   const tr_f=meet('friend',80);ACT.pp(String(tr_f.uid),'bff');ok(s.best===tr_f.uid&&VIEWS.people().includes('Best friend'),'a best friend');
   s.startAge=70;s.cash=1e6;s.re.list[0].t='studio';ACT.pbuy(String(s.re.list[0].uid));ACT.comm();ok(s.rc&&!homeP()&&rentNow()===commFee()&&lifeLine().includes('retirement community'),'a retirement community');
   for(const e of EV12)if(!e.c||e.c(s))for(const c of e.ch){const a=e.a?e.a(s):0;e.d(s,a);ok(typeof c[1](s,a)==='string','event '+e.id)}s=tr_s0;
+  const sl_s0=s;newGame('Let','rich');s.cash=5e6;ACT.pbuy(String(s.re.list[0].uid));ACT.pbuy(String(s.re.list[1].uid));const sl_p=s.props.find(p=>p.uid!==s.home);sl_p.from=0;const sl_r=rentOf(sl_p);ACT.stl(String(sl_p.uid));ok(sl_p.stl&&rentOf(sl_p)>sl_r,'a holiday let pays more');tab='home';ok(VIEWS.home().includes('Holiday let'),'holiday let shown');
+  ACT.chstart();ok(s.ch.on,'a channel');const sl_c=chPost();ok(sl_c&&s.ch.subs>0&&!chPost(),'post an episode, then wait');ok(chInc()>0,'ads pay');tab='chirp';ok(VIEWS.chirp().includes('Your channel'),'channel on Chirp');
+  s.study={p:'ba',sc:'state',mj:'Business',left:300,days:1095,g:60};ACT.abroad();ok(s.study.abroad,'a semester abroad');s=sl_s0;
   tab='dash';ok(VIEWS.dash().includes('Goals'),'goals on home');goalsModal();
   const sp2=meet('spouse',70),k1=addChild(),k2=addChild(),k3=addChild();k1.b=s.day-40*365;k2.b=s.day-30*365;k3.b=s.day-5*365;k1.rel=90;
   deathModal();ok($('#mbox').innerHTML.includes('Continue as '+k1.n),'death lists the kids');ACT.heir(String(k1.uid));
