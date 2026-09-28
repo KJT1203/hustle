@@ -690,7 +690,7 @@ const NEWS=[
  {v:12,t:['Aging parents who need care','Friends and siblings marry, have kids, move away and grow old']},
  {v:13,t:['New careers: pro athlete, fashion model and actor']},
  {v:14,t:['Five new starting lives: lottery winner, young parent, sporty kid, new arrival and art school dropout','Lifetime stats on the family tree','Nine more life moments, from roommates to a memoir']},
- {v:15,t:['A portrait for every character, who ages and shows your mood']},
+ {v:15,t:['A portrait for every character, who ages and shows your mood','Three save slots for separate families (? menu)','Gentle mode: illness never kills you (? menu)']},
 ];
 const NEWSV=NEWS.at(-1).v;
 function newsHtml(){const seen=s.seenV||1,L=NEWS.filter(n=>n.v>seen);if(!L.length)return '';s.seenV=NEWSV;

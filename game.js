@@ -516,7 +516,8 @@ const margRate=()=>{const{ord}=taxParts(),P=s.eco.P;for(const[hi,r]of BRK)if(ord
 const avgDay=(d0,n0,n)=>d0==null?s.day:(d0*n0+s.day*n)/(n0+n); // the average purchase day of a holding, for the holding period
 
 // ---------- state ----------
-const SAVE='hustle-v1',GROW=1.13,CAP=10,MILES=[10,25,50,100,150,200,300,400,500];
+let slot=1;try{slot=+localStorage.getItem('hustle-slot')||1}catch{}
+const SAVE='hustle-v1',saveKey=()=>slot===1?SAVE:`${SAVE}-${slot}`,GROW=1.13,CAP=10,MILES=[10,25,50,100,150,200,300,400,500];
 let helpOpen={},showAll={},openP=null,tour=-1,tourSpeed=1,tourJump=false,enr=null,iv=null,bmode='1',wf='All',bd={},vmode='chart',oxp=0,oq=1,lastSpeed=1,lastIn=[],cg=null,tf='3M',cmode='candle',hov=null,ot={side:'buy',qty:10}; // screen state, not saved
 let s=null,tab='dash',sel='NOVA',csel='SATS',speed=1,holding=false,wiped=false,heir={},hiddenAt=0;
 const age=()=>s.startAge+s.day/365;
@@ -1195,6 +1196,7 @@ const ACT={
   dropout:x=>{if(!s.study)return;if(x!=='yes')return modal(`<h2>Drop out of ${degName(s.study)}?</h2><p>You won't get your tuition back, and any student loan stays.</p><div class="row"><button class="bad" data-a="dropout" data-x="yes">Drop out</button><button data-a="close">Keep studying</button></div>`);log(`Dropped out of ${degName(s.study)}.`,'bad');s.study=null;closeModal()},
   payloan:()=>{if(!s.debt||s.cash<s.debt)return;s.cash-=s.debt;s.debt=0;log('Paid off your student loans.','good')},
   help:()=>modal(`<p class="kicker">Help and settings</p><h2>The Hustle</h2><div class="choices"><button data-a="guide2">Replay the guide</button><button data-a="exp">Back up your save</button><button data-a="imp">Load a saved game</button><button class="bad" data-a="reset">Start a new life</button><button class="pri" data-a="close">Back to the game</button></div>
+    <h3 style="margin-top:var(--space-lg)">Families</h3><table class="ledger"><tbody>${[1,2,3].map(n=>{let m=null;try{m=JSON.parse(localStorage.getItem('hustle-meta-'+n))}catch{}if(n===slot&&s)m={n:s.name,g:s.gen,a:Math.floor(age()),w:netWorth()};return `<tr${n===slot?' class="now"':''}><td>Slot ${n}</td><td>${m?`${esc(m.n)}, ${m.a} · generation ${m.g} · ${fmt(m.w)}`:'<span class="mut">Empty</span>'}</td><td class="act">${n===slot?'<span class="mut">Playing</span>':`<button data-a="slot" data-x="${n}">${m?'Switch':'Start a new family'}</button>`}</td></tr>`}).join('')}</tbody></table>
     <h3 style="margin-top:var(--space-lg)">Settings</h3><table class="ledger"><tbody>
      <tr><td>Pause when a decision arrives</td><td class="act"><button class="${opt('pause')?'pri':''}" data-a="setopt" data-x="pause">${opt('pause')?'On':'Off'}</button></td></tr>
      <tr><td>Decisions decide themselves after</td><td class="act">${[7,30,90].map(d=>`<button class="${decDays()===d?'pri':''}" data-a="setopt" data-x="dec" data-y="${d}">${d} days</button>`).join('')}</td></tr>
@@ -1332,7 +1334,8 @@ const ACT={
   own:id=>{const i=SM[id];if(s.own[id]||s.cash<i.cost)return;s.cash-=i.cost;s.own[id]=1;add('hap',5);log(`Bought ${art(i.n)}`,'good')},
   unown:id=>{if(!s.own[id])return;s.cash+=SM[id].cost*.6;delete s.own[id];log(`Sold your ${SM[id].n}.`)},
   reset:()=>modal(`<h2>Start over?</h2><p>This wipes your save for good.</p><div class="row"><button class="bad" data-a="wipe">Wipe my save</button><button data-a="close">Cancel</button></div>`),
-  wipe:()=>{wiped=true;localStorage.removeItem(SAVE);location.reload()},
+  wipe:()=>{wiped=true;localStorage.removeItem(saveKey());localStorage.removeItem('hustle-meta-'+slot);location.reload()},
+  slot:n=>{n=+n;if(![1,2,3].includes(n)||n===slot)return;save();slot=n;try{localStorage.setItem('hustle-slot',n)}catch{}wiped=true;location.reload()},
   heir:u=>startModal(heirOf(u&&per(+u))),
   goals:()=>goalsModal(),
   begin:bg=>{newGame(($('#nm').value.trim()||pick(NAMES)).slice(0,20),bg,heir);closeModal();save();if(heir.gen)s.tour=1;else ACT.guide()},
@@ -2041,7 +2044,7 @@ setInterval(()=>{
   while(acc>=1){acc--;minute();n++;if(s.dead)break}
   if(n){if(holding||document.activeElement?.matches?.('#view input'))hdr();else render()} // ponytail: skip DOM rebuild mid-click so buttons don't vanish under the cursor
 },100);
-function save(){if(!s||wiped)return;s.lastSeen=Date.now();try{localStorage.setItem(SAVE,JSON.stringify(s))}catch{}lbPost()}
+function save(){if(!s||wiped)return;s.lastSeen=Date.now();try{localStorage.setItem(saveKey(),JSON.stringify(s));localStorage.setItem('hustle-meta-'+slot,JSON.stringify({n:s.name,g:s.gen,a:Math.floor(age()),w:Math.round(netWorth()),d:s.dead?1:0}))}catch{}lbPost()}
 
 // ---------- the leaderboard: only on the published page, where claude.use('db') is served; hidden everywhere else ----------
 // Each player writes one row, board/<their id>; everyone reads the board. Names come from their Claude profile at render time and are never stored.
@@ -2068,7 +2071,7 @@ document.addEventListener('visibilitychange',()=>{if(!s||s.dead)return;if(docume
 
 if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1'))navigator.serviceWorker.register('sw.js').catch(()=>{}); // makes it installable and offline-capable when served
 (function boot(){
-  const go=()=>{let d=null;if(!wiped)try{d=JSON.parse(localStorage.getItem(SAVE))}catch{}
+  const go=()=>{let d=null;if(!wiped)try{d=JSON.parse(localStorage.getItem(saveKey()))}catch{}
     if(d?.v===1){s=d;upgrade();render();if(s.dead)deathModal();else{offline(Date.now()-s.lastSeen);if($('#modal').hidden&&(s.seenV||1)<NEWSV)modal(`<p class="kicker">Welcome back</p><h2>The game has been updated</h2>${newsHtml()}<button class="pri" data-a="close" style="margin-top:var(--space-sm)">Back to it</button>`)}}
     else startModal()};
   if(!location.search.includes('test'))return go();
