@@ -63,16 +63,16 @@ const STUDY={
 const FIELD={academia:'academia',food:'food service',delivery:'delivery',retail:'retail',office:'office work',trade:'the trades',public:'public service',creative:'creative work',tech:'tech',health:'healthcare',finance:'finance',law:'law',aviation:'aviation',exec:'management'};
 const IVQ=['Why should we hire you?','Tell us about a time you solved a hard problem.','Where do you see yourself in five years?','What is your biggest weakness?','How do you handle pressure?'];
 const WORK={
- hard:{n:'Work hard',cd:4,fx:()=>{s.perf=clamp(s.perf+5,0,100);add('hap',-1);return 'Long day. Your boss noticed.'}},
- slack:{n:'Slack off',cd:3,fx:()=>{s.perf=clamp(s.perf-6,0,100);add('hap',4);return 'An hour of videos. Worth it?'}},
+ hard:{n:'Work hard',cd:4,fx:()=>{s.perf=clamp(s.perf+(boss()?.bt==='micro'?7:5),0,100);add('hap',-1);return 'Long day. Your boss noticed.'}},
+ slack:{n:'Slack off',cd:3,fx:()=>{s.perf=clamp(s.perf-(boss()?.bt==='micro'?12:6),0,100);add('hap',4);return 'An hour of videos. Worth it?'}},
  net:{n:'Network',cd:14,c:100,fx:()=>{s.perf=clamp(s.perf+4,0,100);if(R()<.3&&friendsN()<10){const p=meet('friend',40);return `Drinks with coworkers. You clicked with ${p.n}.`}return 'Drinks with coworkers. Good for your name around the office.'}},
  raise:{n:'Ask for a raise',cd:90,fx:()=>{if(R()<raiseOdds()){s.raise=(s.raise||0)+.08;log(`Got a raise. Now ${fmt(jobPay())} a day.`,'good');return `Yes! 8% more. Now ${fmt(jobPay())} a day.`}s.perf=clamp(s.perf-5,0,100);add('hap',-3);return 'Not this time. Your boss suggests "more ownership".'}},
 };
 // people: role decides decay, what you can do together, and how much they lift your mood
 const PNAMES=['Mia','Leo','Ava','Noah','Zara','Ethan','Priya','Omar','Hana','Luca','Sofia','Kenji','Amara','Diego','Ivy','Farid','Nina','Theo','Aisha','Ren','Mei','Jonah','Layla','Arjun','Chloe','Malik','Yuna','Felix','Iris','Tariq','Elif','Mateo'];
-const ROLE={spouse:'Spouse',date:'Partner',child:'Child',parent:'Parent',sibling:'Sibling',friend:'Friend',ex:'Ex'};
-const PW={spouse:.05,date:.04,child:.02,parent:.01,sibling:.008,friend:.008,ex:0};
-const DECAY={spouse:.08,date:.08,friend:.05,parent:.03,sibling:.03,child:.03,ex:.02};
+const ROLE={boss:'Boss',coworker:'Coworker',spouse:'Spouse',date:'Partner',child:'Child',parent:'Parent',sibling:'Sibling',friend:'Friend',ex:'Ex'};
+const PW={boss:0,coworker:0,spouse:.05,date:.04,child:.02,parent:.01,sibling:.008,friend:.008,ex:0};
+const DECAY={boss:.03,coworker:.03,spouse:.08,date:.08,friend:.05,parent:.03,sibling:.03,child:.03,ex:.02};
 const PACTS={
  call:{n:'Call',cd:2,roles:['parent','sibling','friend','date','spouse','child'],fx:p=>{prel(p,4);return `You caught up with ${p.n}.`}},
  time:{n:'Hang out',cd:4,c:p=>p.role==='friend'?40:0,roles:['parent','sibling','friend','child'],fx:p=>{prel(p,rint(6,10));add('hap',2);return `A good afternoon with ${p.n}.`}},
@@ -90,10 +90,15 @@ const PACTS={
  camp:{n:'Summer camp',cd:180,c:()=>Math.round(2500*s.eco.P),roles:['child'],show:p=>p.k&&ageOf(p)>=7&&ageOf(p)<17,fx:p=>{p.k.hap=Math.min(100,p.k.hap+6);p.k.sma=Math.min(100,p.k.sma+.5);prel(p,5);return `${p.n} came back from camp with a tan and ten new friends.`}},
  school:{n:p=>p.k?.sch==='private'?'Back to public school':`Private school · ${fmt(PRIVATE*s.eco.P)}/day`,cd:30,roles:['child'],show:p=>p.k&&ageOf(p)>=5&&ageOf(p)<18,fx:p=>{p.k.sch=p.k.sch==='private'?'public':'private';return p.k.sch==='private'?`${p.n} starts at a private school next term.`:`${p.n} is back at public school.`}},
  fund:{n:'Add to college fund',cd:30,c:()=>Math.round(clamp(s.cash*.05,500,5e4*s.eco.P)),roles:['child'],show:p=>p.k&&ageOf(p)<18,need:p=>p.k.fund>=FUNDCAP*s.eco.P?'The college fund is full':'',fx:(p,v)=>{p.k.fund+=v;return `${fmt(v)} into ${p.n}'s college fund. It earns about 5% a year.`}},
+ lunch:{n:'Lunch with the boss',cd:14,c:()=>Math.round(30*s.eco.P),roles:['boss'],fx:p=>{prel(p,rint(5,9));return `Lunch with ${p.n}. You talked about everything except work.`}},
+ pitch:{n:'Pitch an idea',cd:30,roles:['boss'],fx:p=>{if(R()<.35+s.st.sma/200){s.perf=clamp(s.perf+8,0,100);prel(p,6);return `${p.n} loved it. Your idea is going ahead.`}prel(p,-4);s.perf=clamp(s.perf-2,0,100);return `${p.n} shot it down in front of everyone.`}},
+ coffee:{n:'Grab a coffee',cd:3,c:()=>Math.round(6*s.eco.P),roles:['coworker'],fx:p=>{prel(p,rint(4,7));return `Coffee with ${p.n}. Office gossip acquired.`}},
+ cover:{n:'Cover for them',cd:20,roles:['coworker'],fx:p=>{prel(p,10);s.perf=clamp(s.perf-1,0,100);add('hap',-1);return `${p.n} owes you one.`}},
+ credit:{n:'Take credit for their work',cd:60,roles:['coworker'],fx:p=>{if(R()<.7){s.perf=clamp(s.perf+7,0,100);prel(p,-30);return `The boss is impressed. ${p.n} knows what you did.`}s.perf=clamp(s.perf-8,0,100);prel(p,-35);const b=boss();if(b)prel(b,-10);return `${p.n} had receipts. Everyone saw.`}},
  split:{n:'Break up',bad:1,roles:['date'],fx:p=>endRel(p)},
  divorce:{n:'Divorce',bad:1,roles:['spouse'],fx:p=>endRel(p)},
 };
-const PACT_ORDER=['call','time','homework','play','tutor','camp','school','fund','date','gift','propose','baby','ask','reconnect','split','divorce'];
+const PACT_ORDER=['lunch','pitch','coffee','cover','credit','call','time','homework','play','tutor','camp','school','fund','date','gift','propose','baby','ask','reconnect','split','divorce'];
 const RANKS=['','Senior ','Lead ','Principal ','Head ','Chief '];
 // real-world costs; income is the owner's yearly profit per unit divided by 365 (a food truck nets about half its cost a year, a hotel about 13%)
 const BIZ=[
@@ -477,7 +482,7 @@ const CASES={
  nbr:{n:"Your neighbor's lawsuit",fine:v=>v,conv:.45,law:3e3,d:'Your neighbor took the fence dispute to court.'},
 };
 const jailed=()=>s.legal.jail>s.day;
-const JAILX=new Set(['act','gig','work','apply','learn','enroll','study','pp','post','deal','slot','rl','dice','flip','cbuy','pbuy','hob','hshow','adopt']);
+const JAILX=new Set(['flt','found','suhire','act','gig','work','apply','learn','enroll','study','pp','post','deal','slot','rl','dice','flip','cbuy','pbuy','hob','hshow','adopt']);
 const crimes=(yrs=7)=>s.legal.rec.filter(r=>CASES[r.t].crim&&s.day-r.d<yrs*365);
 const CLEAN=new Set(['police','teacher','nurse','lawyer','pilot','resident','surgeon']);
 function openCase(t,v=0){const c={id:uid(),t,v:Math.round(v),d:s.day};s.legal.cases.push(c);log(`<b>${CASES[t].n}.</b> ${CASES[t].d} You have 30 days to decide how to answer.`,'bad');toast(CASES[t].n);return c}
@@ -635,7 +640,112 @@ const EV3=[
  ['Help out',(s,a)=>{const k=per(a),v=Math.min(s.cash*.05,2e5*s.eco.P);if(!k)return 'The moment has passed.';s.cash-=v;prel(k,15);add('hap',4);return `${k.n} gets the keys. You get a lot of hugs.`}],
  ['They need to stand on their own',(s,a)=>{const k=per(a);if(k)prel(k,-10);return 'They say they understand.'}]]},
 ];
-EV.push(...EV2,...EV3);
+
+// ---------- the team: every job comes with a boss and coworkers you can win over or cross ----------
+const BOSSES={fair:{n:'Fair',d:'rewards good work',w:4},micro:{n:'Micromanager',d:'hard work counts more, and slacking off costs double',w:2},absent:{n:'Hands-off',d:'rarely around, so your performance moves slowly either way',w:2},toxic:{n:'Toxic',d:'takes credit and yells, a daily drag on your mood',w:1}};
+const boss=()=>s.people.find(p=>p.role==='boss'),mates=()=>s.people.filter(p=>p.role==='coworker');
+function makeTeam(){const W=Object.entries(BOSSES);let r=R()*W.reduce((a,[,b])=>a+b.w,0),bt='fair';for(const[k,b]of W)if((r-=b.w)<0){bt=k;break}
+  const b=meet('boss',rint(40,60),s.day-rint(35,58)*365);b.bt=bt;for(let i=rint(2,3);i>0;i--)meet('coworker',rint(30,55),s.day-rint(22,50)*365)}
+function teamDay(){if(s.teamJ===s.job)return;
+  for(const p of [...s.people])if(p.role==='boss'||p.role==='coworker'){if(p.role==='coworker'&&p.rel>=60&&friendsN()<10){p.role='friend';log(`You stay in touch with ${esc(p.n)} from your old job.`)}else s.people.splice(s.people.indexOf(p),1)}
+  if(s.job)makeTeam();s.teamJ=s.job}
+const bossAdj=()=>{const b=boss();return b?(b.rel-50)/5:0}; // a boss who likes you lowers the bar for promotion by up to 10 points
+const mateHap=()=>{const m=mates();return m.length?(m.reduce((a,p)=>a+p.rel,0)/m.length-50)*.0006:0};
+
+// ---------- freelancing: contracts in fields you know; reputation raises your rates ----------
+const FLT=[
+ {n:'Build a small website',fld:'tech',s:45,base:180},{n:'Clear a bug backlog',fld:'tech',s:55,base:240},{n:'Design a logo',fld:'creative',s:30,base:120},{n:'Brand refresh',fld:'creative',s:45,base:210},
+ {n:'Bookkeeping for a shop',fld:'finance',s:40,base:150},{n:'Model a startup\'s finances',fld:'finance',s:60,base:320},{n:'Cater a party',fld:'food',s:15,base:90},{n:'Write product copy',fld:'office',s:35,base:100},
+ {n:'Data entry',fld:'office',s:10,base:55},{n:'Wire a renovation',fld:'trade',s:30,base:210,dg:'cert'},{n:'Review contracts',fld:'law',s:65,base:650,dg:'jd'},{n:'Locum shifts',fld:'health',s:60,base:520,dg:'md'},
+ {n:'Private tutoring',fld:'public',s:50,base:110},{n:'Courier runs',fld:'delivery',s:0,base:65},{n:'Guest lectures',fld:'academia',s:70,base:300,dg:'phd'},{n:'Interim management',fld:'exec',s:70,base:900,dg:'mba'},
+];
+const flNew=()=>({rep:10,jobs:[],offers:[],next:0});
+const flCap=()=>s.su?0:s.job?1:3;
+const flOk=t=>s.st.sma>=t.s&&(!t.dg||s.degs.some(d=>d.p===t.dg));
+function flOffers(){const F=s.fl,ok=FLT.filter(flOk),w=t=>1+xpY(t.fld)*2;F.offers=[];
+  for(let i=0;i<3&&ok.length;i++){let r=R()*ok.reduce((a,t)=>a+w(t),0),t=ok[0];for(const x of ok)if((r-=w(x))<0){t=x;break}
+    const days=rint(5,30),pay=Math.round(t.base*days*(1+Math.min(2,xpY(t.fld)*.25))*(.7+F.rep/100)*s.eco.P*(.85+R()*.3));F.offers.push({id:uid(),n:t.n,fld:t.fld,s:t.s,days,pay})}
+  F.next=s.day+7}
+function flDay(){const F=s.fl;if(s.day>=F.next)flOffers();
+  for(const c of [...F.jobs]){add('hap',-.02);if(s.job)s.perf=clamp(s.perf-.05,0,100);s.xp[c.fld]=(s.xp[c.fld]||0)+1;
+    if(--c.left<=0){F.jobs.splice(F.jobs.indexOf(c),1);const q=clamp(.35+(s.st.sma-c.s)/100+xpY(c.fld)/10+R()*.4,0,1),v=Math.round(c.pay*(.7+.3*q));s.cash+=v;taxAdd('ord',v);F.rep=clamp(F.rep+(q-.5)*12,0,100);
+      log(`Freelance: <b>${c.n}</b> done. ${q>.75?'The client raved':q>.45?'The client was happy':'The client was lukewarm'}. Paid ${fmt(v)}.`,q>.45?'good':'info')}}}
+
+// ---------- founding a startup: a full-time career with a burn rate, funding rounds, dilution and an exit ----------
+const IDEAS=[
+ {id:'saas',n:'B2B software',fld:'tech',risk:.3,mult:.8,d:'Steady, sells to businesses, rarely spectacular'},
+ {id:'app',n:'Consumer app',fld:'tech',risk:.5,mult:1,d:'Hits or misses on whether people love it'},
+ {id:'fin',n:'Fintech',fld:'finance',risk:.45,mult:1.2,d:'Big markets, heavy regulation'},
+ {id:'food',n:'Food brand',fld:'food',risk:.35,mult:.5,d:'Easier to start, harder to make huge'},
+ {id:'bio',n:'Biotech',fld:'health',risk:.65,mult:2.2,d:'Years of burn for a shot at a cure'},
+ {id:'ai',n:'AI lab',fld:'tech',risk:.6,mult:2.5,d:'Everyone wants in, and the costs are enormous'},
+];
+const IM=Object.fromEntries(IDEAS.map(x=>[x.id,x]));
+const SUST=[{n:'Pre-seed',at:0},{n:'Seed',at:150,raise:3e6,val:8e6,team:0,odds:.5},{n:'Series A',at:450,raise:1.5e7,val:3.5e7,team:12,odds:.42},{n:'Series B',at:1050,raise:4e7,val:1.2e8,team:35,odds:.45},{n:'Series C',at:1950,raise:1e8,val:4.5e8,team:90,odds:.5},{n:'IPO',at:3300,val:2e9,team:180}];
+const HIRE=550; // a day, per employee: salary, benefits and a desk
+const SUNAME=['Nimbus','Quanta','Brightside','Loop','Kettle','Parallax','Orbit','Sprout','Vanta','Fable','Pilot','Harbor','Keystone','Mosaic','Tandem'];
+const suBurn=u=>(60+u.hires*HIRE)*s.eco.P+(u.st>=2?suDraw():0);
+const suDraw=()=>250*s.eco.P; // founders pay themselves once they raise a Series A
+const suRunway=u=>Math.floor(u.cash/Math.max(1,suBurn(u)));
+const suWorth=()=>s.su?s.su.own*s.su.val*.5:0; // private shares count at half: you can't sell them yet
+const suSeed=()=>clamp(s.cash*.25,1e4*s.eco.P,5e6*s.eco.P);
+function found(id){const I=IM[id],v=suSeed();if(!I||s.su||s.cash<v||jailed())return;if(s.job){log(`Quit your job as ${jobTitle()} to start a company.`);fire()}
+  s.cash-=v;s.su={idea:id,n:pick(SUNAME)+pick(['',' Labs',' AI',' Co',' HQ']),st:0,prog:0,cash:v,basis:v,own:1,hires:0,val:v,d:s.day,retry:0,fails:0};
+  log(`You founded <b>${esc(s.su.n)}</b>, a ${I.n.toLowerCase()} startup, with ${fmt(v)} of your own money.`,'good');return s.su}
+function suDay(){const u=s.su,I=IM[u.idea],P=s.eco.P;
+  u.cash-=suBurn(u);add('hap',-.04);add('hea',-.01);s.xp[I.fld]=(s.xp[I.fld]||0)+1;
+  const nx0=SUST[u.st+1];u.prog=Math.min(nx0&&u.hires<nx0.team?nx0.at:Infinity,u.prog+(.2+s.st.sma/300+Math.min(.3,xpY(I.fld)*.03))*(1+Math.sqrt(u.hires)*.5)*(s.st.hap/60)*(s.eco.rec?.7:1)*(.5+R())); // investors won't talk to you without a team
+  if(u.st>=1&&R()<I.risk*.3/365){s.su=null;add('hap',-20);const k=pick(['A regulator shut the product down','The market you built for collapsed','Your co-founder walked out and took the customers','A giant copied you and gave it away free']);log(`<b>${esc(u.n)}</b> is finished. ${k}.`,'bad');toast(`${esc(u.n)} shut down`);(s.car2??={}).dead=(s.car2.dead||0)+1;return}
+  if(R()<1/200){const k=pick(['A competitor launched the same thing, cheaper','Your lead engineer quit','A big customer walked away','A server outage lost a week of work']);u.prog=Math.max(0,u.prog-rint(15,40));log(`${esc(u.n)}: ${k}.`,'bad')}
+  const nx=SUST[u.st+1];
+  if(nx&&u.prog>=nx.at&&!u.offer&&s.day>=u.retry){
+    if(nx.n==='IPO'){if(u.hires<nx.team)return;const V=nx.val*I.mult*(.5+R())*(s.eco.rec?.6:1)*P;return suExit(V,'ipo')}
+    if(u.hires<nx.team){}
+    else if(R()<nx.odds*(1-I.risk*.5)+(u.prog-nx.at)/(nx.at*4)-(s.eco.rec?.25:0)){const pre=Math.round(nx.val*I.mult*(.6+R()*.9)*(s.eco.rec?.6:1)*P),raise=Math.round(nx.raise*P*(.8+R()*.4));u.offer={pre,raise,d:s.day};log(`${esc(u.n)}: investors offer <b>${fmt(raise)}</b> at a ${fmt(pre)} valuation for a ${nx.n}.`,'good');toast(`${nx.n} offer for ${esc(u.n)}`)}
+    else if(++u.fails>=3){const back=Math.max(0,u.cash)*u.own;s.cash+=back;capGain(back-u.basis,u.d);s.su=null;add('hap',-20);(s.car2??={}).dead=(s.car2.dead||0)+1;log(`Nobody will fund <b>${esc(u.n)}</b>'s ${nx.n}. You wind it down and get back ${fmt(back)}.`,'bad');toast(`${esc(u.n)} wound down`);return}
+    else{u.retry=s.day+90;u.prog-=(nx.at-SUST[u.st].at)*.2;log(`${esc(u.n)}: investors passed on your ${nx.n}. You rework the plan and can pitch again in 90 days. ${u.fails===2?'One more no and the company is finished.':''}`,'bad')}}
+  if(u.offer&&s.day-u.offer.d>30){delete u.offer;u.retry=s.day+30;log(`${esc(u.n)}: the funding offer expired.`)}
+  if(u.st>=1&&!u.acq&&R()<1/900){const v=Math.round(u.val*(.4+R()*.8));u.acq={v,d:s.day};log(`${esc(u.n)}: a big company offers to buy you for <b>${fmt(v)}</b>.`,'good');toast('Acquisition offer!')}
+  if(u.acq&&s.day-u.acq.d>30)delete u.acq;
+  if(u.cash<0){s.su=null;add('hap',-20);log(`<b>${esc(u.n)}</b> ran out of money and shut down. Most startups do.`,'bad');toast(`${esc(u.n)} shut down`);(s.car2??={}).dead=(s.car2.dead||0)+1}
+}
+function suRaise(){const u=s.su,o=u?.offer;if(!o)return;u.fails=0;u.cash+=o.raise;u.own*=o.pre/(o.pre+o.raise);u.val=o.pre+o.raise;u.st++;delete u.offer;add('hap',8);
+  const m=`${esc(u.n)} closed its ${SUST[u.st].n}: ${fmt(o.raise)} at a ${fmt(u.val)} valuation. You own ${(u.own*100).toFixed(1)}%.`;log(m,'good');return m}
+function suExit(v,kind){const u=s.su,mine=Math.round(u.own*v);s.su=null;(s.car2??={})[kind]=(s.car2[kind]||0)+1;add('hap',kind==='ipo'?30:20);
+  if(kind==='ipo'){const now=Math.round(mine*.2);s.cash+=now;capGain(now-u.basis*.2,u.d);s.later.push({d:s.day+180,k:'x',id:'lockup',v:mine-now,b:u.basis*.8,f:u.d,n:u.n});
+    const m=`<b>${esc(u.n)}</b> went public at a ${fmt(v)} valuation! You sold ${fmt(now)} of shares; the rest, ${fmt(mine-now)}, unlocks in 180 days.`;log(m,'good');toast(`${esc(u.n)} IPO!`);return m}
+  s.cash+=mine;capGain(mine-u.basis,u.d);const m=`You sold <b>${esc(u.n)}</b> for ${fmt(v)}. Your ${(u.own*100).toFixed(1)}% came to ${fmt(mine)}.`;log(m,'good');toast('Sold your startup!');return m}
+LATER.lockup=p=>{const v=Math.round(p.v*(.6+R()));s.cash+=v;capGain(v-p.b,p.f);log(`Your ${esc(p.n)} lockup ended. The rest of your shares sold for ${fmt(v)}.`,'good')};
+LATER.ethics=()=>{if(s.job&&R()<.25){const j=jobTitle(),sev=Math.round(jobPay()*30);fire();s.cash+=sev;taxAdd('ord',sev);log(`The expense scandal broke and your team was cut. You lost your job as ${j}, with ${fmt(sev)} severance.`,'bad')}};
+const EV4=[
+{id:'rival',w:1.5,c:()=>s.job&&!topRank()&&mates().length>0,a:()=>pick(mates())?.uid,t:'A rival',d:(s,a)=>`${esc(per(a)?.n||'A coworker')} is going for the same promotion as you, and they're good.`,def:0,ch:[
+ ['Outwork them',()=>{s.perf=clamp(s.perf+4,0,100);add('hap',-3);return 'Late nights. Your numbers look great.'}],
+ ['Undermine them',(s,a)=>{const p=per(a);if(!p)return 'The moment has passed.';if(R()<.6){s.perf=clamp(s.perf+6,0,100);prel(p,-30);return `A few well-placed doubts. ${p.n} is out of the running.`}s.perf=clamp(s.perf-10,0,100);prel(p,-30);const b=boss();if(b)prel(b,-15);return 'It got back to your boss. Not a good look.'}],
+ ['Offer to team up',(s,a)=>{const p=per(a);if(!p)return 'The moment has passed.';prel(p,12);s.perf=clamp(s.perf+2,0,100);return `You and ${p.n} are a team now.`}]]},
+{id:'weekend',w:1.5,c:()=>!!(s.job&&boss()),t:'Working the weekend',d:()=>`${esc(boss()?.n||'Your boss')} asks you to come in this weekend to finish a project.`,def:0,ch:[
+ ['Sure',()=>{s.perf=clamp(s.perf+5,0,100);add('hap',-4);const b=boss();if(b)prel(b,6);return 'Your boss owes you one.'}],
+ ['I have plans',()=>{add('hap',2);const b=boss();if(b)prel(b,-6);return 'Your boss says "no worries" in the tone that means worries.'}]]},
+{id:'ethics',w:.8,c:()=>!!(s.job&&boss()),t:'Creative accounting',d:()=>`You notice ${esc(boss()?.n||'your boss')} padding expense reports. A lot.`,def:1,ch:[
+ ['Report it',()=>{const b=boss();if(!b)return 'The moment has passed.';if(R()<.5){s.people.splice(s.people.indexOf(b),1);const nb=meet('boss',60,s.day-rint(35,55)*365);nb.bt=pick(['fair','fair','micro','absent']);s.perf=clamp(s.perf+5,0,100);add('hap',4);return `${b.n} was fired. Your new boss, ${nb.n}, respects what you did.`}s.perf=clamp(s.perf-15,0,100);prel(b,-30);add('hap',-6);return `HR "looked into it". Now ${b.n} knows it was you.`}],
+ ['Stay quiet',()=>{s.later.push({d:s.day+rint(60,300),k:'x',id:'ethics'});return 'Not your problem. Probably.'}]]},
+];
+function suHtml(){const u=s.su;if(!u)return '';const I=IM[u.idea],nx=SUST[u.st+1],P=s.eco.P,rw=suRunway(u),hc=HIRE*P*90,cur=SUST[u.st];
+  const offer=u.offer?`<div class="need"><div><div class="k hot">${nx.n} offer · ${30-(s.day-u.offer.d)} days left</div><div class="t">${fmt(u.offer.raise)} at a ${fmt(u.offer.pre)} valuation</div><div class="d">You would own ${(u.own*u.offer.pre/(u.offer.pre+u.offer.raise)*100).toFixed(1)}% afterwards, and the company would have ${fmt(u.cash+u.offer.raise)} to grow with.</div></div><div class="acts2"><button class="pri" data-a="suraise">Take the money</button><button data-a="sudecline">Pass</button></div></div>`:'';
+  const acq=u.acq?`<div class="need"><div><div class="k hot">Acquisition offer · ${30-(s.day-u.acq.d)} days left</div><div class="t">Sell for ${fmt(u.acq.v)}</div><div class="d">Your ${(u.own*100).toFixed(1)}% would come to <b class="num">${fmt(u.own*u.acq.v)}</b>, taxed as a long-term gain.</div></div><div class="acts2"><button class="pri" data-a="suacq">Sell</button><button data-a="suacqno">Decline</button></div></div>`:'';
+  return `<div class="sec-h"><h2>${esc(u.n)}</h2><span>${I.n} · ${cur.n} · ${((s.day-u.d)/365).toFixed(1)} years old</span></div>
+  ${offer||acq?`<div class="needs">${offer}${acq}</div>`:''}
+  <div class="stats4 eco">${[[nx?`Progress to ${nx.n}`:'Progress',nx?`${Math.floor(u.prog)} / ${nx.at}`:'—'],['Company cash',fmt(u.cash)],['Runway',`<span class="${rw<90?'dn':''}">${rw} days</span>`],['You own',`${(u.own*100).toFixed(1)}%`],['Valuation',fmt(u.val)]].map(([l,v])=>`<div><span>${l}</span><b class="num">${v}</b></div>`).join('')}</div>
+  ${nx?meter(Math.min(100,(u.prog-cur.at)/(nx.at-cur.at)*100)):''}
+  <div class="quick" style="margin-top:var(--space-xs)"><button class="pri" data-a="suhire" ${u.cash<hc?'disabled':''}>Hire · ${fmt(HIRE*P)}/day</button><button data-a="suhire" data-x="5" ${u.cash<hc*5?'disabled':''}>Hire 5</button><button data-a="sufire" ${u.hires?'':'disabled'}>Let someone go</button><button data-a="sufund" ${s.cash<1e4*P?'disabled':''}>Put in ${fmt(Math.max(1e4*P,s.cash*.25))} more</button><button class="bad" data-a="sukill">Shut it down</button></div>
+  <p class="mut" style="margin-top:var(--space-2xs)">${u.hires} employee${u.hires===1?'':'s'}${nx&&u.hires<nx.team?`. <span class="dn">Investors want a team of ${nx.team} before a ${nx.n}</span>`:''}. Burning ${fmt(suBurn(u))} a day${u.st>=2?`, including your ${fmt(suDraw())} salary`:', and you pay yourself nothing until a Series A'}. Hiring speeds progress but shortens your runway; you need 90 days of their pay in the bank to hire.</p>`}
+function flHtml(){const F=s.fl,cap=flCap();if(!cap)return '';
+  return `<div class="sec-h"><h2>Freelance</h2><span>reputation ${Math.round(F.rep)} · ${F.jobs.length} of ${cap} contract${cap>1?'s':''}${s.job?' alongside your job':''}</span></div>
+  ${F.jobs.length?`<table class="ledger"><tbody>${F.jobs.map(c=>`<tr><td><b>${c.n}</b> <span class="mut">${FIELD[c.fld]}</span></td><td style="width:25%">${meter((1-c.left/c.days)*100)}</td><td class="r">${c.left}d left</td><td class="r num">${fmt(c.pay)}</td><td class="act"><button data-a="fldrop" data-x="${c.id}">Drop</button></td></tr>`).join('')}</tbody></table>`:''}
+  ${F.offers.length?`<div class="scroll"><table class="ledger"><thead><tr><th>Offer</th><th>Field</th><th class="r">Days</th><th class="r">Pays about</th><th></th></tr></thead><tbody>${F.offers.map(o=>`<tr><td><b>${o.n}</b></td><td class="mut">${FIELD[o.fld]}</td><td class="r num">${o.days}</td><td class="r num">${fmt(o.pay)}</td><td class="act"><button class="pri" data-a="flt" data-x="${o.id}" ${F.jobs.length>=cap?'disabled':''}>Take it</button></td></tr>`).join('')}</tbody></table></div>`:'<p class="mut">No offers right now. New ones come in every 7 days.</p>'}`}
+const teamHtml=()=>{const b=boss(),m=mates();if(!s.job||!b&&!m.length)return '';return `<div class="sec-h"><h2>Your team</h2>${b&&BOSSES[b.bt]?`<span>${esc(b.n)} is a ${BOSSES[b.bt].n.toLowerCase()} boss: ${BOSSES[b.bt].d}</span>`:''}</div><div class="plist">${[b,...m].filter(Boolean).map(personRow).join('')}</div>`};
+const foundHtml=()=>s.su?'':`<div class="sec-h"><h2>Start a company</h2><span>a full-time career: you quit your job to found it</span></div>
+  <div class="acards">${IDEAS.map(I=>`<button class="acard" data-a="found" data-x="${I.id}" ${s.cash<suSeed()||jailed()?'disabled':''}><b>${I.n}</b><span>${I.d}.${xpY(I.fld)>=1?` Your ${FIELD[I.fld]} experience helps.`:''}</span><small>${s.cash<suSeed()?`Needs ${fmt(1e4*s.eco.P)} to start`:`Found with ${fmt(suSeed())}`}</small></button>`).join('')}</div>`;
+EV.push(...EV2,...EV3,...EV4);
 const EVM=EM(EV.map(e=>[e.id,e]));
 
 // ---------- businesses: realistic returns, and profits that ride the economy ----------
@@ -719,10 +829,10 @@ const add=(k,v)=>s.st[k]=clamp(s.st[k]+((k==='hap'||k==='sma')&&v>0?v*clamp((100
 const job=()=>s.job&&JM[s.job];
 const jobPay=()=>job().pay*(1+.15*s.rank)*(1+(s.raise||0));
 const jobTitle=()=>RANKS[Math.min(s.rank,5)]+job().n;
-const promoNeed=()=>55+s.rank*5,topRank=()=>s.rank>=5;
+const promoNeed=()=>Math.round(55+s.rank*5-bossAdj()),topRank=()=>s.rank>=5;
 const fire=()=>{s.job=null;s.rank=0;s.jobDays=0;s.raise=0};
 const xpY=f=>(s.xp[f]||0)/365+((s.degs||[]).some(d=>d.mj&&MAJORS[d.mj]===f)?1:0),xpT=()=>Object.values(s.xp).reduce((a,d)=>a+d,0)/365;
-const raiseOdds=()=>clamp((s.perf-30)/60,.05,.9);
+const raiseOdds=()=>clamp((s.perf-30)/60+bossAdj()/40,.05,.9);
 function jobMiss(j){const m=[];if(s.edu<j.e)m.push(EDU[j.e].n);if(j.dg&&!s.degs.some(d=>d.p===j.dg))m.push(PG[j.dg].n);if(j.mj&&!s.degs.some(d=>d.mj===j.mj))m.push(`a ${j.mj} major`);if(s.st.sma<j.s)m.push(`${j.s} smarts`);if(j.h&&s.st.hea<j.h)m.push(`${j.h} health`);if(CLEAN.has(j.id)&&crimes().length)m.push('a clean record');
   for(const f in j.x||{})if(xpY(f)<j.x[f])m.push(`${j.x[f]} yr${j.x[f]>1?'s':''} in ${FIELD[f]}`);if(j.xt&&xpT()<j.xt)m.push(`${j.xt} yrs experience`);if(j.f&&s.fol<j.f)m.push(`${big(j.f)} followers`);return m}
 const jobReqText=j=>[j.dg?PG[j.dg].n:EDU[j.e].n,j.mj?`${j.mj} major`:'',j.s?`${j.s} smarts`:'',j.h?`${j.h} health`:'',...Object.entries(j.x||{}).map(([f,y])=>`${y} yr${y>1?'s':''} ${FIELD[f]}`),j.xt?`${j.xt} yrs experience`:'',j.f?`${big(j.f)} followers`:''].filter(Boolean).join(', ');
@@ -742,9 +852,11 @@ function endRel(p,theyLeft){const sp=p.role==='spouse',who=theyLeft?`${p.n} left
   if(sp){const c=Math.max(0,s.cash*.4);s.cash-=c;add('hap',-20);return `${who}You and ${p.n} divorced. It cost ${fmt(c)}.`}add('hap',-12);return `${who}You and ${p.n} broke up.`}
 function parentDies(p){s.people.splice(s.people.indexOf(p),1);const v=Math.round(rint(5000,40000)*(.5+p.rel/100));s.cash+=v;add('hap',-20);const m=`${p.n}, your parent, passed away at ${Math.floor(ageOf(p))}. They left you ${fmt(v)}.`;log(esc(m),'bad');toast(esc(m));return m}
 function peopleDay(){
+  teamDay();
   for(const p of [...s.people]){
     p.rel=clamp(p.rel-(DECAY[p.role]||0),0,100);
     const a=ageOf(p)-(p.x||0);
+    if(p.role==='boss'||p.role==='coworker')continue;
     if(p.role==='child')kidDay(p);
     if(p.role==='child'&&!p.out&&ageOf(p)>=18){p.out=1;if(p.k)kidLaunch(p);else log(`${esc(p.n)} turns 18 and moves out.`,'good')}
     else if(p.role==='parent'&&a>68&&R()<Math.min(.5,((a-68)/25)**3*2)/365)parentDies(p);
@@ -795,13 +907,13 @@ function upgrade(){ // bring older saves up to date
   if(!s.goals){s.goals={};checkGoals(1)}
   s.min??=480;s.eco??=ecoNew();s.fin??=finNew();s.tax??=taxNew();s.mloan??=0;s.shorts??={};s.opts??=[];applyPrices();
   const fresh=STOCKS.filter(k=>!s.px[k.t]);if(fresh.length){for(const k of fresh)seedStock(k);for(let i=0;i<239;i++)tradeDay(1,fresh);fresh.forEach(anchor)}
-  s.tr??=[];for(const p of s.people)if(p.role==='child'&&!p.k){p.k=kidNew();const a=ageOf(p);p.k.sma=p.k.gs*(a>=18?1:.3+Math.min(1,a/10)*.7);if(a>=18)kidLaunch(p,1)}
+  s.tr??=[];s.fl??=flNew();for(const p of s.people)if(p.role==='child'&&!p.k){p.k=kidNew();const a=ageOf(p);p.k.sma=p.k.gs*(a>=18?1:.3+Math.min(1,a/10)*.7);if(a>=18)kidLaunch(p,1)}
   s.conds??=[];s.ins??='basic';s.legal??={rec:[],cases:[],jail:0};s.hob??={};if(!s.pets){s.pets=[];if(s.pet)addPet('cat',s.day-365)}delete s.pet;
   s.orders??=[];const M=s.mkt;M.h??=MVOL.bull**2/YR;M.eps??=0;M.cb??=0;for(const k of STOCKS)initStock(k);if(!M.rc){M.rc=capSum()*.6;M.div=(capSum()+M.rc)/5000;M.ic=M.ih=5000;M.lab='Bull market'} // stocks added since this save
   for(const k of STOCKS){const q=s.px[k.t];if(q.k)continue; // daily candles used to be drawn from closes alone
     q.k=q.h.map((c,i)=>{const o=i?q.h[i-1]:c;return [o,Math.max(o,c)*(1+.005*hsh(i,1)),Math.min(o,c)*(1-.005*hsh(i,2))]});[q.op,q.hi,q.lo]=q.k.at(-1)}
 }
-function flows(){const f={job:(s.job&&!jailed()?jobPay():0)+(s.pension||0),biz:0,pend:0,spon:sponsor(),exp:expenses(),rent:s.props.reduce((t,p)=>t+rentOf(p),0),mort:s.props.reduce((t,p)=>t+(p.loan>0?p.pay:0),0)+loanPay(),own:ownInc()};f.tax=s.tax?Math.max(0,(f.job+f.biz+f.pend+f.spon+f.rent*.5)*margRate()+f.own*.15):0;for(const b of BIZ){const o=s.biz[b.id];if(o?.n)f[o.mgr?'biz':'pend']+=bizInc(b,o)}return f}
+function flows(){const f={job:(s.job&&!jailed()?jobPay():0)+(s.pension||0)+(s.su?.st>=2?suDraw():0),biz:0,pend:0,spon:sponsor(),exp:expenses(),rent:s.props.reduce((t,p)=>t+rentOf(p),0),mort:s.props.reduce((t,p)=>t+(p.loan>0?p.pay:0),0)+loanPay(),own:ownInc()};f.tax=s.tax?Math.max(0,(f.job+f.biz+f.pend+f.spon+f.rent*.5)*margRate()+f.own*.15):0;for(const b of BIZ){const o=s.biz[b.id];if(o?.n)f[o.mgr?'biz':'pend']+=bizInc(b,o)}return f}
 const pfmt=n=>n>=1?fmt(n):'$'+(n<1e-6?n.toExponential(1):n.toPrecision(3));
 const qfmt=n=>n>=1?'$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):pfmt(n); // share prices to the cent, like a broker
 const units=u=>u>=1000?big(u):u>=1?u.toFixed(2):u.toPrecision(3);
@@ -849,7 +961,7 @@ function bjEnd(){const b=s.cz.bj,p=hv(b.p),nat=b.p.length===2&&p===21;
   const ret=p>21?0:nat&&!dnat?b.bet*2.5:dnat&&!nat?0:d>21||p>d?b.bet*2:p===d?b.bet:0;
   b.msg=p>21?'Bust.':nat&&!dnat?'Blackjack! Paid 3 to 2.':dnat&&!nat?'Dealer has blackjack.':ret>b.bet?(d>21?'Dealer busts. You win.':'You win.'):ret===b.bet?'Push. Your bet comes back.':'Dealer wins.';
   b.done=1;settle(b.bet,ret,'blackjack','bj')}
-function netWorth(){let w=s.cash+(s.fin&&s.mkt.div?finVal():0)-(s.mloan||0);for(const t in s.shorts||{})w-=s.shorts[t].sh*s.px[t].p;if(s.opts?.length)w+=optVal();for(const t in s.port)w+=s.port[t].sh*s.px[t].p;for(const id in s.biz)w+=s.biz[id].spent*.5;for(const id in s.own)w+=SM[id].cost*.6;for(const p of s.props)w+=pval(p)-p.loan;for(const c of s.cars)w+=c.v;return w+walletVal()-(s.debt||0)}
+function netWorth(){let w=s.cash+(s.fin&&s.mkt.div?finVal():0)-(s.mloan||0);for(const t in s.shorts||{})w-=s.shorts[t].sh*s.px[t].p;if(s.opts?.length)w+=optVal();for(const t in s.port)w+=s.port[t].sh*s.px[t].p;for(const id in s.biz)w+=s.biz[id].spent*.5;for(const id in s.own)w+=SM[id].cost*.6;for(const p of s.props)w+=pval(p)-p.loan;for(const c of s.cars)w+=c.v;return w+walletVal()+suWorth()-(s.debt||0)}
 function log(t,k='info'){s.log.unshift({d:s.day,t,k});if(s.log.length>80)s.log.pop()}
 function chirp(h,n,x,v){s.feed.unshift({h,n,x,v,l:0,tl:rint(3,40)*(v?40:1),d:s.day});if(s.feed.length>60)s.feed.pop()}
 function toast(m){if(catching)return;const t=document.createElement('div');t.className='toast';t.innerHTML=m;$('#toasts').append(t);setTimeout(()=>t.remove(),2800)}
@@ -857,7 +969,7 @@ function toast(m){if(catching)return;const t=document.createElement('div');t.cla
 function newGame(name,bg,h={}){
   const b=BG[bg]||{cash:0,st:{hea:75,hap:60,sma:40,loo:50}};
   s={v:1,name,handle:'@'+(name.toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,15)||'you'),day:0,startAge:18,cash:b.cash+(h.inherit||0),st:{...b.st},edu:b.edu||0,study:null,
-     job:b.job||null,jobDays:0,rank:0,biz:{},port:{},px:{},mkt:{bull:true,h:MVOL.bull**2/YR,eps:0,cb:0,div:1,ic:1,ih:1,rc:1e13},orders:[],fol:b.fol||0,feed:[],own:{},people:[],degs:b.edu?[{p:'dip',sc:'cc',mj:'Computer science',hon:false}]:[],debt:0,xp:{},perf:50,raise:0,pension:0,wallet:{},cz:{chip:100,net:0,played:0,rh:[],ban:0},props:[],cars:[],home:null,re:{idx:1,list:[],next:0},cd:{},inbox:[],later:[],log:[],pets:[],conds:[],ins:'basic',legal:{rec:[],cases:[],jail:0},hob:{},
+     job:b.job||null,jobDays:0,rank:0,biz:{},port:{},px:{},mkt:{bull:true,h:MVOL.bull**2/YR,eps:0,cb:0,div:1,ic:1,ih:1,rc:1e13},orders:[],fol:b.fol||0,feed:[],own:{},people:[],degs:b.edu?[{p:'dip',sc:'cc',mj:'Computer science',hon:false}]:[],debt:0,xp:{},perf:50,raise:0,pension:0,wallet:{},cz:{chip:100,net:0,played:0,rh:[],ban:0},props:[],cars:[],home:null,re:{idx:1,list:[],next:0},cd:{},inbox:[],later:[],log:[],fl:flNew(),su:null,pets:[],conds:[],ins:'basic',legal:{rec:[],cases:[],jail:0},hob:{},
      gen:h.gen||1,boost:0,lastPost:0,dead:0,lastSeen:Date.now(),goals:{...h.goals},min:480,eco:h.eco?{...h.eco}:ecoNew(),fin:finNew(),tax:taxNew(),mloan:0,shorts:{},opts:[]};applyPrices();
   s.legacy=1+.25*(s.gen-1);
   s.tr=h.tr||rollTraits().slice(0,1);
@@ -887,7 +999,7 @@ function day(live){
   for(const b of BIZ){const o=s.biz[b.id];if(!o?.n)continue;closeCheck(b,o);if(o.n&&!o.mgr){const g=bizInc(b,o);if(g<0){s.cash+=g;taxAdd('ord',g)}else o.pend=Math.min(o.pend+g,g*CAP)}} // losses come straight out of cash
   if(s.cash<0){s.cash*=1.0003;add('hap',-.05)}
   if(s.job){const J=job();s.jobDays++;s.xp[J.fld]=(s.xp[J.fld]||0)+1;
-    s.perf=clamp(s.perf+((40+(trait('driven')?8:0)+s.st.sma*.3+(s.st.hap-50)*.2-J.str*2)-s.perf)*.02,0,100);
+    s.perf=clamp(s.perf+((40+(trait('driven')?8:0)+s.st.sma*.3+(s.st.hap-50)*.2-J.str*2)-s.perf)*(boss()?.bt==='absent'?.012:.02),0,100);
     if(s.jobDays%120===0&&!topRank()){if(s.perf>=promoNeed()){s.rank++;s.perf-=10;log(`Promoted to <b>${jobTitle()}</b>! Now ${fmt(jobPay())} a day.`,'good');toast('Promotion!')}else log(`Passed over for promotion. You needed a performance of ${promoNeed()}.`,'bad')}
     if(s.job&&s.eco.u>.05&&R()<(s.eco.u-.045)*2/365){const j=jobTitle(),sev=jobPay()*30;fire();s.cash+=sev;taxAdd('ord',sev);add('hap',-12);log(`Laid off from ${j} as the economy slows. Severance: ${fmt(sev)}.`,'bad');toast(`Laid off from ${j}`)}
     if(s.job&&s.perf<20&&R()<.01){const j=jobTitle();fire();add('hap',-15);log(`Fired from ${j} for poor performance.`,'bad');toast(`Fired from ${j}.`)}}
@@ -896,7 +1008,7 @@ function day(live){
     if(st.left<=0){if(st.g<30){st.left=60;st.g=45;log(`Failed the final exams for ${degName(st)}. One more term.`,'bad');toast('Failed the finals. One more term.')}else graduate()}}
   const J=job();
   // stats drift toward a baseline, so an idle life is dull but survivable; choices push you above or below it
-  add('hap',(50+(trait('sunny')?6:0)-(trait('anxious')?6:0)-s.st.hap)*.004-(J?J.str*.02:0)-(s.study&&s.study.sc!=='online'?.03:0)+peopleHap()+petSum('hap')+shopSum('hap')+(PM[homeP()?.t]?.hap||0)+(bestCar()?CM[bestCar().t].hap:0));
+  add('hap',(50+(trait('sunny')?6:0)-(trait('anxious')?6:0)-s.st.hap)*.004-(J?J.str*.02:0)-(s.study&&s.study.sc!=='online'?.03:0)+peopleHap()+mateHap()-(s.job&&boss()?.bt==='toxic'?.04:0)+petSum('hap')+shopSum('hap')+(PM[homeP()?.t]?.hap||0)+(bestCar()?CM[bestCar().t].hap:0));
   add('hea',(85+(trait('sporty')?5:0)-Math.max(0,A-35)*1.2-s.st.hea)*.003+(s.st.hap>70?.01:0)-(s.st.hap<15?.04:0));
   if(A>30)add('loo',-.004);
   s.fol+=shopSum('fame')+carSum('fame')+s.props.reduce((t,p)=>t+(PM[p.t].fame||0),0);if(s.day-s.lastPost>30)s.fol*=.999;
@@ -907,6 +1019,7 @@ function day(live){
   s.later=s.later.filter(p=>p.d>s.day||(runLater(p),false));
   s.inbox=s.inbox.filter(it=>{if(s.day-it.d<30)return true;const e=EVM[it.id];if(!e.c||e.c(s))log(`<b>${e.t}</b> ${e.ch[e.def][1](s,it.a)}<span class="auto">decided for you</span>`);return false});
   if(s.inbox.length<3&&R()<1/28)newEvent();
+  flDay();if(s.su)suDay();
   lifeDay(A);if(s.dead)return;
   const pd=s.st.hea<=0?1:A>60?Math.min(.5,((A-60)/30)**3*3)/365:0;
   if(R()<pd)die();else checkGoals();
@@ -1224,6 +1337,8 @@ const GOALS=[
  {id:'close5',n:'Inner circle',d:'Be very close (80+) to 5 people',p:()=>[s.people.filter(p=>p.rel>=80).length,5]},
  {id:'fol1',n:'Influencer',d:'Reach 100K followers',p:()=>[s.fol,1e5]},
  {id:'top',n:'Top of the ladder',d:'Reach the highest rank in any job',p:()=>has(s.job&&topRank())},
+ {id:'exit',n:'The exit',d:'Sell a startup you founded, or take it public',p:()=>has(s.car2?.acq||s.car2?.ipo)},
+ {id:'ipo',n:'Ring the bell',d:'Take a startup public',p:()=>has(s.car2?.ipo)},
  {id:'landlord',n:'Landlord',d:'Own 5 properties',p:()=>[s.props.length,5]},
  {id:'cars',n:'Car collector',d:'Own 3 cars at once',p:()=>[s.cars.length,3]},
  {id:'casino',n:'Beat the house',d:'Be $100K up at the casino overall',p:()=>[Math.max(0,s.cz.net),1e5],m:1},
@@ -1292,6 +1407,17 @@ const dur=sec=>sec<3600?`${Math.round(sec/60)} minutes`:sec<172800?`${Math.floor
 
 // ---------- actions ----------
 const ACT={
+  flt:id=>{const F=s.fl,i=F.offers.findIndex(o=>o.id===+id);if(i<0||F.jobs.length>=flCap())return;const o=F.offers.splice(i,1)[0];F.jobs.push({...o,left:o.days});toast(`Contract started: ${o.n}`)},
+  fldrop:id=>{const F=s.fl,i=F.jobs.findIndex(o=>o.id===+id);if(i<0)return;F.jobs.splice(i,1);F.rep=Math.max(0,F.rep-10);toast('Contract dropped. Your reputation took a hit.')},
+  found:(id,y)=>{const I=IM[id];if(!I||s.su||s.cash<suSeed())return;if(y!=='yes')return modal(`<p class="kicker">Start a company</p><h2>Found a ${I.n.toLowerCase()} startup?</h2><p>You put in <b class="num">${fmt(suSeed())}</b> of your own money${s.job?` and quit your job as ${jobTitle()}`:''}. The company burns cash every day. Grow it until investors fund the next round, or it runs out of money and dies. Most startups do. The few that make it end in an acquisition or an IPO.</p><div class="row"><button class="pri" data-a="found" data-x="${id}" data-y="yes">Found it</button><button data-a="close">Not yet</button></div>`);closeModal();const u=found(id);if(u)toast(`${esc(u.n)} is born`)},
+  suhire:x=>{const u=s.su,n=+x||1;if(!u||u.cash<HIRE*s.eco.P*90*n)return;u.hires+=n;toast(n>1?`Hired ${n} people. The team is ${u.hires} strong.`:`Hired employee number ${u.hires}`)},
+  sufire:()=>{const u=s.su;if(!u||!u.hires)return;u.hires--;add('hap',-2);toast('You let someone go. It never gets easier.')},
+  sufund:()=>{const u=s.su,v=Math.max(1e4*s.eco.P,s.cash*.25);if(!u||s.cash<v)return;s.cash-=v;u.cash+=v;u.basis+=v;toast(`Put ${fmt(v)} into ${esc(u.n)}`)},
+  suraise:()=>{const m=suRaise();if(m)toast(m)},
+  sudecline:()=>{const u=s.su;if(u?.offer){delete u.offer;u.retry=s.day+30}},
+  suacq:()=>{const u=s.su;if(u?.acq)suExit(u.acq.v,'acq')},
+  suacqno:()=>{if(s.su)delete s.su.acq},
+  sukill:y=>{const u=s.su;if(!u)return;if(y!=='yes')return modal(`<h2>Shut down ${esc(u.n)}?</h2><p>You get back your ${(u.own*100).toFixed(1)}% of the ${fmt(Math.max(0,u.cash))} left in the bank.</p><div class="row"><button class="bad" data-a="sukill" data-x="yes">Shut it down</button><button data-a="close">Keep going</button></div>`);closeModal();const back=Math.max(0,u.cash)*u.own;s.cash+=back;capGain(back-u.basis,u.d);s.su=null;add('hap',-8);log(`You shut down ${esc(u.n)} and got back ${fmt(back)}.`)},
   treat:id=>{const c=cond(id);if(!c||c.hid||c.tx||c.cd>s.day)return;const K=CONDS[id];if(K.med&&!K.tc){c.tx=1;toast(id==='dep'?'You started therapy.':'You started medication.');return}const o=oopOf(txCost(c)).out;if(s.cash<o)return;const v=billMed(txCost(c));const m=CURE[id](c);log(`${condName(c)}: ${m} You paid ${fmt(v)} after insurance.`);toast(m)},
   untreat:id=>{const c=cond(id);if(c)c.tx=0},
   ins:k=>{if(INS[k]){s.ins=k;toast(`Switched to ${INS[k].n.toLowerCase()}.`)}},
@@ -1346,9 +1472,9 @@ const ACT={
   tback:()=>{if(tour>0){tour--;ACT.tab(TOUR[tour].tab);tourJump=true}},
   tend:()=>{if(tour<0)return;tour=-1;s.tour=1;speed=tourSpeed;coach()},
   tskip:()=>{s.tour=1},
-  apply:id=>{const j=JM[id];if(!canJob(j)||s.day<(s.cd['job_'+id]||0))return;iv={id,q:pick(IVQ)};modal(ivHtml())},
+  apply:id=>{if(s.su)return toast('You run a startup full time. Shut it down or sell it first.');const j=JM[id];if(!canJob(j)||s.day<(s.cd['job_'+id]||0))return;iv={id,q:pick(IVQ)};modal(ivHtml())},
   answer:k=>{const j=JM[iv.id],ch=ivOdds(j,k);closeModal();
-    if(R()<ch){s.job=j.id;s.rank=0;s.jobDays=0;s.perf=50;s.raise=k==='pay'?.1:0;log(`Hired as <b>${j.n}</b>${k==='pay'?' at 10% over the posted pay':''}.`,'good');toast(`You got the job: ${j.n}`)}
+    if(R()<ch){s.job=j.id;s.rank=0;s.jobDays=0;s.perf=50;s.raise=k==='pay'?.1:0;teamDay();log(`Hired as <b>${j.n}</b>${k==='pay'?' at 10% over the posted pay':''}.`,'good');toast(`You got the job: ${j.n}`)}
     else{s.cd['job_'+j.id]=s.day+30;log(`${j.n}: they went with someone else.`,'bad');toast(`No offer after the ${j.n} interview. You can reapply in 30 days.`)}},
   work:k=>{const W=WORK[k];if(!s.job||s.day<(s.cd['w_'+k]||0)||s.cash<(W.c||0))return;s.cash-=W.c||0;s.cd['w_'+k]=s.day+W.cd;toast(W.fx())},
   retire:()=>{if(!s.job||age()<55)return;s.pension=(s.pension||0)+jobPay()*.45;const j=jobTitle();fire();log(`Retired from ${j} with a pension of ${fmt(s.pension)} a day.`,'good')},
@@ -1544,6 +1670,7 @@ const LOWFIX={hea:['doc','gym'],hap:['trip','spa','med','fam','out']};
 function needs(){
   const L=[];
   for(const it of s.inbox){const e=EVM[it.id];if(!e.c||e.c(s))L.push({k:'dec',it,e})}
+  if(s.su?.offer)L.push({k:'su',t:'offer'});if(s.su?.acq)L.push({k:'su',t:'acq'});if(s.su&&suRunway(s.su)<60)L.push({k:'su',t:'run'});
   for(const c of s.legal.cases)L.push({k:'case',c});if(jailed())L.push({k:'jail'});
   for(const c of s.conds)if(!c.hid&&!c.tx&&!CONDS[c.id].acute)L.push({k:'cond',c});
   let pend=0;const full=[];for(const b of BIZ){const o=s.biz[b.id];if(o?.n&&!o.mgr&&o.pend>0){pend+=o.pend;if(o.pend>=bizInc(b,o)*CAP*.999)full.push(b.n)}}
@@ -1568,6 +1695,7 @@ function needHtml(n){
   const row=(k,ti,d,acts,hot)=>`<div class="need"><div><div class="k ${hot?'hot':''}">${k}</div><div class="t">${ti}</div><div class="d">${d}</div></div><div class="acts2">${acts}</div></div>`;
   if(n.k==='dec'){const left=30-(s.day-n.it.d);return row(`Decision · ${left} day${left===1?'':'s'} left`,n.e.t,n.e.d(s,n.it.a),n.e.ch.map((c,j)=>`<button data-a="pick" data-x="${n.it.id}" data-y="${j}">${c[0]}</button>`).join(''),1)}
   if(n.k==='case'){const c=n.c,K=CASES[c.t];return row(`Legal · ${30-(s.day-c.d)} days left`,K.n,`${K.d} Answer it on the Life screen, or it goes to trial with a public defender.`,`<button data-a="tab" data-x="life">Deal with it</button>`,1)}
+  if(n.k==='su'){const u=s.su;return row('Startup',n.t==='offer'?`${SUST[u.st+1].n} offer for ${esc(u.n)}`:n.t==='acq'?`Someone wants to buy ${esc(u.n)}`:`${esc(u.n)} has ${suRunway(u)} days of cash left`,n.t==='offer'?`${fmt(u.offer.raise)} at a ${fmt(u.offer.pre)} valuation.`:n.t==='acq'?`${fmt(u.acq.v)} for the company. Your share: ${fmt(u.own*u.acq.v)}.`:'Raise money, cut staff or put in more of your own, or it shuts down.',`<button data-a="tab" data-x="work">Open</button>`,1)}
   if(n.k==='jail')return row('Jail',`${s.legal.jail-s.day} days left inside`,'No work, school, gigs or activities until you get out. Your money keeps working.','');
   if(n.k==='cond')return row('Health',`Untreated ${condName(n.c).toLowerCase()}`,CONDS[n.c.id].d,`<button data-a="tab" data-x="health">See Health</button>`,n.c.id==='heart'||n.c.id==='cancer');
   if(n.k==='till'){const f=n.full;return row('Business',f.length?(f.length===1?`${f[0]}'s till is full`:`${f.length} tills are full`):'Tills are filling up',f.length?`${f.join(' and ')} ${f.length===1?'has':'have'} stopped earning until you collect.`:'Collect before they stop earning.',`<span class="amt">${fmt(n.pend)}</span><button class="pri" data-a="colAll">Collect</button>`)}
@@ -1596,7 +1724,7 @@ function personRow(p){
   const all=PACT_ORDER.filter(k=>PACTS[k].roles.includes(p.role)&&(!PACTS[k].show||PACTS[k].show(p))),main=['date','call','reconnect'].find(k=>all.includes(k)),open=openP===p.uid,lo=p.rel<30;
   const btn=k=>{const A=PACTS[k],w=Math.max(0,(p.c?.[k]||0)-s.day),cost=A.c?A.c(p):0,why=A.need?.(p);if(why)return `<span class="hint">${why}</span>`;
     return `<button class="${A.bad?'bad':k==='propose'||k==='baby'?'pri':''}" data-a="pp" data-x="${p.uid}" data-y="${k}" ${w||s.cash<cost?'disabled':''}>${typeof A.n==='function'?A.n(p):A.n}${cost?` · ${fmt(cost)}`:''}${w?` · ${w}d`:''}</button>`};
-  return `<div class="prow"><div class="who"><span class="av">${esc(p.n[0])}</span><div><div class="pn">${esc(p.n)}</div><div class="mut" style="font-size:var(--text-xs)">${ROLE[p.role]}${p.out?', moved out':''} · ${Math.max(0,Math.floor(ageOf(p)))}</div>${p.role==='child'&&p.k?`<div class="mut kstat">${kidStat(p)}</div>`:''}</div></div>
+  return `<div class="prow"><div class="who"><span class="av">${esc(p.n[0])}</span><div><div class="pn">${esc(p.n)}</div><div class="mut" style="font-size:var(--text-xs)">${ROLE[p.role]}${p.out?', moved out':''} · ${Math.max(0,Math.floor(ageOf(p)))}</div>${p.role==='child'&&p.k?`<div class="mut kstat">${kidStat(p)}</div>`:p.role==='boss'&&BOSSES[p.bt]?`<div class="mut kstat">${BOSSES[p.bt].n}</div>`:''}</div></div>
    <div class="close"><div class="top2"><span class="${lo?'dn':'mut'}">${closeWord(p.rel)}</span><span class="num">${Math.round(p.rel)}</span></div>${meter(p.rel,lo?'low':'')}</div>
    <div class="acts3">${main?btn(main):''}${all.length>1?`<button data-a="pmore" data-x="${p.uid}" aria-expanded="${open}">${open?'Less':'More'}</button>`:''}</div>
    ${open?`<div class="pmore">${all.filter(k=>k!==main).map(btn).join('')}</div>`:''}</div>`;
@@ -1766,18 +1894,20 @@ work(){
   const J=job(),yrs=Object.entries(s.xp).filter(([,d])=>d>=30).sort((a,b)=>b[1]-a[1]),toPromo=120-s.jobDays%120;
   const wbtn=(k,extra='')=>{const W=WORK[k],w=Math.max(0,(s.cd['w_'+k]||0)-s.day);return `<button data-a="work" data-x="${k}" ${w||s.cash<(W.c||0)?'disabled':''}>${W.n}${W.c?` · ${fmt(W.c)}`:''}${extra}${w?` · in ${w}d`:''}</button>`};
   return `<section class="lede">
-    <div><h2 class="headline">${J?jobTitle():s.pension?'Retired':'Out of work'}</h2>
-     <p class="dek">${J?`Paid <b class="num">${fmt(jobPay())}</b> a day in ${FIELD[J.fld]}. ${topRank()?'You are at the top of this ladder. Switch jobs to earn more.':s.perf>=promoNeed()?`On track for promotion in ${toPromo} days.`:`Promotion review in ${toPromo} days. You need a performance of ${promoNeed()}.`}`:'No salary coming in. Pick a position from the board below and go to the interview.'}${s.pension?` Your pension pays <b class="num">${fmt(s.pension)}</b> a day.`:''}</p></div>
+    <div><h2 class="headline">${J?jobTitle():s.su?`Founder of ${esc(s.su.n)}`:s.pension?'Retired':'Out of work'}</h2>
+     <p class="dek">${J?`Paid <b class="num">${fmt(jobPay())}</b> a day in ${FIELD[J.fld]}. ${topRank()?'You are at the top of this ladder. Switch jobs to earn more.':s.perf>=promoNeed()?`On track for promotion in ${toPromo} days.`:`Promotion review in ${toPromo} days. You need a performance of ${promoNeed()}.`}`:s.su?`Your startup is your job now: ${SUST[s.su.st].n}, with ${suRunway(s.su)} days of runway.`:'No salary coming in. Pick a position from the board below, freelance, or start a company.'}${s.pension?` Your pension pays <b class="num">${fmt(s.pension)}</b> a day.`:''}</p></div>
     ${J?`<div class="side"><p class="mut">Performance</p><span class="figure ${s.perf<25?'dn':s.perf>=promoNeed()?'up':''}">${Math.round(s.perf)}</span>${meter(s.perf,s.perf<25?'low':'')}<p class="mut" style="font-size:var(--text-xs)">${s.perf<25?'At risk of being fired.':s.perf>=promoNeed()||topRank()?'Your boss is happy.':`Get it to ${promoNeed()} for the next promotion.`}</p></div>`:''}
   </section>
   ${J?`<div class="sec-h"><h2>At work</h2></div><div class="quick">${wbtn('hard')}${wbtn('slack')}${wbtn('net')}${wbtn('raise',` · ${Math.round(raiseOdds()*100)}% odds`)}<button data-a="gig" ${gigsLeft()?'':'disabled'}>Side gig · +${fmt(gig())} · ${gigsLeft()} left</button>${age()>=55?'<button data-a="retire">Retire on a pension</button>':''}<button class="bad" data-a="quit">Resign</button></div>`
      :`<div class="quick" style="margin-top:var(--space-md)"><button class="pri" data-a="gig" ${gigsLeft()?'':'disabled'}>Take a gig · +${fmt(gig())} · ${gigsLeft()} left today</button></div>`}
+  ${teamHtml()}${suHtml()}${flHtml()}
   <div class="sec-h"><h2>Job board</h2><span>${JOBS.filter(j=>canJob(j)&&s.job!==j.id).length} you qualify for</span></div>
   <div class="scroll"><table class="ledger"><thead><tr><th>Position</th><th>Field</th><th>Requires</th><th class="r">Stress</th><th class="r">Per day</th><th></th></tr></thead><tbody>
   ${JOBS.map(j=>{const miss=jobMiss(j),cur=s.job===j.id,wait=Math.max(0,(s.cd['job_'+j.id]||0)-s.day);if(miss.length&&!cur&&!showAll.work)return '';return `<tr class="${miss.length&&!cur?'dim':''}"><td><b>${j.n}</b></td><td class="mut">${FIELD[j.fld]}</td><td>${jobReqText(j)}${miss.length&&!cur?`<div class="sub dn">Missing ${miss.join(', ')}</div>`:''}</td><td class="r num">${j.str}/5</td><td class="r num">${fmt(j.pay)}</td>
    <td class="act">${cur?'<span class="mut">Current</span>':wait?`<span class="mut">Reapply in ${wait}d</span>`:`<button ${miss.length?'disabled':'class="pri"'} data-a="apply" data-x="${j.id}">Interview</button>`}</td></tr>`}).join('')}
   </tbody></table></div>
   ${(n=>n?`<div class="more-row"><button class="link2" data-a="showall">${showAll.work?'Hide the jobs you can\'t get yet':`Show ${n} more job${n>1?'s':''} you can't get yet`}</button></div>`:'')(JOBS.filter(j=>jobMiss(j).length&&s.job!==j.id).length)}
+  ${foundHtml()}
   ${howto(`Experience builds in whatever field you work in, and better jobs ask for it. Promotion reviews come every 120 days, and each step up asks for a higher performance, starting at 55. Below 20, you can be fired.${yrs.length?` You have ${yrs.map(([f,d])=>`${(d/365).toFixed(1)} years in ${FIELD[f]}`).join(', ')}.`:''}`)}`;
 },
 school(){
@@ -1802,7 +1932,7 @@ school(){
   ${howto(`Better schools cost more and are harder to get into, but impress interviewers. Strong students can win a half scholarship. Online study doesn't hurt your mood and fits around a job, but takes longer.`)}`;
 },
 people(){
-  const pt=partner(),G=[['Partner',['date','spouse']],['Family',['child','parent','sibling']],['Friends',['friend']],['Exes',['ex']]];
+  const pt=partner(),G=[['Partner',['date','spouse']],['Family',['child','parent','sibling']],['Friends',['friend']],['Work',['boss','coworker']],['Exes',['ex']]];
   return `<section class="lede">
     <div><h2 class="headline">People</h2><p class="dek">${pt?`You are ${pt.role==='spouse'?'married to':'seeing'} <b>${esc(pt.n)}</b>.`:'You are single.'} Staying close to people keeps you happy.</p></div>
     <div class="side"><p class="mut">Meet people</p><div class="row">${['date','out','club'].map(id=>{const a=AM[id];if(a.show&&!a.show())return '';const w=cdLeft(id);return `<button data-a="act" data-x="${id}" ${w||s.cash<a.c?'disabled':''}>${a.n}${a.c?` · ${fmt(a.c)}`:''}${w?` · ${w}d`:''}</button>`}).join('')}</div></div>
@@ -2325,6 +2455,23 @@ function selfTest(){ // open with ?test=1 — never touches your real save
   for(const e of EV3)if(!e.c||e.c(s))for(const c of e.ch){const a=e.a?e.a(s):0;e.d(s,a);ok(typeof c[1](s,a)==='string','event '+e.id)}
   kq2[1].b=s.day-30*365;for(const e of EV3.filter(e=>e.id==='kask'))ok(e.c(s),'adult kids ask for help');
   for(let i=0;i<400;i++)day();ok(kids().every(k=>Number.isFinite(k.k.sma)),'kids grow');s=kq_s0;
+  const cq_s0=s;newGame('Crew','street');day();ok(boss()&&mates().length>=2&&BOSSES[boss().bt],'jobs come with a team');
+  tab='work';ok(VIEWS.work().includes('Your team')&&VIEWS.people().includes('Coworker'),'the team shows up');
+  const cq_b=boss();cq_b.rel=100;ok(promoNeed()===45,'a boss who likes you lowers the bar');cq_b.rel=50;ACT.pp(String(cq_b.uid),'lunch');ok(cq_b.rel>50,'lunch with the boss');
+  const cq_m=mates()[0];cq_m.rel=70;fire();day();ok(!boss()&&!mates().length&&s.people.some(p=>p.uid===cq_m.uid&&p.role==='friend'),'the team stays behind, close coworkers become friends');
+  s.job='crew';day();ok(boss(),'a new job brings a new team');
+  s.fl.next=0;day();ok(s.fl.offers.length>0,'freelance offers');ACT.flt(String(s.fl.offers[0].id));ok(s.fl.jobs.length===1,'take a contract');if(s.fl.offers[0])ACT.flt(String(s.fl.offers[0].id));ok(s.fl.jobs.length===1,'one contract while employed');
+  const cq_c=s.cash,cq_x=xpY(s.fl.jobs[0].fld);s.fl.jobs[0].left=1;flDay();ok(!s.fl.jobs.length&&s.cash>cq_c&&xpY(FLT.find(t=>t.n===s.log[0].t.match(/<b>(.*?)<\/b>/)?.[1])?.fld||'delivery')>=0,'contracts pay when done');
+  s.cash=1e6;ACT.found('saas');ok($('#mbox').innerHTML.includes('Found it')&&!s.su,'founding asks first');ACT.found('saas','yes');ok(s.su&&!s.job&&s.su.cash===2.5e5*s.eco.P**0&&flCap()===0,'founded');
+  ACT.apply('crew');ok(!s.job&&$('#modal').hidden,'no interviews while founding');ACT.suhire();ok(s.su.hires===1&&suRunway(s.su)>0,'hire');ok(Math.abs(netWorth()-(s.cash+suWorth()+walletVal()+finVal()))<1e6,'startup counts toward net worth');
+  s.su.offer={pre:8e6,raise:2e6,d:s.day};ACT.suraise();ok(s.su.st===1&&Math.abs(s.su.own-.8)<1e-9&&s.su.val===1e7,'a round dilutes you');
+  tab='work';ok(VIEWS.work().includes('Founder of'),'founder screen');s.su.acq={v:5e7,d:s.day};ok(needs().some(n=>n.k==='su'),'offers need you');
+  const cq_c2=s.cash;ACT.suacq();checkGoals();ok(!s.su&&s.cash-cq_c2>2e7&&s.goals.exit,'sell the company');
+  ACT.found('ai','yes');s.su.st=4;s.su.hires=90;s.su.prog=1e4;s.su.cash=1e8;s.su.retry=0;suDay();ok(s.su&&s.su.prog<=SUST[5].at,'no IPO without a big enough team');s.su.hires=180;s.su.prog=1e4;suDay();ok(!s.su&&s.car2.ipo===1&&s.later.some(p=>p.id==='lockup'),'an IPO with a lockup');const cq_c3=s.cash;LATER.lockup(s.later.find(p=>p.id==='lockup'));ok(s.cash>cq_c3,'the lockup ends');
+  s.cash=1e6;ACT.found('food','yes');s.su.cash=-1;suDay();ok(!s.su,'out of money, out of business');
+  ACT.found('app','yes');ACT.sukill('yes');ok(!s.su,'shut it down');
+  s.job='crew';day();s.cash=1e6;for(const e of EV4)if(!e.c||e.c(s))for(const c of e.ch){const a=e.a?e.a(s):0;e.d(s,a);ok(typeof c[1](s,a)==='string','event '+e.id)}
+  LATER.ethics();s=cq_s0;
   tab='dash';ok(VIEWS.dash().includes('Goals'),'goals on home');goalsModal();
   const sp2=meet('spouse',70),k1=addChild(),k2=addChild(),k3=addChild();k1.b=s.day-40*365;k2.b=s.day-30*365;k3.b=s.day-5*365;k1.rel=90;
   deathModal();ok($('#mbox').innerHTML.includes('Continue as '+k1.n),'death lists the kids');ACT.heir(String(k1.uid));
