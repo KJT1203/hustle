@@ -653,7 +653,7 @@ function bjEnd(){const b=s.cz.bj,p=hv(b.p),nat=b.p.length===2&&p===21;
 function netWorth(){let w=s.cash+(s.fin&&s.mkt.div?finVal():0)-(s.mloan||0);for(const t in s.shorts||{})w-=s.shorts[t].sh*s.px[t].p;if(s.opts?.length)w+=optVal();for(const t in s.port)w+=s.port[t].sh*s.px[t].p;w+=bizWorth();for(const id in s.own)w+=SM[id].cost*.6;for(const p of s.props)w+=pval(p)-p.loan;for(const c of s.cars)w+=c.v-(c.loan||0);return w+walletVal()+suWorth()+clubVal()-(s.debt||0)}
 function log(t,k='info'){s.log.unshift({d:s.day,t,k});if(s.log.length>80)s.log.pop()}
 function chirp(h,n,x,v){s.feed.unshift({h,n,x,v,l:0,tl:rint(3,40)*(v?40:1),d:s.day});if(s.feed.length>60)s.feed.pop()}
-const decDays=()=>s?.opt?.dec||30,opt=k=>!!s?.opt?.[k];
+const decDays=()=>Math.min(s?.opt?.dec||30,s?.staff?.pa?7:90),opt=k=>!!s?.opt?.[k];
 function toast(m){if(catching||opt('quiet'))return;const t=document.createElement('div');t.className='toast';t.innerHTML=m;$('#toasts').append(t);setTimeout(()=>t.remove(),2800)}
 
 function newGame(name,bg,h={}){
@@ -712,7 +712,7 @@ function day(live){
   s.later=s.later.filter(p=>p.d>s.day||(runLater(p),false));
   s.inbox=s.inbox.filter(it=>{if(s.day-it.d<decDays())return true;const e=EVM[it.id];if(!e.c||e.c(s))log(`<b>${e.t}</b> ${e.ch[e.def][1](s,it.a)}<span class="auto">decided for you</span>`);return false});
   if(s.inbox.length<3&&R()<1/28)newEvent();
-  flDay();if(s.su)suDay();propDay();worldDay();fdnDay();oldDay(A);polDay();clubDay();creditDay();viceDay();milDay();trustDay();stlDay();chDay();
+  flDay();if(s.su)suDay();propDay();worldDay();fdnDay();oldDay(A);polDay();clubDay();creditDay();viceDay();milDay();trustDay();stlDay();chDay();staffDay();
   lifeDay(A);if(s.dead)return;
   const pd=s.st.hea<=0?1:A>60?Math.min(.5,((A-60)/30)**3*3)/365:0;
   if(R()<pd)die();else checkGoals();
@@ -1117,6 +1117,7 @@ const dur=sec=>sec<3600?`${Math.round(sec/60)} minutes`:sec<172800?`${Math.floor
 
 // ---------- actions ----------
 const ACT={
+  staff:k=>{if(k!=='pa'&&k!=='adv')return;const S=s.staff??={};S[k]=S[k]?0:1;toast(S[k]?(k==='pa'?'You hired a personal assistant':'You hired a financial advisor'):'You let them go')},
   rich:()=>modal(richHtml()),
   stl:u=>{const p=P(+u);if(!p||p.uid===s.home||PM[p.t].biz)return;p.stl=p.stl?0:1;toast(p.stl?'Now a holiday let: more rent, more wear, more empty nights':'Back to a long let')},
   chstart:()=>{const C=s.ch??=chNew();if(C.on||s.cash<500*s.eco.P)return;s.cash-=500*s.eco.P;C.on=1;C.last=s.day;mile('Started a channel.');toast('Your channel is live')},
@@ -1865,6 +1866,7 @@ shop(){
   ${SHOP.map(i=>{const o=s.own[i.id];return `<tr class="${o||s.cash>=i.cost?'':'dim'}"><td><b>${i.n}</b></td><td class="r num">${fmt(i.cost)}</td><td class="r num">+${Math.round(i.hap/.004)}</td><td class="r num">${i.fame?big(i.fame*365):'—'}</td><td class="r num">${i.up?fmt(i.up):'—'}</td>
    <td class="act">${o?`<button class="bad" data-a="unown" data-x="${i.id}">Sell for ${fmt(i.cost*.6)}</button>`:`<button class="pri" data-a="own" data-x="${i.id}" ${s.cash<i.cost?'disabled':''}>Buy</button>`}</td></tr>`}).join('')}
   </tbody></table></div>
+  ${staffHtml()}
   ${clubHtml()}`;
 },
 };

@@ -119,7 +119,7 @@ function petsDay(){for(const p of [...s.pets])if(s.day>=p.dies){s.pets.splice(s.
   if(s.pets.length&&R()<s.pets.length*.4/365){const v=Math.round(rint(200,2500)*s.eco.P);s.cash-=v;log(`A vet bill for ${esc(pick(s.pets).n)}: ${fmt(v)}.`,'bad')}}
 
 // ---------- the daily tick for all of the above ----------
-const lifeCost=()=>dietCost()+careCost()+insPrem()+medDaily()+kidsCost()+petSum('up')*s.eco.P-Math.min(.2,hobSk('cook')/500)*(15+kidsHome()*47)*s.eco.P;
+const lifeCost=()=>(s.staff?.pa?paCost():0)+dietCost()+careCost()+insPrem()+medDaily()+kidsCost()+petSum('up')*s.eco.P-Math.min(.2,hobSk('cook')/500)*(15+kidsHome()*47)*s.eco.P;
 function lifeDay(A){
   if(jailed())add('hap',-.25);else if(s.legal.jail&&s.legal.jail===s.day){log('Released from jail.','good');toast('Released from jail')}
   for(const id in s.hob){const h=s.hob[id];if(s.day-h.last>30)h.sk=Math.max(0,h.sk-.03)}
@@ -684,6 +684,7 @@ const NEWS=[
  {v:8,t:['Holiday lets for your rentals','Start a podcast or video channel','A semester abroad']},
  {v:9,t:['Car loans','Adopt a child','IVF']},
  {v:10,t:['The world rich list: see where you rank']},
+ {v:11,t:['Hire a personal assistant and a financial advisor (Lifestyle)']},
 ];
 const NEWSV=NEWS.at(-1).v;
 function newsHtml(){const seen=s.seenV||1,L=NEWS.filter(n=>n.v>seen);if(!L.length)return '';s.seenV=NEWSV;
@@ -732,3 +733,14 @@ function richHtml(){const L=richList(),me=L.findIndex(x=>x.me),top=L.slice(0,20)
   return `<p class="kicker">The Hustle Rich List</p><h2>The world's richest</h2><p>${me<20?`You're <b>number ${me+1}</b> in the world.`:netWorth()>=1e6?`About <b class="num">${big(worldRank(netWorth()))}</b> people in the world are richer than you.`:'Most of the world. Keep going.'} Fortunes move with their companies' share prices.</p>
   <table class="ledger"><tbody>${top.map((x,i)=>`<tr${x.me?' class="now"':''}><td class="num">${i+1}</td><td><b>${esc(x.n)}</b>${x.t?` <span class="mut">${nameOf(x.t)}</span>`:''}${x.me?' <span class="mut">(you)</span>':''}</td><td class="r num">${fmt(x.w)}</td></tr>`).join('')}${me>=20?`<tr class="now"><td class="num">—</td><td><b>${esc(s.name)}</b> <span class="mut">(you)</span></td><td class="r num">${fmt(netWorth())}</td></tr>`:''}</tbody></table>
   <button class="pri" data-a="close" style="margin-top:var(--space-sm)">Back</button>`}
+
+// ---------- staff: people you pay to run the boring parts of a rich life ----------
+const paCost=()=>80*s.eco.P;
+function staffDay(){const S=s.staff;if(!S)return;
+  if(S.pa){for(const id in s.biz){const v=s.biz[id].pend;if(v){s.cash+=v;taxAdd('ord',v);s.biz[id].pend=0}}}
+  if(S.adv){const F=s.fin,px=fundPx();s.cash-=F.fu*px*.01/365; // 1% a year of what they manage
+    if(s.day%7===0){const keep=Math.max(5e3*s.eco.P,flows().exp*90),a=s.cash-keep;if(a>1e3*s.eco.P){s.cash-=a;F.fd=avgDay(F.fd,F.fu,a/px);F.fu+=a/px;F.fc+=a}}}}
+function staffHtml(){const S=s.staff||{};
+  return `<div class="sec-h"><h2>Staff</h2><span>for when life runs itself</span></div>
+  <div class="acards"><button class="acard${S.pa?' on':''}" data-a="staff" data-x="pa" aria-pressed="${!!S.pa}"><b>Personal assistant</b><span>Collects every till each day and answers decisions after 7 days with the sensible choice.</span><small>${S.pa?'Hired · tap to let go':`${fmt(paCost())} a day`}</small></button>
+  <button class="acard${S.adv?' on':''}" data-a="staff" data-x="adv" aria-pressed="${!!S.adv}"><b>Financial advisor</b><span>Each week, invests spare cash in the index fund, keeping about 90 days of spending in cash.</span><small>${S.adv?'Hired · tap to let go':'1% a year of what they manage'}</small></button></div>`}
