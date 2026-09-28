@@ -600,3 +600,26 @@ const EV9=[
  ['Get away somewhere warm',()=>{const v=Math.round(3000*s.eco.P);s.cash-=v;add('hap',10);const pt=partner();if(pt)prel(pt,6);return `Sun instead of snow, for ${fmt(v)}.`}],
  ['Keep it quiet',()=>{add('hap',2);return 'A calm, quiet week.'}]]},
 ];
+
+// ---------- more of life's surprises ----------
+const EV10=[
+{id:'idtheft',w:.7,t:'Identity theft',d:()=>'Someone opened credit cards in your name and ran them up.',def:1,ch:[
+ ['Freeze your credit and file reports',()=>{s.credit=Math.max(300,(s.credit??650)-15);add('hap',-3);return 'A week of phone calls, but it is contained. Your score dipped a little.'}],
+ ['Deal with it later',()=>{s.credit=Math.max(300,(s.credit??650)-90);add('hap',-5);return 'Collectors started calling. Your credit score took a beating.'}]]},
+{id:'crash',w:s=>s.cars.length?1:0,c:s=>s.cars.length>0,t:'Fender bender',d:()=>'Someone ran a red light and hit your car.',def:0,ch:[
+ ['Go through insurance',()=>{const c=s.cars[0];c.v*=.9;add('hap',-3);if(R()<.25){addCond('inj');return 'The car is fixed, but your neck is not right. Sports injury.'}return 'Paperwork, a rental, and the car is back in a couple of weeks.'}],
+ ['Settle it with cash on the spot',()=>{const v=Math.round(1500*s.eco.P);s.cash-=v;return `${fmt(v)} and a handshake. No claim on your record.`}]]},
+{id:'jury',w:.8,c:()=>age()>=18&&!jailed(),t:'Jury duty',d:()=>'A summons came: you are called for jury duty, possibly for a couple of weeks.',def:0,ch:[
+ ['Serve',()=>{add('hap',2);add('sma',1);if(s.job)s.perf=clamp(s.perf-3,0,100);return 'Two weeks in a courtroom. It was more interesting than you expected.'}],
+ ['Ask to be excused',()=>R()<.5?'Excused. Back to work.':(add('hap',-2),'Denied. You serve anyway, grumbling.')]]},
+{id:'volunteer',w:.8,t:'Give some time',d:()=>'The food bank down the street is short of volunteers this winter.',def:1,ch:[
+ ['Volunteer every weekend',()=>{add('hap',7);s.fol+=rint(10,60);if(friendsN()<10&&R()<.4){const p=meet('friend',45);return `Hard work, good people. You became friends with ${p.n}.`}return 'Hard work, good people. You feel great.'}],
+ ['Donate instead',()=>{const v=Math.round(200*s.eco.P);if(s.cash<v)return 'Money is tight right now.';donate(v);return `You donated ${fmt(v)}.`}]]},
+{id:'sibhelp',w:s=>s.people.some(p=>p.role==='sibling')&&s.cash>5e3?.9:0,c:s=>s.people.some(p=>p.role==='sibling')&&s.cash>5e3,a:s=>pick(s.people.filter(p=>p.role==='sibling'))?.uid,t:'Family first',d:(s,a)=>`${esc(per(a)?.n||'Your sibling')} is going through a divorce and needs somewhere to stay for a few months.`,def:0,ch:[
+ ['Take them in',(s,a)=>{const p=per(a);if(!p)return 'The moment has passed.';prel(p,20);add('hap',-2);s.cash-=Math.round(1500*s.eco.P);return `A crowded few months, but ${p.n} will never forget it.`}],
+ ['Help them find a place',(s,a)=>{const p=per(a);if(!p)return 'The moment has passed.';const v=Math.round(3000*s.eco.P);s.cash-=v;prel(p,10);return `You covered the deposit: ${fmt(v)}.`}],
+ ['You can\'t right now',(s,a)=>{const p=per(a);if(p)prel(p,-15);return 'They say they understand. They do not.'}]]},
+{id:'fire',w:s=>homeP()?.35:0,c:s=>!!homeP(),t:'Fire!',d:()=>`A kitchen fire spread through part of your ${homeP()?pname(homeP()):'home'}. Everyone got out safely.`,def:0,ch:[
+ ['Claim on the home insurance and rebuild',()=>{const p=homeP();if(!p)return 'The moment has passed.';const v=Math.round(pval(p)*.01);s.cash-=v;p.cond=Math.max(p.cond??100,90);add('hap',-6);return `The insurer paid for most of it. Your deductible was ${fmt(v)}.`}],
+ ['Patch it up yourself',()=>{const p=homeP();if(!p)return 'The moment has passed.';p.cond=Math.max(0,(p.cond??100)-40);add('hap',-8);return 'You saved money, but the place is a mess now.'}]]},
+];
