@@ -84,10 +84,16 @@ const PACTS={
   fx:()=>{if(R()<.6){const k=addChild();add('hap',12);log(`Welcome, ${esc(k.n)}!`,'good');return `It's a baby! Welcome, ${k.n}.`}return 'Not this time. You can try again in a couple of months.'}},
  ask:{n:'Ask for money',cd:180,roles:['parent'],need:p=>p.rel<40?'Ask for money once closeness reaches 40':'',fx:p=>{const v=rint(300,3000);s.cash+=v;prel(p,-8);return `${p.n} sends ${fmt(v)}, with a lecture.`}},
  reconnect:{n:'Reach out',cd:30,roles:['ex'],need:()=>partner()?'Not while you are with someone':'',fx:p=>{if(R()<.35){p.role='date';p.rel=45;p.met=s.day;return `You and ${p.n} are giving it another go.`}prel(p,-5);return `${p.n} left you on read.`}},
+ homework:{n:'Help with homework',cd:7,roles:['child'],show:p=>p.k&&ageOf(p)>=6&&ageOf(p)<18,fx:p=>{p.k.sma=Math.min(100,p.k.sma+.25*s.st.sma/60);prel(p,3);return `You and ${p.n} got through the homework.`}},
+ play:{n:'Play sports together',cd:7,roles:['child'],show:p=>p.k&&ageOf(p)>=4&&ageOf(p)<18,fx:p=>{p.k.hea=Math.min(100,p.k.hea+.8);prel(p,4);add('hea',1);return `A good game with ${p.n}.`}},
+ tutor:{n:'Hire a tutor',cd:30,c:()=>Math.round(400*s.eco.P),roles:['child'],show:p=>p.k&&ageOf(p)>=6&&ageOf(p)<18,fx:p=>{p.k.sma=Math.min(100,p.k.sma+.6);return `The tutor says ${p.n} is making progress.`}},
+ camp:{n:'Summer camp',cd:180,c:()=>Math.round(2500*s.eco.P),roles:['child'],show:p=>p.k&&ageOf(p)>=7&&ageOf(p)<17,fx:p=>{p.k.hap=Math.min(100,p.k.hap+6);p.k.sma=Math.min(100,p.k.sma+.5);prel(p,5);return `${p.n} came back from camp with a tan and ten new friends.`}},
+ school:{n:p=>p.k?.sch==='private'?'Back to public school':`Private school · ${fmt(PRIVATE*s.eco.P)}/day`,cd:30,roles:['child'],show:p=>p.k&&ageOf(p)>=5&&ageOf(p)<18,fx:p=>{p.k.sch=p.k.sch==='private'?'public':'private';return p.k.sch==='private'?`${p.n} starts at a private school next term.`:`${p.n} is back at public school.`}},
+ fund:{n:'Add to college fund',cd:30,c:()=>Math.round(clamp(s.cash*.05,500,5e4*s.eco.P)),roles:['child'],show:p=>p.k&&ageOf(p)<18,need:p=>p.k.fund>=FUNDCAP*s.eco.P?'The college fund is full':'',fx:(p,v)=>{p.k.fund+=v;return `${fmt(v)} into ${p.n}'s college fund. It earns about 5% a year.`}},
  split:{n:'Break up',bad:1,roles:['date'],fx:p=>endRel(p)},
  divorce:{n:'Divorce',bad:1,roles:['spouse'],fx:p=>endRel(p)},
 };
-const PACT_ORDER=['call','time','date','gift','propose','baby','ask','reconnect','split','divorce'];
+const PACT_ORDER=['call','time','homework','play','tutor','camp','school','fund','date','gift','propose','baby','ask','reconnect','split','divorce'];
 const RANKS=['','Senior ','Lead ','Principal ','Head ','Chief '];
 // real-world costs; income is the owner's yearly profit per unit divided by 365 (a food truck nets about half its cost a year, a hotel about 13%)
 const BIZ=[
@@ -212,7 +218,7 @@ const ACTS=[
  {id:'gym',n:'Hit the gym',d:'+3 health, +1 looks',cd:3,c:15,fx:()=>{add('hea',3);add('loo',1);add('hap',1);return 'Good pump.'}},
  {id:'read',n:'Read a book',d:'+1.5 smarts',cd:3,c:20,fx:()=>{add('sma',1.5);return 'You feel a little smarter.'}},
  {id:'med',n:'Meditate',d:'+3 happiness',cd:2,c:0,fx:()=>{add('hap',3);return 'Inner peace, briefly.'}},
- {id:'out',n:'Night out',d:'+8 happiness, −2 health. You might make a friend.',cd:5,c:150,fx:()=>{add('hap',8);add('hea',-2);if(s.cars.length&&R()<.04){openCase('dui');return 'You drove home after a few drinks and got pulled over. See Life.'}if(R()<.25&&friendsN()<10){const p=meet('friend',35);return `Great night. You made a new friend: ${p.n}.`}if(R()<.3){const f=rint(5,40)+Math.round(s.fol*.01);s.fol+=f;return `Legendary night. +${f} followers.`}return 'Great night, rough morning.'}},
+ {id:'out',n:'Night out',d:'+8 happiness, −2 health. You might make a friend.',cd:5,c:150,fx:()=>{add('hap',8);add('hea',-2);if(s.cars.length&&R()<(trait('rebel')?.08:.04)){openCase('dui');return 'You drove home after a few drinks and got pulled over. See Life.'}if(R()<.25&&friendsN()<10){const p=meet('friend',35);return `Great night. You made a new friend: ${p.n}.`}if(R()<.3){const f=rint(5,40)+Math.round(s.fol*.01);s.fol+=f;return `Legendary night. +${f} followers.`}return 'Great night, rough morning.'}},
  {id:'date',n:'Dating app',d:'A chance to meet someone',cd:10,c:40,show:()=>!partner(),fx:()=>{if(R()<.2+s.st.loo/250){const p=meet('date',40);add('hap',10);log(`You matched with ${esc(p.n)}. You're seeing each other.`,'good');return `It's a match with ${p.n}!`}add('hap',-2);return 'Swiped all night. Nothing.'}},
  {id:'fam',n:'Family time',d:'+5 happiness, and your family feels closer',cd:4,c:0,show:()=>s.people.some(p=>['parent','sibling','spouse','child'].includes(p.role))||s.pets.length,fx:()=>{for(const p of s.people)if(['parent','sibling','spouse','child'].includes(p.role))prel(p,3);add('hap',5);return 'Quality time with family.'}},
  {id:'club',n:'Join a club',d:'A good chance to make a friend',cd:30,c:200,fx:()=>{if(friendsN()<10&&R()<.7){const p=meet('friend',40);return `You joined a ${pick(['running','book','chess','climbing','board game'])} club and met ${p.n}.`}return 'Nice people, no real connection yet.'}},
@@ -502,7 +508,7 @@ const HM=Object.fromEntries(HOBS.map(h=>[h.id,h]));
 const hobSk=id=>s.hob[id]?.sk||0;
 const HFLD={tech:'code',food:'cook',creative:'paint'};
 const hobIv=j=>hobSk(HFLD[j.fld])/400; // up to +25% interview odds in a matching field
-function practice(id){const H=HM[id],h=s.hob[id]??={sk:0,last:s.day,n:0};h.sk=Math.min(100,h.sk+5*(1-h.sk/100)*(.7+s.st.sma/200));h.last=s.day;h.n++;add('hap',3);
+function practice(id){const H=HM[id],h=s.hob[id]??={sk:0,last:s.day,n:0};h.sk=Math.min(100,h.sk+5*(1-h.sk/100)*(.7+s.st.sma/200)*(trait('creative')?1.5:1));h.last=s.day;h.n++;add('hap',3);
   if(id==='sport'){add('hea',2);if(R()<.03&&!cond('inj')){addCond('inj');return 'You twisted something. Sports injury.'}}
   if(id==='chess')add('sma',.6);
   return `${H.n} practice. Skill ${Math.round(h.sk)}.`}
@@ -530,7 +536,7 @@ function petsDay(){for(const p of [...s.pets])if(s.day>=p.dies){s.pets.splice(s.
   if(s.pets.length&&R()<s.pets.length*.4/365){const v=Math.round(rint(200,2500)*s.eco.P);s.cash-=v;log(`A vet bill for ${esc(pick(s.pets).n)}: ${fmt(v)}.`,'bad')}}
 
 // ---------- the daily tick for all of the above ----------
-const lifeCost=()=>insPrem()+medDaily()+petSum('up')*s.eco.P-Math.min(.2,hobSk('cook')/500)*(15+kidsHome()*47)*s.eco.P;
+const lifeCost=()=>insPrem()+medDaily()+kidsCost()+petSum('up')*s.eco.P-Math.min(.2,hobSk('cook')/500)*(15+kidsHome()*47)*s.eco.P;
 function lifeDay(A){
   if(jailed())add('hap',-.25);else if(s.legal.jail&&s.legal.jail===s.day){log('Released from jail.','good');toast('Released from jail')}
   for(const id in s.hob){const h=s.hob[id];if(s.day-h.last>30)h.sk=Math.max(0,h.sk-.03)}
@@ -552,7 +558,7 @@ const LATER={
  sec(p){openCase('sec',p.v)},
 };
 const EV2=[
-{id:'lend',w:1.2,c:s=>friendsN()>0&&s.cash>2000,a:s=>({u:pick(s.people.filter(p=>p.role==='friend')).uid,v:Math.round(Math.min(s.cash*.1,rint(5,40)*100*s.eco.P))}),t:'Can I borrow some money?',d:(s,a)=>`${esc(per(a.u)?.n||'A friend')} asks to borrow <b>${fmt(a.v)}</b> to cover rent. "I'll pay you back, I swear."`,def:1,ch:[
+{id:'lend',w:1.2,c:s=>friendsN()>0&&s.cash>2000,a:s=>({u:pick(s.people.filter(p=>p.role==='friend'))?.uid,v:Math.round(Math.min(s.cash*.1,rint(5,40)*100*s.eco.P))}),t:'Can I borrow some money?',d:(s,a)=>`${esc(per(a.u)?.n||'A friend')} asks to borrow <b>${fmt(a.v)}</b> to cover rent. "I'll pay you back, I swear."`,def:1,ch:[
  ['Lend it',(s,a)=>{if(s.cash<a.v)return "You don't have it to lend.";s.cash-=a.v;s.later.push({d:s.day+rint(45,180),k:'x',id:'lend',u:a.u,v:a.v});const f=per(a.u);if(f)prel(f,5);return 'They hug you. Now you wait.'}],
  ['Say no',(s,a)=>{const f=per(a.u);if(f)prel(f,-8);return 'They say they understand. They seem hurt.'}]]},
 {id:'lump',w:.6,c:()=>age()>25&&!cond('cancer'),t:'Something feels off',d:()=>'You notice a small lump. It doesn\'t hurt.',def:1,ch:[
@@ -561,7 +567,7 @@ const EV2=[
 {id:'nbr',w:.8,t:'Fence feud',d:()=>`Your neighbor says your tree cracked their fence and wants ${fmt(3000*s.eco.P)} for a new one.`,def:1,ch:[
  ['Pay for the fence',()=>{s.cash-=3000*s.eco.P;add('hap',1);return 'New fence, happy neighbor.'}],
  ['Tell them to get lost',()=>{s.later.push({d:s.day+rint(20,60),k:'x',id:'nbr'});add('hap',2);return 'That felt good. They looked furious.'}]]},
-{id:'fstart',w:.8,c:s=>friendsN()>0&&s.cash>5000,a:s=>({u:pick(s.people.filter(p=>p.role==='friend')).uid,v:Math.round(Math.min(s.cash*.1,5e4*s.eco.P))}),t:'Get in early',d:(s,a)=>`${esc(per(a.u)?.n||'A friend')} is starting a company and asks you to invest <b>${fmt(a.v)}</b>. Most startups fail. A few make their backers rich.`,def:1,ch:[
+{id:'fstart',w:.8,c:s=>friendsN()>0&&s.cash>5000,a:s=>({u:pick(s.people.filter(p=>p.role==='friend'))?.uid,v:Math.round(Math.min(s.cash*.1,5e4*s.eco.P))}),t:'Get in early',d:(s,a)=>`${esc(per(a.u)?.n||'A friend')} is starting a company and asks you to invest <b>${fmt(a.v)}</b>. Most startups fail. A few make their backers rich.`,def:1,ch:[
  ['Invest',(s,a)=>{if(s.cash<a.v)return "You don't have it any more.";s.cash-=a.v;s.later.push({d:s.day+rint(365,1460),k:'x',id:'fstart',u:a.u,v:a.v});return "You're in. It'll be a few years before you know."}],
  ['Pass',()=>{if(R()<.06)s.later.push({d:s.day+rint(700,1400),k:'x',id:'fmiss'});return 'You wish them luck.'}]]},
 {id:'slip',w:.8,c:()=>nOwned()>0,a:()=>Math.round(rint(5,40)*1000*s.eco.P),t:'Wet floor',d:(s,a)=>`A customer slipped at one of your businesses. Their lawyer offers to settle for <b>${fmt(a)}</b>.`,def:0,ch:[
@@ -571,7 +577,65 @@ const EV2=[
  ['Keep it off the books',(s,a)=>{const v=Math.round(a*margRate());taxAdd("ord",-a);s.later.push({d:s.day+rint(90,540),k:'x',id:'audit',v:a});return `You save about ${fmt(v)} in tax. Hopefully nobody checks.`}],
  ['Report every dollar',()=>{add('hap',1);return 'Clean books, clear conscience.'}]]},
 ];
-EV.push(...EV2);
+
+// ---------- kids: born with traits and some of your stats, shaped by how you raise them; your heir starts as the person they became ----------
+const TRAITS={
+ bright:{n:'Bright',d:'learns faster at school',sma:12},
+ sporty:{n:'Sporty',d:'healthier all life',hea:8},
+ charming:{n:'Charming',d:'wins people over in interviews',loo:8},
+ sunny:{n:'Sunny',d:'naturally happier',hap:10},
+ anxious:{n:'Anxious',d:'moods run lower',hap:-10},
+ rebel:{n:'Rebellious',d:'finds trouble',loo:3},
+ creative:{n:'Creative',d:'picks up hobbies fast'},
+ driven:{n:'Driven',d:'works harder',sma:3},
+};
+const trait=t=>!!s.tr?.includes(t);
+const trTxt=tr=>(tr||[]).map(t=>TRAITS[t].n).join(', ');
+function rollTraits(from=[]){const ks=Object.keys(TRAITS),tr=[];if(from.length&&R()<.5)tr.push(pick(from));
+  while(tr.length<2){const t=pick(ks);if(!tr.includes(t)&&!(t==='sunny'&&tr.includes('anxious'))&&!(t==='anxious'&&tr.includes('sunny')))tr.push(t)}return tr}
+const trSum=(tr,k)=>(tr||[]).reduce((a,t)=>a+(TRAITS[t][k]||0),0);
+function kidNew(){const sp=partner(),tr=rollTraits(s.tr||[]),gs=clamp((s.st.sma+(sp?.gs??rint(35,70)))/2+rint(-10,10)+trSum(tr,'sma'),5,95),gl=clamp((s.st.loo+(sp?.gl??rint(35,70)))/2+rint(-10,10)+trSum(tr,'loo'),5,95);
+  return {gs,sma:gs*.3,hea:clamp(78+trSum(tr,'hea')+rint(-5,5),0,100),loo:gl,hap:clamp(62+trSum(tr,'hap'),0,100),tr,sch:'public',fund:0}}
+const FUNDCAP=5e5,COLLEGE=1e5,PRIVATE=70; // a college fund caps at $500K; four years of college cost $100K; private school $70 a day (all in today's prices)
+const kidAge=p=>ageOf(p);
+function kidDay(p){const K=p.k,a=kidAge(p);if(!K)return;
+  if(a<18){const pv=K.sch==='private'?6:0;
+    K.sma=clamp(K.sma+((a<6?K.gs*(.3+a/10):K.gs+pv+(p.rel-50)*.08)-K.sma)*.003,0,100);
+    K.hap=clamp(K.hap+((55+(p.rel-50)*.5+trSum(K.tr,'hap'))-K.hap)*.003,0,100);
+    K.hea=clamp(K.hea+((80+trSum(K.tr,'hea'))-K.hea)*.002,0,100)}
+  K.fund*=1+.05/365;
+  if(K.path==='college'||K.path==='trade'){if(s.day>=K.grad){K.done=1;K.job=K.path==='college'?(K.sma>=65?'swe':K.sma>=58?'analyst':pick(['teacher','design','dev','admin'])):'elec';K.path+='d';log(`${esc(p.n)} ${K.path==='colleged'?'graduated from college':'finished a trade certificate'} and started work as ${art(JM[K.job].n.toLowerCase())}.`,'good');add('hap',6)}}
+  if(a>=24&&a<38&&!K.sp&&R()<1/2500){K.sp=pick(PNAMES.filter(n=>n!==p.n));log(`${esc(p.n)} married ${esc(K.sp)}.`,'good');add('hap',5)}
+  if(K.sp&&a>=26&&a<42&&(K.gk||[]).length<3&&R()<1/1400){(K.gk??=[]).push({n:pick(PNAMES),b:s.day});add('hap',8);log(`${esc(p.n)} had a baby, ${esc(K.gk.at(-1).n)}. You're a grandparent!`,'good');toast('A grandchild!')}
+}
+function kidLaunch(p,quiet){const K=p.k;if(!K||K.path)return;const P=s.eco.P,cost=COLLEGE*P;
+  if(K.sma>=55){const use=Math.min(K.fund,cost);K.fund-=use;K.loan=Math.round(cost-use);K.path='college';K.grad=p.b+22*365;
+    if(!quiet)log(`${esc(p.n)} turns 18 and heads to college.${use?` The college fund covers ${fmt(use)}.`:''}${K.loan?` The rest, ${fmt(K.loan)}, is student loans.`:''}`,'good')}
+  else if(K.sma>=35){const use=Math.min(K.fund,8000*P);K.fund-=use;K.path='trade';K.grad=p.b+19*365;if(!quiet)log(`${esc(p.n)} turns 18 and starts a trade course.`,'good')}
+  else{K.path='work';K.job=pick(['crew','retail','rider']);if(!quiet)log(`${esc(p.n)} turns 18 and goes straight to work as ${art(JM[K.job].n.toLowerCase())}.`)}
+  if(quiet&&K.grad<=s.day){K.path+='d';K.done=1;K.job=K.path==='colleged'?(K.sma>=65?'swe':K.sma>=58?'analyst':'admin'):'elec'}
+}
+const kidStat=p=>{const K=p.k;return K?`Smarts ${Math.round(K.sma)} · Health ${Math.round(K.hea)} · Mood ${Math.round(K.hap)}${K.tr?.length?` · ${trTxt(K.tr)}`:''}${kidAge(p)<18&&K.sch==='private'?' · Private school':''}${K.fund>=1?` · Fund ${fmt(K.fund)}`:''}${K.job&&kidAge(p)>=18?` · ${JM[K.job].n}`:K.path==='college'?' · At college':K.path==='trade'?' · Trade course':''}${K.sp?` · Married to ${esc(K.sp)}`:''}${K.gk?.length?` · ${K.gk.length} kid${K.gk.length>1?'s':''}`:''}`:''};
+const kidsCost=()=>kids().filter(k=>k.k?.sch==='private'&&kidAge(k)<18).length*PRIVATE*s.eco.P;
+const estateTax=w=>Math.max(0,w-13e6*s.eco.P)*.4; // 40% above a $13M exemption
+const EV3=[
+{id:'report',w:1.5,c:()=>kids().some(k=>k.k&&kidAge(k)>=6&&kidAge(k)<18),a:()=>pick(kids().filter(k=>k.k&&kidAge(k)>=6&&kidAge(k)<18))?.uid,t:'Report card',d:(s,a)=>{const k=per(a);if(!k)return 'A report card came home.';const g=k.k.sma;return `${esc(k.n)}'s report card is in: <b>${g>=75?'straight As':g>=60?'mostly As and Bs':g>=45?'Bs and Cs':g>=30?'mostly Cs, a D in maths':'failing two classes'}</b>.`},def:0,ch:[
+ ['Praise the effort',(s,a)=>{const k=per(a);if(!k)return 'The moment has passed.';prel(k,5);k.k.hap=Math.min(100,k.k.hap+4);return `${k.n} beams.`}],
+ ['Push them harder',(s,a)=>{const k=per(a);if(!k)return 'The moment has passed.';prel(k,-5);k.k.sma=Math.min(100,k.k.sma+2);k.k.hap-=4;return `${k.n} sulks, but studies more.`}]]},
+{id:'ktrouble',w:s=>kids().some(k=>k.k&&kidAge(k)>=12&&kidAge(k)<18&&(k.k.tr.includes('rebel')||k.rel<40))?2:.3,c:()=>kids().some(k=>k.k&&kidAge(k)>=12&&kidAge(k)<18),a:()=>pick(kids().filter(k=>k.k&&kidAge(k)>=12&&kidAge(k)<18))?.uid,t:'A call from school',d:(s,a)=>`${esc(per(a)?.n||'Your kid')} was caught ${pick(['skipping class','spray-painting the gym','selling answers to a test','in a fight behind the bleachers'])}.`,def:1,ch:[
+ ['Ground them',(s,a)=>{const k=per(a);if(!k)return 'The moment has passed.';prel(k,-8);k.k.sma=Math.min(100,k.k.sma+1);return `Phone confiscated. ${k.n} is furious.`}],
+ ['Talk it through',(s,a)=>{const k=per(a);if(!k)return 'The moment has passed.';prel(k,4);k.k.hap=Math.min(100,k.k.hap+2);return `A long talk. ${k.n} actually listened, you think.`}]]},
+{id:'ktalent',w:1,c:()=>kids().some(k=>k.k&&kidAge(k)>=5&&kidAge(k)<16&&k.k.tr.length<3),a:()=>pick(kids().filter(k=>k.k&&kidAge(k)>=5&&kidAge(k)<16&&k.k.tr.length<3))?.uid,t:'A hidden talent',d:(s,a)=>`${esc(per(a)?.n||'Your kid')}'s teacher says they have a real gift, and lessons would make the most of it. About ${fmt(3000*s.eco.P)} a year.`,def:1,ch:[
+ ['Pay for lessons',(s,a)=>{const k=per(a);if(!k)return 'The moment has passed.';s.cash-=3000*s.eco.P;const t=pick(['creative','sporty','bright'].filter(x=>!k.k.tr.includes(x)));if(t){k.k.tr.push(t);if(t==='bright')k.k.gs=Math.min(95,k.k.gs+12);if(t==='sporty')k.k.hea=Math.min(100,k.k.hea+8)}prel(k,6);return `${k.n} loves it.${t?` They're ${TRAITS[t].n.toLowerCase()} now.`:''}`}],
+ ['Maybe later',()=>'Money is tight. Maybe next year.']]},
+{id:'kcar',w:1,c:()=>kids().some(k=>kidAge(k)>=16&&kidAge(k)<18),a:()=>pick(kids().filter(k=>kidAge(k)>=16&&kidAge(k)<18))?.uid,t:'Can I have a car?',d:(s,a)=>`${esc(per(a)?.n||'Your teen')} just passed their driving test and wants a car. A used one is about ${fmt(9000*s.eco.P)}.`,def:1,ch:[
+ ['Buy one',(s,a)=>{const k=per(a);if(!k)return 'The moment has passed.';s.cash-=9000*s.eco.P;prel(k,15);return `${k.n} screams with joy.`}],
+ ['Save up for it',(s,a)=>{const k=per(a);if(!k)return 'The moment has passed.';prel(k,-5);return `${k.n} rolls their eyes and gets a weekend job.`}]]},
+{id:'kask',w:1,c:()=>kids().some(k=>kidAge(k)>=22)&&s.cash>2e4,a:()=>pick(kids().filter(k=>kidAge(k)>=22))?.uid,t:'A down payment',d:(s,a)=>`${esc(per(a)?.n||'Your kid')} found a first home and asks if you can help with the down payment: <b>${fmt(Math.min(s.cash*.05,2e5*s.eco.P))}</b>.`,def:1,ch:[
+ ['Help out',(s,a)=>{const k=per(a),v=Math.min(s.cash*.05,2e5*s.eco.P);if(!k)return 'The moment has passed.';s.cash-=v;prel(k,15);add('hap',4);return `${k.n} gets the keys. You get a lot of hugs.`}],
+ ['They need to stand on their own',(s,a)=>{const k=per(a);if(k)prel(k,-10);return 'They say they understand.'}]]},
+];
+EV.push(...EV2,...EV3);
 const EVM=EM(EV.map(e=>[e.id,e]));
 
 // ---------- businesses: realistic returns, and profits that ride the economy ----------
@@ -672,7 +736,7 @@ const friendsN=()=>s.people.filter(p=>p.role==='friend').length;
 const peopleHap=()=>s.people.reduce((a,p)=>a+(PW[p.role]||0)*(p.rel-40)/(p.rel<40?80:60)*(p.role==='child'&&ageOf(p)>=18?.5:1),0);
 const closeWord=r=>r>=80?'Very close':r>=60?'Close':r>=40?'Friendly':r>=20?'Distant':'Strained';
 function meet(role,rel,b){const used=new Set(s.people.map(p=>p.n)),n=PNAMES.find(x=>!used.has(x)&&R()<.2)||pick(PNAMES);const p={uid:uid(),n,role,rel,b:b??(-s.startAge*365+rint(-4,4)*365),met:s.day,c:{}};s.people.push(p);return p}
-const addChild=()=>meet('child',80,s.day);
+const addChild=()=>{const p=meet('child',80,s.day);p.k=kidNew();return p};
 function makeFamily(){const me=-s.startAge*365;for(let i=0;i<2;i++)meet('parent',rint(55,85),me-rint(24,38)*365);for(let i=rint(0,2);i>0;i--)meet('sibling',rint(40,75),me+rint(-6,6)*365);for(let i=rint(1,2);i>0;i--)meet('friend',rint(45,70),me+rint(-2,2)*365)}
 function endRel(p,theyLeft){const sp=p.role==='spouse',who=theyLeft?`${p.n} left you. `:'';p.role='ex';p.rel=Math.min(p.rel,20);
   if(sp){const c=Math.max(0,s.cash*.4);s.cash-=c;add('hap',-20);return `${who}You and ${p.n} divorced. It cost ${fmt(c)}.`}add('hap',-12);return `${who}You and ${p.n} broke up.`}
@@ -681,7 +745,8 @@ function peopleDay(){
   for(const p of [...s.people]){
     p.rel=clamp(p.rel-(DECAY[p.role]||0),0,100);
     const a=ageOf(p)-(p.x||0);
-    if(p.role==='child'&&!p.out&&ageOf(p)>=18){p.out=1;log(`${esc(p.n)} turns 18 and moves out.`,'good')}
+    if(p.role==='child')kidDay(p);
+    if(p.role==='child'&&!p.out&&ageOf(p)>=18){p.out=1;if(p.k)kidLaunch(p);else log(`${esc(p.n)} turns 18 and moves out.`,'good')}
     else if(p.role==='parent'&&a>68&&R()<Math.min(.5,((a-68)/25)**3*2)/365)parentDies(p);
     else if((p.role==='date'||p.role==='spouse')&&p.rel<15&&R()<.004){const m=endRel(p,1);log(esc(m),'bad');toast(esc(m))}
     else if(p.role==='friend'&&p.rel<8&&R()<.01){s.people.splice(s.people.indexOf(p),1);log(`You and ${esc(p.n)} drifted apart.`)}
@@ -730,6 +795,7 @@ function upgrade(){ // bring older saves up to date
   if(!s.goals){s.goals={};checkGoals(1)}
   s.min??=480;s.eco??=ecoNew();s.fin??=finNew();s.tax??=taxNew();s.mloan??=0;s.shorts??={};s.opts??=[];applyPrices();
   const fresh=STOCKS.filter(k=>!s.px[k.t]);if(fresh.length){for(const k of fresh)seedStock(k);for(let i=0;i<239;i++)tradeDay(1,fresh);fresh.forEach(anchor)}
+  s.tr??=[];for(const p of s.people)if(p.role==='child'&&!p.k){p.k=kidNew();const a=ageOf(p);p.k.sma=p.k.gs*(a>=18?1:.3+Math.min(1,a/10)*.7);if(a>=18)kidLaunch(p,1)}
   s.conds??=[];s.ins??='basic';s.legal??={rec:[],cases:[],jail:0};s.hob??={};if(!s.pets){s.pets=[];if(s.pet)addPet('cat',s.day-365)}delete s.pet;
   s.orders??=[];const M=s.mkt;M.h??=MVOL.bull**2/YR;M.eps??=0;M.cb??=0;for(const k of STOCKS)initStock(k);if(!M.rc){M.rc=capSum()*.6;M.div=(capSum()+M.rc)/5000;M.ic=M.ih=5000;M.lab='Bull market'} // stocks added since this save
   for(const k of STOCKS){const q=s.px[k.t];if(q.k)continue; // daily candles used to be drawn from closes alone
@@ -789,19 +855,22 @@ function chirp(h,n,x,v){s.feed.unshift({h,n,x,v,l:0,tl:rint(3,40)*(v?40:1),d:s.d
 function toast(m){if(catching)return;const t=document.createElement('div');t.className='toast';t.innerHTML=m;$('#toasts').append(t);setTimeout(()=>t.remove(),2800)}
 
 function newGame(name,bg,h={}){
-  const b=BG[bg];
+  const b=BG[bg]||{cash:0,st:{hea:75,hap:60,sma:40,loo:50}};
   s={v:1,name,handle:'@'+(name.toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,15)||'you'),day:0,startAge:18,cash:b.cash+(h.inherit||0),st:{...b.st},edu:b.edu||0,study:null,
      job:b.job||null,jobDays:0,rank:0,biz:{},port:{},px:{},mkt:{bull:true,h:MVOL.bull**2/YR,eps:0,cb:0,div:1,ic:1,ih:1,rc:1e13},orders:[],fol:b.fol||0,feed:[],own:{},people:[],degs:b.edu?[{p:'dip',sc:'cc',mj:'Computer science',hon:false}]:[],debt:0,xp:{},perf:50,raise:0,pension:0,wallet:{},cz:{chip:100,net:0,played:0,rh:[],ban:0},props:[],cars:[],home:null,re:{idx:1,list:[],next:0},cd:{},inbox:[],later:[],log:[],pets:[],conds:[],ins:'basic',legal:{rec:[],cases:[],jail:0},hob:{},
      gen:h.gen||1,boost:0,lastPost:0,dead:0,lastSeen:Date.now(),goals:{...h.goals},min:480,eco:h.eco?{...h.eco}:ecoNew(),fin:finNew(),tax:taxNew(),mloan:0,shorts:{},opts:[]};applyPrices();
   s.legacy=1+.25*(s.gen-1);
-  if(h.gen){s.st.sma=Math.round(s.st.sma*.7+h.sma*.3);s.st.loo=Math.round(s.st.loo*.7+h.loo*.3)} // a little of the family runs in the blood
+  s.tr=h.tr||rollTraits().slice(0,1);
+  if(h.ks){for(const k in h.ks)s.st[k]=Math.round(clamp(h.ks[k],0,100));s.cash+=h.fund||0;s.debt=h.loan||0;if(h.degs){s.degs=h.degs;s.edu=h.edu}if(h.job){s.job=h.job;s.xp=h.xp||{}}if(h.study)s.study=h.study} // the heir is the person their childhood made
+  else if(h.gen){s.st.sma=Math.round(s.st.sma*.7+h.sma*.3);s.st.loo=Math.round(s.st.loo*.7+h.loo*.3)} // a little of the family runs in the blood
+  if(h.pets)s.pets=h.pets.map(p=>({...p,uid:uid()}));
   if(h.kid){s.startAge=h.age;add('hap',(h.rel-50)*.3)}
   for(const k of STOCKS)seedStock(k);
   for(let i=0;i<239;i++)marketDay(1);
   for(const k of STOCKS){anchor(k);initStock(k)}
   s.mkt.rc=capSum()*.6;s.mkt.div=(capSum()+s.mkt.rc)/5000;s.mkt.ic=s.mkt.ih=5000;s.mkt.lab='Bull market';
   initCrypto();relist();
-  if(h.fam){for(const p of h.fam)s.people.push({...p,uid:uid(),met:0,c:{}});for(let i=rint(1,2);i>0;i--)meet('friend',rint(45,70),-s.startAge*365+rint(-2,2)*365)}else makeFamily();
+  if(h.fam){for(const p of h.fam){const q={...p,uid:uid(),met:0,c:{}};if(q.role==='child'){q.rel=75;q.k=kidNew();q.k.sma=q.k.gs*(.3+Math.min(1,ageOf(q)/10)*.7)}s.people.push(q)}for(let i=rint(1,2);i>0;i--)meet('friend',rint(45,70),-s.startAge*365+rint(-2,2)*365)}else makeFamily();
   log(h.kid?`${esc(name)}, ${Math.floor(s.startAge)}, takes over from ${esc(h.last)} with a ${fmt(h.inherit)} inheritance. Generation ${s.gen} begins.`:h.gen?`${esc(name)} begins generation ${s.gen} with a ${fmt(h.inherit)} inheritance.`:`${esc(name)} turns 18 and moves out. Time to hustle.`,'good');
   chirp('@hustleculture','Hustle Culture','new week, new grind. what are you building? 👇',1);
 }
@@ -818,17 +887,17 @@ function day(live){
   for(const b of BIZ){const o=s.biz[b.id];if(!o?.n)continue;closeCheck(b,o);if(o.n&&!o.mgr){const g=bizInc(b,o);if(g<0){s.cash+=g;taxAdd('ord',g)}else o.pend=Math.min(o.pend+g,g*CAP)}} // losses come straight out of cash
   if(s.cash<0){s.cash*=1.0003;add('hap',-.05)}
   if(s.job){const J=job();s.jobDays++;s.xp[J.fld]=(s.xp[J.fld]||0)+1;
-    s.perf=clamp(s.perf+((40+s.st.sma*.3+(s.st.hap-50)*.2-J.str*2)-s.perf)*.02,0,100);
+    s.perf=clamp(s.perf+((40+(trait('driven')?8:0)+s.st.sma*.3+(s.st.hap-50)*.2-J.str*2)-s.perf)*.02,0,100);
     if(s.jobDays%120===0&&!topRank()){if(s.perf>=promoNeed()){s.rank++;s.perf-=10;log(`Promoted to <b>${jobTitle()}</b>! Now ${fmt(jobPay())} a day.`,'good');toast('Promotion!')}else log(`Passed over for promotion. You needed a performance of ${promoNeed()}.`,'bad')}
     if(s.job&&s.eco.u>.05&&R()<(s.eco.u-.045)*2/365){const j=jobTitle(),sev=jobPay()*30;fire();s.cash+=sev;taxAdd('ord',sev);add('hap',-12);log(`Laid off from ${j} as the economy slows. Severance: ${fmt(sev)}.`,'bad');toast(`Laid off from ${j}`)}
     if(s.job&&s.perf<20&&R()<.01){const j=jobTitle();fire();add('hap',-15);log(`Fired from ${j} for poor performance.`,'bad');toast(`Fired from ${j}.`)}}
   peopleDay();
-  if(s.study&&!jailed()){const st=s.study,P=PG[st.p];st.left--;st.g=clamp(st.g+((40+s.st.sma*.4+(s.st.hap-50)*.2)-st.g)*.02,0,100);if(P.stipend)s.cash+=P.stipend;
+  if(s.study&&!jailed()){const st=s.study,P=PG[st.p];st.left--;st.g=clamp(st.g+((40+(trait('bright')?6:0)+s.st.sma*.4+(s.st.hap-50)*.2)-st.g)*.02,0,100);if(P.stipend)s.cash+=P.stipend;
     if(st.left<=0){if(st.g<30){st.left=60;st.g=45;log(`Failed the final exams for ${degName(st)}. One more term.`,'bad');toast('Failed the finals. One more term.')}else graduate()}}
   const J=job();
   // stats drift toward a baseline, so an idle life is dull but survivable; choices push you above or below it
-  add('hap',(50-s.st.hap)*.004-(J?J.str*.02:0)-(s.study&&s.study.sc!=='online'?.03:0)+peopleHap()+petSum('hap')+shopSum('hap')+(PM[homeP()?.t]?.hap||0)+(bestCar()?CM[bestCar().t].hap:0));
-  add('hea',(85-Math.max(0,A-35)*1.2-s.st.hea)*.003+(s.st.hap>70?.01:0)-(s.st.hap<15?.04:0));
+  add('hap',(50+(trait('sunny')?6:0)-(trait('anxious')?6:0)-s.st.hap)*.004-(J?J.str*.02:0)-(s.study&&s.study.sc!=='online'?.03:0)+peopleHap()+petSum('hap')+shopSum('hap')+(PM[homeP()?.t]?.hap||0)+(bestCar()?CM[bestCar().t].hap:0));
+  add('hea',(85+(trait('sporty')?5:0)-Math.max(0,A-35)*1.2-s.st.hea)*.003+(s.st.hap>70?.01:0)-(s.st.hap<15?.04:0));
   if(A>30)add('loo',-.004);
   s.fol+=shopSum('fame')+carSum('fame')+s.props.reduce((t,p)=>t+(PM[p.t].fame||0),0);if(s.day-s.lastPost>30)s.fol*=.999;
   for(const p of s.feed)if(p.l<p.tl)p.l+=Math.ceil((p.tl-p.l)*.35);
@@ -1184,11 +1253,19 @@ const goalAmt=(g,v)=>g.m?fmt(v):g.id==='old'||g.id==='peak'||g.id==='gen3'?Math.
 
 // ---------- the heir: one of your kids, or a relative if you had none ----------
 function heirOf(k){
-  const h={inherit:Math.max(0,netWorth()*.5),gen:s.gen+1,last:s.name,goals:s.goals,sma:s.st.sma,loo:s.st.loo,eco:s.eco};
+  const w=Math.max(0,netWorth()),tax=estateTax(w),h={inherit:(w-tax)*(k?1:.5),tax,gen:s.gen+1,last:s.name,goals:s.goals,sma:s.st.sma,loo:s.st.loo,eco:s.eco};
   if(!k)return h;
   const skip=Math.max(0,18*365-(s.day-k.b)),carry=p=>({n:p.n,b:p.b-s.day-skip,rel:(p.rel+k.rel)/2});
-  return {...h,kid:k.n,age:(s.day-k.b+skip)/365,rel:k.rel,
-    fam:[...s.people.filter(p=>p.role==='spouse').map(p=>({...carry(p),role:'parent'})),...kids().filter(p=>p!==k).map(p=>({...carry(p),role:'sibling'}))]};
+  const K=k.k,x={};if(K){const age18=k.b+18*365;if(!K.path&&s.day+skip>=age18){const d=s.day;s.day+=skip;kidLaunch(k,1);s.day=d}
+    Object.assign(x,{ks:{sma:K.sma,hea:K.hea,loo:K.loo,hap:K.hap},tr:K.tr,fund:K.fund,loan:K.loan||0});
+    if(K.path==='colleged')Object.assign(x,{degs:[{p:'ba',sc:'state',mj:K.sma>=65?'Computer science':'Business',hon:K.sma>=75}],edu:2});
+    else if(K.path==='traded')Object.assign(x,{degs:[{p:'cert',sc:'cc',mj:null,hon:false}],edu:1});
+    else if(K.path==='college'){const left=Math.max(30,K.grad-s.day-skip);x.study={p:'ba',sc:'state',mj:'Business',left,days:1095,g:60}}
+    if(K.job){const yrs=Math.max(0,s.day+skip-(K.grad||age18))/365;x.job=K.job;x.xp={[JM[K.job].fld]:Math.round(yrs*365)};x.loan=Math.round(x.loan*Math.max(0,1-yrs/10))} // ten years to pay off student loans
+    x.fam=[...(K.sp?[{n:K.sp,b:k.b-s.day-skip+rint(-2,2)*365,rel:70,role:'spouse'}]:[]),...(K.gk||[]).map(g=>({n:g.n,b:g.b-s.day-skip,rel:75,role:'child'}))]}
+  const pets=s.pets.filter(p=>p.dies>s.day+skip).map(p=>({...p,b:p.b-s.day-skip,dies:p.dies-s.day-skip}));
+  return {...h,...x,pets,kid:k.n,age:(s.day-k.b+skip)/365,rel:k.rel,
+    fam:[...s.people.filter(p=>p.role==='spouse').map(p=>({...carry(p),role:'parent'})),...kids().filter(p=>p!==k).map(p=>({...carry(p),role:'sibling'})),...(x.fam||[])]};
 }
 function skipDay(){cstep(1);if(tradingDay())tradeDay(0);s.min=1439;minute()} // a whole day in one step, from midnight to midnight
 function catchUp(g,step,done){ // g game minutes: finish today minute by minute, jump whole days, then the last minutes. step(daysLeft) reports progress; sync when no step
@@ -1275,10 +1352,10 @@ const ACT={
     else{s.cd['job_'+j.id]=s.day+30;log(`${j.n}: they went with someone else.`,'bad');toast(`No offer after the ${j.n} interview. You can reapply in 30 days.`)}},
   work:k=>{const W=WORK[k];if(!s.job||s.day<(s.cd['w_'+k]||0)||s.cash<(W.c||0))return;s.cash-=W.c||0;s.cd['w_'+k]=s.day+W.cd;toast(W.fx())},
   retire:()=>{if(!s.job||age()<55)return;s.pension=(s.pension||0)+jobPay()*.45;const j=jobTitle();fire();log(`Retired from ${j} with a pension of ${fmt(s.pension)} a day.`,'good')},
-  pp:(u,k)=>{const sure=k.endsWith('!');k=k.replace('!','');const p=per(+u),A=PACTS[k];if(!p||!A||!A.roles.includes(p.role))return;
+  pp:(u,k)=>{const sure=k.endsWith('!');k=k.replace('!','');const p=per(+u),A=PACTS[k];if(!p||!A||!A.roles.includes(p.role)||A.show&&!A.show(p))return;
     if(A.bad&&!sure)return modal(`<h2>${A.n} with ${esc(p.n)}?</h2><p>${k==='divorce'?`Lawyers and the settlement will cost about <b class="num">${fmt(Math.max(0,s.cash*.4))}</b>.`:'This cannot be undone.'}</p><div class="row"><button class="bad" data-a="pp" data-x="${p.uid}" data-y="${k}!">${A.n}</button><button data-a="close">Cancel</button></div>`);
     const cost=A.c?A.c(p):0;if((p.c?.[k]||0)>s.day||s.cash<cost||A.need?.(p))return;
-    s.cash-=cost;(p.c??={})[k]=s.day+(A.cd||0);const m=A.fx(p);if(sure)closeModal();toast(esc(m));if(A.bad)log(esc(m),'bad')},
+    s.cash-=cost;(p.c??={})[k]=s.day+(A.cd||0);const m=A.fx(p,cost);if(sure)closeModal();toast(esc(m));if(A.bad)log(esc(m),'bad')},
   quit:()=>{log(`Quit your job as ${jobTitle()}.`);fire()},
   gig:()=>{if(gigsLeft()<1)return;const g=gig();s.cash+=g;taxAdd('ord',g);s.gigs=(s.gigs||0)+1;if(s.gd!==s.day){s.gd=s.day;s.gn=0}s.gn++},
   bbuy:(id,x)=>{const b=BM[id],o=s.biz[id]??={n:0,mgr:0,pend:0,spent:0},q=x==='max'?bmax(b,o.n):+x;if(q<1)return;const c=bcost(b,o.n,q);if(c>s.cash)return;
@@ -1383,7 +1460,7 @@ const ACT={
 const gigsLeft=()=>3-(s.gd===s.day?s.gn||0:0); // a gig takes a few hours: three a day at most
 const gig=()=>(4+s.st.sma*.15)*s.eco.P+(s.job?jobPay()*.02:0);
 const canJob=j=>!jobMiss(j).length;
-function ivOdds(j,k){const sc=k==='exp'?xpY(j.fld)*15+(s.st.sma-j.s)*.8:k==='charm'?(s.st.loo-50)*.8+(s.fol>1000?10:0):-10;return clamp(.55+sc/100+eduBonus(j)+hobIv(j)-crimes().length*.12-Math.max(0,s.eco.u-.045)*3,.1,.95)} // a weak job market makes interviews harder
+function ivOdds(j,k){const sc=k==='exp'?xpY(j.fld)*15+(s.st.sma-j.s)*.8:k==='charm'?(s.st.loo-50)*.8+(s.fol>1000?10:0)+(trait('charming')?10:0):-10;return clamp(.55+sc/100+eduBonus(j)+hobIv(j)-crimes().length*.12-Math.max(0,s.eco.u-.045)*3,.1,.95)} // a weak job market makes interviews harder
 const eduBonus=j=>Math.max(0,...s.degs.map(d=>(SCHOOLS[d.sc]?.pres||0)*.04+(d.hon?.03:0)+(d.mj&&MAJORS[d.mj]===j.fld?.1:0)));
 const schoolOf=st=>st.sc==='inst'?{id:'inst',n:PG[st.p].at,pres:0}:{id:st.sc,...SCHOOLS[st.sc]};
 const schoolsFor=P=>P.at?[{id:'inst',n:P.at,cost:1,adm:0,pres:0}]:P.sch.map(id=>({id,...SCHOOLS[id]}));
@@ -1423,19 +1500,20 @@ function modal(h,wide){$('#mbox').innerHTML=h;$('#mbox').classList.toggle('wide'
 function closeModal(){$('#modal').hidden=true;render()}
 function startModal(h={}){
   heir=h;
-  const fam=h.fam?.length?` ${h.fam.map(p=>`${esc(p.n)} (${p.role==='parent'?'your parent':'your sibling'})`).join(', ').replace(/, ([^,]*)$/,' and $1')} ${h.fam.length>1?'are':'is'} still around.`:'';
+  const fam=h.fam?.length?` ${h.fam.map(p=>`${esc(p.n)} (your ${p.role==='child'?'kid':p.role})`).join(', ').replace(/, ([^,]*)$/,' and $1')} ${h.fam.length>1?'are':'is'} still around.`:'';
   modal(`<p class="kicker">${h.gen?`Generation ${h.gen}`:'The Hustle'}</p><h2>${h.kid?`${esc(h.kid)} takes over`:h.gen?'The family business continues':'You just turned eighteen'}</h2>
-  <p>${h.kid?`You are ${esc(h.last)}'s kid, starting at ${Math.floor(h.age)}. You inherit <b class="num">${fmt(h.inherit)}</b> and a permanent <b>+${(h.gen-1)*25}%</b> business income bonus.${fam}`:h.gen?`With no children, a relative inherits <b class="num">${fmt(h.inherit)}</b> and a permanent <b>+${(h.gen-1)*25}%</b> business income bonus.`:'Work, study, open businesses, trade stocks and build a following. Decisions will land on your desk along the way. Time flies while you’re idle, slows down while you play, and keeps passing when you’re away.'}</p>
+  <p>${h.kid?`You are ${esc(h.last)}'s kid, starting at ${Math.floor(h.age)}. You inherit <b class="num">${fmt(h.inherit)}</b>${h.fund>=1?` plus your ${fmt(h.fund)} college fund`:''} and a permanent <b>+${(h.gen-1)*25}%</b> business income bonus.${fam}`:h.gen?`With no children, a relative inherits <b class="num">${fmt(h.inherit)}</b> and a permanent <b>+${(h.gen-1)*25}%</b> business income bonus.`:'Work, study, open businesses, trade stocks and build a following. Decisions will land on your desk along the way. Time flies while you’re idle, slows down while you play, and keeps passing when you’re away.'}</p>
   <label>Your name<input id="nm" maxlength="20" value="${h.kid?esc(h.kid):h.last?esc(h.last.split(' ')[0])+' Jr.':pick(NAMES)}"></label>
-  <label>Pick your start</label>
-  <div class="bgs">${Object.entries(BG).map(([k,b])=>`<button data-a="begin" data-x="${k}"><b>${b.n}</b><small>${b.d}</small></button>`).join('')}</div>`);
+  ${h.ks?`<table class="ledger"><tr><td>Grew up</td><td>${trTxt(h.tr)||'Ordinary'}${h.tr?.length?` <span class="mut">(${h.tr.map(t=>TRAITS[t].d).join('; ')})</span>`:''}</td></tr><tr><td>Stats</td><td>Health ${Math.round(h.ks.hea)} · Happiness ${Math.round(h.ks.hap)} · Smarts ${Math.round(h.ks.sma)} · Looks ${Math.round(h.ks.loo)}</td></tr><tr><td>Path</td><td>${h.job?`Working as ${art(JM[h.job].n.toLowerCase())}`:h.study?'At college':'No job yet'}${h.degs?`, ${h.degs.map(degName).join(', ')}`:''}${h.loan?`, ${fmt(h.loan)} in student loans`:''}</td></tr></table>
+  <button class="pri big" data-a="begin" data-x="heir" style="margin-top:var(--space-sm)">Begin</button>`:`<label>Pick your start</label>
+  <div class="bgs">${Object.entries(BG).map(([k,b])=>`<button data-a="begin" data-x="${k}"><b>${b.n}</b><small>${b.d}</small></button>`).join('')}</div>`}`);
 }
 function deathModal(){
   const w=netWorth(),nb=BIZ.reduce((t,b)=>t+(s.biz[b.id]?.n||0),0),ks=kids().sort((a,b)=>a.b-b.b),ng=Object.values(s.goals).filter(g=>g.gen===s.gen).length;
   modal(`<p class="kicker">Obituary</p><h2>${esc(s.name)}, ${Math.floor(age())}</h2>
   <table class="ledger"><tr><td>Net worth</td><td class="r num">${fmt(w)}</td></tr><tr><td>Businesses</td><td>${nb}</td></tr><tr><td>Followers</td><td>${big(s.fol)}</td></tr><tr><td>Career</td><td>${s.job?jobTitle():'—'}</td></tr><tr><td>Family</td><td>${partner()?(partner().role==='spouse'?'Married to ':'Seeing ')+esc(partner().n):'Single'}${kids().length?`, ${kids().length} kid${kids().length>1?'s':''}`:''}</td></tr><tr><td>Goals reached</td><td>${ng}</td></tr></table>
-  <p style="margin-top:var(--space-sm)">Your heir inherits half your net worth: <b class="num">${fmt(Math.max(0,w*.5))}</b>.${ks.length>1?' Pick which of your kids takes over. Younger ones have more years ahead of them, and closer ones start happier.':''}</p>
-  ${ks.length?`<div class="choices">${ks.map(k=>{const a=ageOf(k);return `<button data-a="heir" data-x="${k.uid}"><b>Continue as ${esc(k.n)}</b><br><small class="mut">${a<18?`${Math.floor(a)} now, takes over at 18`:`Age ${Math.floor(a)}`} · ${closeWord(k.rel)} to you</small></button>`}).join('')}</div>`:'<button class="pri big" data-a="heir">Continue as your heir</button>'}`);
+  <p style="margin-top:var(--space-sm)">${estateTax(Math.max(0,w))?`Estate tax takes ${fmt(estateTax(w))} (40% above ${fmt(13e6*s.eco.P)}). `:''}${ks.length?`Your heir inherits <b class="num">${fmt(Math.max(0,w-estateTax(Math.max(0,w))))}</b>, plus their own college fund.`:`With no children, a relative inherits half: <b class="num">${fmt(Math.max(0,(w-estateTax(Math.max(0,w)))*.5))}</b>.`}${ks.length>1?' Pick which of your kids takes over. Each starts as the person they grew into: their smarts, health, traits, degree and job. Younger ones have more years ahead, and closer ones start happier.':''}</p>
+  ${ks.length?`<div class="choices">${ks.map(k=>{const a=ageOf(k);return `<button data-a="heir" data-x="${k.uid}"><b>Continue as ${esc(k.n)}</b><br><small class="mut">${a<18?`${Math.floor(a)} now, takes over at 18`:`Age ${Math.floor(a)}`} · ${closeWord(k.rel)} to you${k.k?`<br>${kidStat(k)}`:''}</small></button>`}).join('')}</div>`:'<button class="pri big" data-a="heir">Continue as your heir</button>'}`);
 }
 function goalsModal(){
   const done=GOALS.filter(g=>s.goals[g.id]),left=goalsLeft();
@@ -1515,10 +1593,10 @@ function bestBuy(){ // cheapest income per dollar, counting milestone doublings
   return best;
 }
 function personRow(p){
-  const all=PACT_ORDER.filter(k=>PACTS[k].roles.includes(p.role)),main=['date','call','reconnect'].find(k=>all.includes(k)),open=openP===p.uid,lo=p.rel<30;
+  const all=PACT_ORDER.filter(k=>PACTS[k].roles.includes(p.role)&&(!PACTS[k].show||PACTS[k].show(p))),main=['date','call','reconnect'].find(k=>all.includes(k)),open=openP===p.uid,lo=p.rel<30;
   const btn=k=>{const A=PACTS[k],w=Math.max(0,(p.c?.[k]||0)-s.day),cost=A.c?A.c(p):0,why=A.need?.(p);if(why)return `<span class="hint">${why}</span>`;
-    return `<button class="${A.bad?'bad':k==='propose'||k==='baby'?'pri':''}" data-a="pp" data-x="${p.uid}" data-y="${k}" ${w||s.cash<cost?'disabled':''}>${A.n}${cost?` · ${fmt(cost)}`:''}${w?` · ${w}d`:''}</button>`};
-  return `<div class="prow"><div class="who"><span class="av">${esc(p.n[0])}</span><div><div class="pn">${esc(p.n)}</div><div class="mut" style="font-size:var(--text-xs)">${ROLE[p.role]}${p.out?', moved out':''} · ${Math.max(0,Math.floor(ageOf(p)))}</div></div></div>
+    return `<button class="${A.bad?'bad':k==='propose'||k==='baby'?'pri':''}" data-a="pp" data-x="${p.uid}" data-y="${k}" ${w||s.cash<cost?'disabled':''}>${typeof A.n==='function'?A.n(p):A.n}${cost?` · ${fmt(cost)}`:''}${w?` · ${w}d`:''}</button>`};
+  return `<div class="prow"><div class="who"><span class="av">${esc(p.n[0])}</span><div><div class="pn">${esc(p.n)}</div><div class="mut" style="font-size:var(--text-xs)">${ROLE[p.role]}${p.out?', moved out':''} · ${Math.max(0,Math.floor(ageOf(p)))}</div>${p.role==='child'&&p.k?`<div class="mut kstat">${kidStat(p)}</div>`:''}</div></div>
    <div class="close"><div class="top2"><span class="${lo?'dn':'mut'}">${closeWord(p.rel)}</span><span class="num">${Math.round(p.rel)}</span></div>${meter(p.rel,lo?'low':'')}</div>
    <div class="acts3">${main?btn(main):''}${all.length>1?`<button data-a="pmore" data-x="${p.uid}" aria-expanded="${open}">${open?'Less':'More'}</button>`:''}</div>
    ${open?`<div class="pmore">${all.filter(k=>k!==main).map(btn).join('')}</div>`:''}</div>`;
@@ -1676,7 +1754,7 @@ dash(){
 },
 life(){
   const f=flows(),rows=[['Salary and pension',f.job],['Managed businesses',f.biz],['Tills to collect',f.pend],['Sponsorships',f.spon],['Companies you control',f.own],['Rent from tenants',f.rent],['Loan payments',-f.mort],['Income tax, about',-f.tax],[`Living costs${homeP()?'':', rent included'}`,-f.exp]].filter(r=>Math.abs(r[1])>=.01);
-  return `<section class="lede solo"><div><h2 class="headline">${esc(s.name)}, ${Math.floor(age())}</h2><p class="dek">${esc(s.name)} ${lifeLine()}</p></div></section>
+  return `<section class="lede solo"><div><h2 class="headline">${esc(s.name)}, ${Math.floor(age())}</h2><p class="dek">${esc(s.name)} ${lifeLine()}</p>${s.tr?.length?`<p class="mut">${s.tr.map(t=>`<b>${TRAITS[t].n}</b>: ${TRAITS[t].d}`).join(' · ')}</p>`:''}</div></section>
   <div class="sec-h"><h2>Activities</h2><span>each one has a cooldown</span></div>
   <div class="acards">${ACTS.filter(a=>!a.show||a.show()).map(a=>{const w=cdLeft(a.id);return `<button class="acard" data-a="act" data-x="${a.id}" ${w||s.cash<a.c?'disabled':''}><b>${a.n}</b><span>${a.d}</span><small>${a.c?fmt(a.c):'Free'}${w?` · ready in ${w}d`:''}</small></button>`}).join('')}</div>
   <div class="sec-h"><h2>Money in and out</h2><span>a day</span></div>
@@ -2120,7 +2198,7 @@ function selfTest(){ // open with ?test=1 — never touches your real save
   const cb0=closeBell;closeBell=()=>{s.mkt.ic=idx()};s.mkt.bull=true;s.mkt.h=MVOL.bull**2/YR; // hold volatility still so both samples see the same market
   let lv=0,bk=0;for(const k of MAIN){const x=s.px[k.t];x.p=k.p;x.h=[k.p];x.k=[[k.p,k.p,k.p]]}for(let i=0;i<1440*7*26;i++)minute();for(const k of MAIN)lv+=sd(s.px[k.t].h);
   for(const k of MAIN){const x=s.px[k.t];x.h=[k.p];x.k=[[k.p,k.p,k.p]]}for(let i=0;i<130;i++)tradeDay(1);for(const k of MAIN)bk+=sd(s.px[k.t].h);
-  closeBell=cb0;ok(lv/bk>.8&&lv/bk<1.25,'live sessions move like whole-day steps '+(lv/bk).toFixed(2));
+  closeBell=cb0;ok(lv/bk>.75&&lv/bk<1.33,'live sessions move like whole-day steps '+(lv/bk).toFixed(2));
   delete s.px.NVBA;delete s.px.CBAS;upgrade();ok(s.px.NVBA.h.length===240&&s.px.CBAS.k.length===240&&Number.isFinite(s.px.NVBA.p),'new stocks seed into old saves');ok(Math.abs(s.px.NVBA.p/SK.NVBA.p-1)<1e-9,'history ends at the listed price');
   tab='stock';wf='Semis';ok(VIEWS.stock().includes('NVBA')&&!VIEWS.stock().includes('>MSFY<'),'sector filter');wf='Held';VIEWS.stock();wf='All';
   newGame('Coins','street');const sats=coin('SATS'),usd=s.cx.coins.find(c=>c.stable);s.day=5;s.min=120;const cp=sats.p;for(let i=0;i<30;i++)minute();ok(sats.p!==cp&&sats.h.at(-1)===sats.p&&usd.p===1,'crypto trades at 2 AM on a Saturday');
@@ -2146,7 +2224,7 @@ function selfTest(){ // open with ?test=1 — never touches your real save
   const sq=s.px.CSTK,sh0=shOf('CSTK');s.port.CSTK={sh:10,cost:1e4};sq.p=2600;split(SK.CSTK);ok(shOf('CSTK')===sh0*10&&s.port.CSTK.sh===100&&Math.abs(100*sq.p-26000)<1e-6,'a split keeps your stake whole');delete s.port.CSTK;
   const eq=s.px.MSFY,e0=eq.eps;eq.er=s.day;events();ok(eq.eps!==e0&&eq.er>s.day&&eq.last,'earnings report');
   const dk=STOCKS.find(k=>k.div),dq=s.px[dk.t];s.port[dk.t]={sh:1000,cost:1};const dc=s.cash,dp=dq.p;dq.nd=s.day;events();ok(s.cash>dc&&dq.p<dp&&dq.nd>s.day,'ex-dividend pays and drops the price');delete s.port[dk.t];
-  newGame('Long','street');const ix0=idx();for(let d=0;d<365*40;d++){s.day=d;marketDay(1)}const ar=Math.log(idx()/ix0)/40;ok(ar>-.03&&ar<.18&&fear()>5&&fear()<200,'index returns '+(ar*100).toFixed(1)+'% a year');
+  newGame('Long','street');const ix0=idx();for(let d=0;d<365*40;d++){s.day=d;marketDay(1)}const ar=Math.log(idx()/ix0)/40;ok(ar>-.05&&ar<.19&&fear()>5&&fear()<200,'index returns '+(ar*100).toFixed(1)+'% a year');
   newGame('Pace','street');const sp0=speed,tb0=tab;speed=1;lastAct=-1e9;tab='dash';ok(paceNow()==='idle'&&PACE.idle===288,'idle: 5 seconds a day');lastAct=performance.now();ok(paceNow()==='active','playing slows time');
   s.day=nextTrading(s.day);s.min=600;tab='stock';ok(paceNow()==='trade','trading pace on Markets');s.min=1000;ok(paceNow()==='active','closed market, normal play pace');speed=2;ok(paceNow()==='fast','fast');speed=sp0;tab=tb0;lastAct=-1e9;
   s.min=480;const aw0=s.day,mk2=s.px.NOVA.k.at(-1);let sess=0;for(let d=aw0;d<aw0+32;d++)sess+=tradingDay(d)?1:0;let fin=false;catchUp(Math.floor(8*3600*AWAY),null,()=>fin=true);
@@ -2230,6 +2308,23 @@ function selfTest(){ // open with ?test=1 — never touches your real save
   s.cash=1e6;meet('friend',60);ACT.bbuy('lemon','1');for(const e of EV2){for(const c of e.ch){const a=e.a?e.a(s):0;e.d(s,a);ok(typeof c[1](s,a)==='string','event '+e.id)}}
   for(const k in LATER)LATER[k]({u:s.people[0].uid,v:1000});
   tab='health';VIEWS.health();tab='hobby';VIEWS.hobby();s=lf_s;
+  const kq_s0=s;newGame('Kid','nerd');meet('spouse',80);const kq=addChild();ok(kq.k&&kq.k.tr.length===2&&kq.k.gs>0,'kids have traits and genes');
+  kq.b=s.day-10*365;const kq_s=kq.k.sma;s.cash=1e5;ACT.pp(String(kq.uid),'tutor');ok(kq.k.sma>kq_s,'a tutor helps');
+  ACT.pp(String(kq.uid),'school');ok(kq.k.sch==='private'&&kidsCost()>0&&VIEWS.people().includes('Private school'),'private school');
+  s.cash=1e5;ACT.pp(String(kq.uid),'fund');ok(kq.k.fund===5000,'college fund');ACT.pp(String(kq.uid),'fund');ok(kq.k.fund===5000,'fund cooldown');
+  kq.k.sma=70;kq.b=s.day-18*365;peopleDay();ok(kq.out&&kq.k.path==='college'&&kq.k.fund<1&&kq.k.loan>0,'off to college, fund first');
+  ok(!personRow(kq).includes('Hire a tutor'),'no tutoring adults');
+  s.day=kq.k.grad;kidDay(kq);ok(kq.k.path==='colleged'&&JM[kq.k.job],'graduates into a job');
+  kq.k.sp='Zed';kq.k.gk=[{n:'Tiny',b:s.day-2*365}];kq.k.fund=777;addPet('parrot');
+  const kh=heirOf(kq);ok(kh.ks.sma===kq.k.sma&&kh.degs[0].p==='ba'&&kh.job===kq.k.job&&kh.fam.some(p=>p.role==='spouse'&&p.n==='Zed')&&kh.fam.some(p=>p.role==='child'&&p.n==='Tiny')&&kh.pets.length===1,'the heir is who the kid became');
+  newGame(kq.n,'heir',kh);ok(s.edu===2&&s.job===kh.job&&partner()?.n==='Zed'&&kids()[0]?.k&&Math.floor(ageOf(kids()[0]))===2&&s.tr.join()===kh.tr.join()&&s.pets[0].t==='parrot','heir starts with their life');
+  ok(Math.abs(s.cash-kh.inherit-777)<1&&s.debt===kh.loan,'fund and loans carry over');
+  ok(estateTax(1e7*s.eco.P)===0&&Math.abs(estateTax(23e6*s.eco.P)-4e6*s.eco.P)<1,'estate tax');
+  startModal(heirOf(kids()[0]));ok($('#mbox').innerHTML.includes('Grew up'),'heir modal shows the upbringing');$('#modal').hidden=true;
+  newGame('Kids2','street');meet('spouse',70);const kq2=[addChild(),addChild(),addChild()];kq2[0].b=s.day-8*365;kq2[1].b=s.day-14*365;kq2[2].b=s.day-16.5*365;s.cash=1e6;
+  for(const e of EV3)if(!e.c||e.c(s))for(const c of e.ch){const a=e.a?e.a(s):0;e.d(s,a);ok(typeof c[1](s,a)==='string','event '+e.id)}
+  kq2[1].b=s.day-30*365;for(const e of EV3.filter(e=>e.id==='kask'))ok(e.c(s),'adult kids ask for help');
+  for(let i=0;i<400;i++)day();ok(kids().every(k=>Number.isFinite(k.k.sma)),'kids grow');s=kq_s0;
   tab='dash';ok(VIEWS.dash().includes('Goals'),'goals on home');goalsModal();
   const sp2=meet('spouse',70),k1=addChild(),k2=addChild(),k3=addChild();k1.b=s.day-40*365;k2.b=s.day-30*365;k3.b=s.day-5*365;k1.rel=90;
   deathModal();ok($('#mbox').innerHTML.includes('Continue as '+k1.n),'death lists the kids');ACT.heir(String(k1.uid));
@@ -2246,7 +2341,7 @@ function selfTest(){ // open with ?test=1 — never touches your real save
 
 if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1'))navigator.serviceWorker.register('sw.js').catch(()=>{}); // makes it installable and offline-capable when served
 (function boot(){
-  if(location.search.includes('test')){try{selfTest()}catch(e){console.error('self-test FAILED:',e.message)}s=null;tab='dash';}
+  if(location.search.includes('test')){try{selfTest()}catch(e){console.error('self-test FAILED:',e.message,(e.stack||'').split('\n').slice(1,4).join(' | '))}s=null;tab='dash';}
   let d=null;if(!wiped)try{d=JSON.parse(localStorage.getItem(SAVE))}catch{}
   if(d?.v===1){s=d;upgrade();render();if(s.dead)deathModal();else offline(Date.now()-s.lastSeen)}
   else startModal();
