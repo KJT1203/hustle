@@ -22,6 +22,9 @@ const JOBS=[
  {id:'elec',n:'Electrician',fld:'trade',e:0,dg:'cert',s:30,pay:190,str:2},
  {id:'army',n:'Soldier',fld:'military',e:0,s:15,pay:95,str:4,h:60,rk:['Private','Corporal','Sergeant','Staff Sergeant','Master Sergeant','Sergeant Major']},
  {id:'officer',n:'Army Officer',fld:'military',e:2,s:50,pay:270,str:4,h:60,rk:['Lieutenant','Captain','Major','Lieutenant Colonel','Colonel','General']},
+ {id:'model',n:'Fashion Model',fld:'fashion',e:0,s:0,pay:420,str:3,lk:80,end:40,rk:['New Face','Model','Top Model','Supermodel','Icon','Legend']},
+ {id:'actor',n:'Actor',fld:'film',e:0,s:30,pay:650,str:3,lk:65,f:50000,rk:['Extra','Actor','Lead Actor','Star','A-Lister','Screen Legend']},
+ {id:'athlete',n:'Pro Athlete',fld:'sports',e:0,s:0,pay:1600,str:4,h:85,sk:['sport',70],young:30,end:36,rk:['Rookie','Starter','Veteran','All-Star','Captain','Legend']},
  {id:'police',n:'Police Officer',fld:'public',e:0,dg:'academy',s:35,pay:205,str:4,h:60},
  {id:'design',n:'Graphic Designer',fld:'creative',e:1,s:40,pay:175,str:2},
  {id:'dev',n:'Junior Developer',fld:'tech',e:1,s:50,pay:210,str:2},
@@ -62,7 +65,7 @@ const STUDY={
  party:{n:'Go to a party',cd:6,fx:()=>{s.study.g=clamp(s.study.g-5,0,100);add('hap',6);if(R()<.4&&friendsN()<10){const q=meet('friend',45);return `Great party. You met ${q.n}.`}return 'Great party. Rough morning.'}},
  tutor:{n:'Hire a tutor',cd:14,c:250,fx:()=>{s.study.g=clamp(s.study.g+10,0,100);return 'Your tutor explains it in five minutes.'}},
 };
-const FIELD={military:'the military',academia:'academia',food:'food service',delivery:'delivery',retail:'retail',office:'office work',trade:'the trades',public:'public service',creative:'creative work',tech:'tech',health:'healthcare',finance:'finance',law:'law',aviation:'aviation',exec:'management'};
+const FIELD={fashion:'fashion',film:'film',sports:'sport',military:'the military',academia:'academia',food:'food service',delivery:'delivery',retail:'retail',office:'office work',trade:'the trades',public:'public service',creative:'creative work',tech:'tech',health:'healthcare',finance:'finance',law:'law',aviation:'aviation',exec:'management'};
 const IVQ=['Why should we hire you?','Tell us about a time you solved a hard problem.','Where do you see yourself in five years?','What is your biggest weakness?','How do you handle pressure?'];
 const WORK={
  hard:{n:'Work hard',cd:4,fx:()=>{s.perf=clamp(s.perf+(boss()?.bt==='micro'?7:5),0,100);add('hap',-1);return 'Long day. Your boss noticed.'}},
@@ -430,7 +433,7 @@ const EV=[
  ['Take it to a shelter',()=>'It will find a good home.']]},
 ];
 
-EV.push(...EV2,...EV3,...EV4,...EV5,...EV6,...EV7,...EV8,...EV9,...EV10,...EV11,...EV12,...EV13);
+EV.push(...EV2,...EV3,...EV4,...EV5,...EV6,...EV7,...EV8,...EV9,...EV10,...EV11,...EV12,...EV13,...EV14);
 const EVM=EM(EV.map(e=>[e.id,e]));
 
 // ---------- businesses: realistic returns, and profits that ride the economy ----------
@@ -520,9 +523,9 @@ const promoNeed=()=>Math.round(55+s.rank*5-bossAdj()),topRank=()=>s.rank>=5;
 const fire=()=>{s.job=null;s.rank=0;s.jobDays=0;s.raise=0};
 const xpY=f=>(s.xp[f]||0)/365+((s.degs||[]).some(d=>d.mj&&MAJORS[d.mj]===f)?1:0),xpT=()=>Object.values(s.xp).reduce((a,d)=>a+d,0)/365;
 const raiseOdds=()=>clamp((s.perf-30)/60+bossAdj()/40,.05,.9);
-function jobMiss(j){const m=[];if(s.edu<j.e)m.push(EDU[j.e].n);if(j.dg&&!s.degs.some(d=>d.p===j.dg))m.push(PG[j.dg].n);if(j.mj&&!s.degs.some(d=>d.mj===j.mj))m.push(`a ${j.mj} major`);if(s.st.sma<j.s)m.push(`${j.s} smarts`);if(j.h&&s.st.hea<j.h)m.push(`${j.h} health`);if(CLEAN.has(j.id)&&crimes().length)m.push('a clean record');
+function jobMiss(j){const m=[];if(s.edu<j.e)m.push(EDU[j.e].n);if(j.dg&&!s.degs.some(d=>d.p===j.dg))m.push(PG[j.dg].n);if(j.mj&&!s.degs.some(d=>d.mj===j.mj))m.push(`a ${j.mj} major`);if(s.st.sma<j.s)m.push(`${j.s} smarts`);if(j.h&&s.st.hea<j.h)m.push(`${j.h} health`);if(j.lk&&s.st.loo<j.lk)m.push(`${j.lk} looks`);if(j.sk&&hobSk(j.sk[0])<j.sk[1])m.push(`${HM[j.sk[0]].n.toLowerCase()} skill ${j.sk[1]}`);if(j.young&&age()>=j.young)m.push(`to be under ${j.young}`);if(j.end&&age()>=j.end)m.push(`to be under ${j.end}`);if(CLEAN.has(j.id)&&crimes().length)m.push('a clean record');
   for(const f in j.x||{})if(xpY(f)<j.x[f])m.push(`${j.x[f]} yr${j.x[f]>1?'s':''} in ${FIELD[f]}`);if(j.xt&&xpT()<j.xt)m.push(`${j.xt} yrs experience`);if(j.f&&s.fol<j.f)m.push(`${big(j.f)} followers`);return m}
-const jobReqText=j=>[j.dg?PG[j.dg].n:EDU[j.e].n,j.mj?`${j.mj} major`:'',j.s?`${j.s} smarts`:'',j.h?`${j.h} health`:'',...Object.entries(j.x||{}).map(([f,y])=>`${y} yr${y>1?'s':''} ${FIELD[f]}`),j.xt?`${j.xt} yrs experience`:'',j.f?`${big(j.f)} followers`:''].filter(Boolean).join(', ');
+const jobReqText=j=>[j.dg?PG[j.dg].n:EDU[j.e].n,j.mj?`${j.mj} major`:'',j.s?`${j.s} smarts`:'',j.h?`${j.h} health`:'',j.lk?`${j.lk} looks`:'',j.sk?`${HM[j.sk[0]].n.toLowerCase()} skill ${j.sk[1]}`:'',j.young?`under ${j.young}`:'',...Object.entries(j.x||{}).map(([f,y])=>`${y} yr${y>1?'s':''} ${FIELD[f]}`),j.xt?`${j.xt} yrs experience`:'',j.f?`${big(j.f)} followers`:''].filter(Boolean).join(', ');
 const ageOf=p=>(s.day-p.b)/365;
 const per=u=>s.people.find(p=>p.uid===u);
 const prel=(p,v)=>p.rel=clamp(p.rel+v,0,100);
@@ -712,7 +715,7 @@ function day(live){
   s.later=s.later.filter(p=>p.d>s.day||(runLater(p),false));
   s.inbox=s.inbox.filter(it=>{if(s.day-it.d<decDays())return true;const e=EVM[it.id];if(!e.c||e.c(s))log(`<b>${e.t}</b> ${e.ch[e.def][1](s,it.a)}<span class="auto">decided for you</span>`);return false});
   if(s.inbox.length<3&&R()<1/28)newEvent();
-  flDay();if(s.su)suDay();propDay();worldDay();fdnDay();oldDay(A);polDay();clubDay();creditDay();viceDay();milDay();trustDay();stlDay();chDay();staffDay();
+  flDay();if(s.su)suDay();propDay();worldDay();fdnDay();oldDay(A);polDay();clubDay();creditDay();viceDay();milDay();trustDay();stlDay();chDay();staffDay();starDay();
   lifeDay(A);if(s.dead)return;
   const pd=s.st.hea<=0?1:A>60?Math.min(.5,((A-60)/30)**3*3)/365:0;
   if(R()<pd)die();else checkGoals();

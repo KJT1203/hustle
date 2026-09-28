@@ -686,6 +686,7 @@ const NEWS=[
  {v:10,t:['The world rich list: see where you rank']},
  {v:11,t:['Hire a personal assistant and a financial advisor (Lifestyle)']},
  {v:12,t:['Aging parents who need care','Friends and siblings marry, have kids, move away and grow old']},
+ {v:13,t:['New careers: pro athlete, fashion model and actor']},
 ];
 const NEWSV=NEWS.at(-1).v;
 function newsHtml(){const seen=s.seenV||1,L=NEWS.filter(n=>n.v>seen);if(!L.length)return '';s.seenV=NEWSV;
@@ -760,4 +761,15 @@ const EV13=[
  ['Move them in with you',(s,a)=>{const p=per(a);if(!p)return 'The moment has passed.';p.care='you';prel(p,20);add('hap',-6);if(s.job)s.perf=clamp(s.perf-5,0,100);return `${p.n} moves in. It's hard, and it's the right thing.`}],
  ['Pay for a good care home',(s,a)=>{const p=per(a);if(!p)return 'The moment has passed.';p.care='home';prel(p,8);return `${p.n} settles into a care home. You visit on Sundays.`}],
  ['They\'ll have to cope',(s,a)=>{const p=per(a);if(!p)return 'The moment has passed.';p.care='none';prel(p,-25);add('hap',-4);p.x=(p.x||0)-3;return 'You tell yourself they are fine. They are not.'}]]},
+];
+
+// ---------- glamour careers end early; stars get big offers ----------
+function starDay(){const J=job();if(!J)return;
+  if(J.end&&age()>=J.end){const t=jobTitle();fire();add('hap',-6);mile(`Retired from ${J.id==='athlete'?'sport':J.n.toLowerCase()} as ${art(t.toLowerCase())}.`);log(J.id==='athlete'?`Your playing days are over. You retire as ${art(t.toLowerCase())}.`:`The industry moves on to younger faces. Your ${J.n.toLowerCase()} career is over.`,'info');return}
+  if(J.id==='athlete')add('hea',.01);
+  if((J.id==='actor'||J.id==='model')&&R()<1/(J.id==='actor'?300:250)){const v=Math.round(jobPay()*rint(60,400)*(1+s.fol/1e6));s.inbox.push({id:'bigrole',d:s.day,a:v})}}
+const EV14=[
+{id:'bigrole',w:0,c:()=>job()?.id==='actor'||job()?.id==='model',t:'The big one',d:(s,a)=>job()?.id==='actor'?`Your agent calls: a lead role in a blockbuster, for <b>${fmt(a)}</b>. Filming takes four months.`:`A global campaign for a luxury brand wants you, for <b>${fmt(a)}</b>.`,def:0,ch:[
+ ['Take it',(s,a)=>{s.cash+=a;taxAdd('ord',a);s.fol+=Math.round(a/50);s.perf=clamp(s.perf+10,0,100);add('hap',10);mile(job()?.id==='actor'?'Starred in a blockbuster.':'Fronted a global campaign.');return `You signed. ${fmt(a)}, and your face is everywhere.`}],
+ ['Hold out for more',(s,a)=>{if(R()<.4){const v=Math.round(a*1.5);s.cash+=v;taxAdd('ord',v);s.fol+=Math.round(v/50);return `They came back with ${fmt(v)}. Well played.`}return 'They went with someone else.'}]]},
 ];
