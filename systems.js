@@ -782,7 +782,7 @@ const EV14=[
 function statsDay(){const w=netWorth();if(w>(s.peak||0))s.peak=w}
 function lifeStatsHtml(){const T=s.tax,paid=Object.values(T.hist||{}).reduce((a,h)=>a+(h.tax||0),0)+(T.paid||0),trips=Object.keys(s.cd).filter(k=>k.startsWith('t_')).length,ops=BIZ.filter(b=>s.biz[b.id]).length;
   const rows=[['Peak net worth',fmt(s.peak||netWorth())],['Salary earned',fmt(s.wage||0)],['Income tax paid',fmt(paid)],['Gigs worked',big(s.gigs||0)],['Casino',`${(s.cz?.net||0)>=0?'+':''}${fmt(s.cz?.net||0)} over ${big(s.cz?.played||0)} bets`],['Kinds of business run',ops],['Places visited',trips],['Followers',big(s.fol)],['Given to charity',fmt(s.given||0)],['Goals reached this life',Object.values(s.goals).filter(g=>g.gen===s.gen).length]];
-  return `<div class="sec-h"><h2>Lifetime stats</h2><span>${esc(s.name)}</span></div><div class="stats4 eco">${rows.map(([l,v])=>`<div><span>${l}</span><b class="num">${v}</b></div>`).join('')}</div>`}
+  return `<div class="sec-h"><h2>Lifetime stats</h2><span>${esc(s.name)}</span></div><div class="lstats">${rows.map(([l,v])=>`<div><span class="mut">${l}</span><b class="num">${v}</b></div>`).join('')}</div>`}
 
 // ---------- more moments, across a life ----------
 const EV15=[
