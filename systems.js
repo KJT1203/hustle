@@ -86,6 +86,9 @@ const HOBS=[
  {id:'code',n:'Coding',c:0,show:'Take a freelance project',perk:'Helps tech interviews and pays for freelance work'},
  {id:'sport',n:'Tennis',c:20,show:'Enter a tournament',perk:'+2 health a session, with a small risk of injury'},
  {id:'chess',n:'Chess',c:0,show:'Enter a tournament',perk:'+0.6 smarts a session. Strong players win prizes'},
+ {id:'photo',n:'Photography',c:15,show:'Sell prints',perk:'Sell prints and grow your following'},
+ {id:'garden',n:'Gardening',c:10,show:'Enter the county fair',perk:'+1 health a session, and your own vegetables cut the grocery bill'},
+ {id:'dance',n:'Dance',c:20,show:'Enter a competition',perk:'+1 health and a little looks each session'},
 ];
 const HM=Object.fromEntries(HOBS.map(h=>[h.id,h]));
 const hobSk=id=>s.hob[id]?.sk||0;
@@ -94,6 +97,8 @@ const hobIv=j=>hobSk(HFLD[j.fld])/400; // up to +25% interview odds in a matchin
 function practice(id){const H=HM[id],h=s.hob[id]??={sk:0,last:s.day,n:0};h.sk=Math.min(100,h.sk+5*(1-h.sk/100)*(.7+s.st.sma/200)*(trait('creative')?1.5:1));h.last=s.day;h.n++;add('hap',3);
   if(id==='sport'){add('hea',2);if(R()<.03&&!cond('inj')){addCond('inj');return 'You twisted something. Sports injury.'}}
   if(id==='chess')add('sma',.6);
+  if(id==='garden')add('hea',1);
+  if(id==='dance'){add('hea',1);add('loo',.4)}
   return `${H.n} practice. Skill ${Math.round(h.sk)}.`}
 function hobShow(id){const k=hobSk(id),P=s.eco.P,rn=.5+R();
   if(id==='music'){const v=Math.round(k*k*.6*P*rn),f=Math.round(k*3*rn);s.cash+=v;taxAdd('ord',v);s.fol+=f;return `The crowd loved it. ${fmt(v)} in tips and +${f} followers.`}
@@ -101,6 +106,7 @@ function hobShow(id){const k=hobSk(id),P=s.eco.P,rn=.5+R();
   if(id==='write'){const best=R()<.05*k/100,v=k**3/1e4*P*(best?12:1)*rn;s.roy={v,end:s.day+365};log(best?`Your book is a <b>bestseller</b>! Royalties of ${fmt(v)} a day for a year.`:`Your book is out. Royalties of ${fmt(v)} a day for a year.`,'good');return best?'A bestseller!':'Published.'}
   if(id==='cook'){for(const p of s.people)if(p.role==='friend'||p.role==='spouse'||p.role==='date')prel(p,4+k/20);add('hap',5);return 'Everyone raved about the food. Your friends feel closer.'}
   if(id==='code'){const v=Math.round(k*k*P*rn);s.cash+=v;taxAdd('ord',v);return `Freelance project done: ${fmt(v)}.`}
+  if(id==='photo'){const v=Math.round(k**2*.35*P*rn*(1+s.fol/2e5)),f=Math.round(k*6*rn);s.cash+=v;taxAdd('ord',v);s.fol+=f;return `Prints sold for ${fmt(v)}, and +${f} followers.`}
   const win=R()<k/130,v=win?Math.round(500*(k/50)**3*P):0;s.cash+=v;taxAdd('ord',v);add('hap',win?6:1);if(id==='sport')add('hea',1);return win?`You won the tournament! ${fmt(v)}.`:'Knocked out early. Still fun.'}
 
 // ---------- pets ----------
@@ -119,7 +125,7 @@ function petsDay(){for(const p of [...s.pets])if(s.day>=p.dies){s.pets.splice(s.
   if(s.pets.length&&R()<s.pets.length*.4/365){const v=Math.round(rint(200,2500)*s.eco.P);s.cash-=v;log(`A vet bill for ${esc(pick(s.pets).n)}: ${fmt(v)}.`,'bad')}}
 
 // ---------- the daily tick for all of the above ----------
-const lifeCost=()=>(s.staff?.pa?paCost():0)+dietCost()+careCost()+insPrem()+medDaily()+kidsCost()+petSum('up')*s.eco.P-Math.min(.2,hobSk('cook')/500)*(15+kidsHome()*47)*s.eco.P;
+const lifeCost=()=>(s.staff?.pa?paCost():0)+dietCost()+careCost()+insPrem()+medDaily()+kidsCost()+petSum('up')*s.eco.P-Math.min(.25,hobSk('cook')/500+hobSk('garden')/1000)*(15+kidsHome()*47)*s.eco.P;
 function lifeDay(A){
   if(jailed())add('hap',-.25);else if(s.legal.jail&&s.legal.jail===s.day){log('Released from jail.','good');toast('Released from jail')}
   for(const id in s.hob){const h=s.hob[id];if(s.day-h.last>30)h.sk=Math.max(0,h.sk-.03)}
@@ -693,7 +699,7 @@ const NEWS=[
  {v:13,t:['New careers: pro athlete, fashion model and actor']},
  {v:14,t:['Five new starting lives: lottery winner, young parent, sporty kid, new arrival and art school dropout','Lifetime stats on the family tree','Nine more life moments, from roommates to a memoir']},
  {v:15,t:['Unemployment benefits after a layoff, and Medicare from 65','A portrait for every character, who ages and shows your mood','Three save slots for separate families (? menu)','Gentle mode: illness never kills you (? menu)','Menu badges for court, illness, campaigns and startup offers']},
- {v:16,t:['Enact policies once you hold office']},
+ {v:16,t:['Enact policies once you hold office','Three new hobbies: photography, gardening and dance']},
 ];
 const NEWSV=NEWS.at(-1).v;
 function newsHtml(){const seen=s.seenV||1,L=NEWS.filter(n=>n.v>seen);if(!L.length)return '';s.seenV=NEWSV;
