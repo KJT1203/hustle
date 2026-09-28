@@ -20,7 +20,7 @@ function billMed(cost){const {out,d}=oopOf(cost),m=medYear();m.ded+=d;m.oop+=out
 const cond=id=>s.conds.find(c=>c.id===id);
 const condName=c=>c.id==='cancer'?`Stage ${c.st} cancer`:CONDS[c.id].n;
 function addCond(id,hid){const K=CONDS[id],c={id,d:s.day};if(K.len)c.left=rint(...K.len);if(id==='cancer'){c.st=1;c.nx=s.day+rint(220,420)}if(K.hid&&hid!==0)c.hid=1;s.conds.push(c);
-  if(!c.hid){log(`Diagnosed with ${condName(c).toLowerCase()}.`,'bad');toast(`Health: ${condName(c)}`)}return c}
+  if(!c.hid){if(!K.acute)mile(`Diagnosed with ${condName(c).toLowerCase()}.`);log(`Diagnosed with ${condName(c).toLowerCase()}.`,'bad');toast(`Health: ${condName(c)}`)}return c}
 function checkup(){const f=s.conds.filter(c=>c.hid);for(const c of f){delete c.hid;c.dx=s.day}return f.length?` The tests found <b>${f.map(c=>condName(c).toLowerCase()).join(' and ')}</b>. See Health.`:' No hidden problems.'}
 function condHaz(c){const K=CONDS[c.id];if(c.id==='cancer')return c.tx?CSTAGE.hz[c.st-1]*.3:CSTAGE.hz[c.st-1];return (c.tx?K.thz:K.hz)||0}
 function medDaily(){return s.conds.reduce((t,c)=>t+(c.tx===1&&CONDS[c.id].med?CONDS[c.id].med:0),0)*s.eco.P*(1-INS[s.ins].cov)}
@@ -32,7 +32,7 @@ function healthDay(A){
     if(K.acute&&--c.left<=0){s.conds.splice(s.conds.indexOf(c),1);continue}
     if(c.id==='dep'&&R()<(tx?1/100:1/400)+(s.st.hap>60?1/200:0)){s.conds.splice(s.conds.indexOf(c),1);log('The depression has lifted.','good');continue}
     if(c.id==='cancer'){
-      if(c.tx>1&&s.day>=c.tx){if(R()<CSTAGE.cure[c.st-1]){s.conds.splice(s.conds.indexOf(c),1);add('hap',15);s.beat=1;log('Treatment worked. You are cancer-free.','good');toast('Cancer-free!');continue}c.tx=0;log(`The treatment didn't clear the cancer. It is still stage ${c.st}.`,'bad');toast('Treatment failed')}
+      if(c.tx>1&&s.day>=c.tx){if(R()<CSTAGE.cure[c.st-1]){s.conds.splice(s.conds.indexOf(c),1);add('hap',15);s.beat=1;mile('Beat cancer.');log('Treatment worked. You are cancer-free.','good');toast('Cancer-free!');continue}c.tx=0;log(`The treatment didn't clear the cancer. It is still stage ${c.st}.`,'bad');toast('Treatment failed')}
       else if(c.tx>1)add('hea',-.1);
       else if(s.day>=c.nx&&c.st<4){c.st++;c.nx=s.day+rint(220,420);if(!c.hid)log(`The cancer has spread to stage ${c.st}.`,'bad')}}
     if(!c.hid&&!c.tx&&['cancer','heart','diab','dep'].includes(c.id)&&s.day-(c.dx??c.d)>=30&&!(c.cd>s.day))autoTreat(c);
@@ -65,7 +65,7 @@ const crimes=(yrs=7)=>s.legal.rec.filter(r=>CASES[r.t].crim&&s.day-r.d<yrs*365);
 const CLEAN=new Set(['police','teacher','nurse','lawyer','pilot','resident','surgeon']);
 function openCase(t,v=0){const c={id:uid(),t,v:Math.round(v),d:s.day};s.legal.cases.push(c);log(`<b>${CASES[t].n}.</b> ${CASES[t].d} You have 30 days to decide how to answer.`,'bad');toast(CASES[t].n);return c}
 function lawCost(c){return CASES[c.t].law*s.eco.P*(c.t==='sec'||c.t==='tax'?1+Math.min(3,c.v/2e5):1)}
-function goJail(days){if(days<1)return '';s.legal.jail=Math.max(s.legal.jail,s.day)+days;let m=` Sentenced to <b>${days} day${days>1?'s':''}</b> in jail.`;
+function goJail(days){if(days<1)return '';mile(`Went to jail for ${days} day${days>1?'s':''}.`);s.legal.jail=Math.max(s.legal.jail,s.day)+days;let m=` Sentenced to <b>${days} day${days>1?'s':''}</b> in jail.`;
   if(s.job&&days>=30){const j=jobTitle();fire();m+=` You lost your job as ${j}.`}add('hap',-Math.min(25,5+days/6));return m}
 function resolveCase(c,how){const K=CASES[c.t],fine=Math.round(K.fine(c.v));s.legal.cases.splice(s.legal.cases.indexOf(c),1);
   const conv=how==='plead'?1:R()<K.conv*(how==='lawyer'?.45:how==='self'?1.15:1);let m='';
@@ -189,7 +189,7 @@ function kidDay(p){const K=p.k,a=kidAge(p);if(!K)return;
   K.fund*=1+.05/365;
   if(K.path==='college'||K.path==='trade'){if(s.day>=K.grad){K.done=1;K.job=K.path==='college'?(K.sma>=65?'swe':K.sma>=58?'analyst':pick(['teacher','design','dev','admin'])):'elec';K.path+='d';log(`${esc(p.n)} ${K.path==='colleged'?'graduated from college':'finished a trade certificate'} and started work as ${art(JM[K.job].n.toLowerCase())}.`,'good');add('hap',6)}}
   if(a>=24&&a<38&&!K.sp&&R()<1/2500){K.sp=pick(PNAMES.filter(n=>n!==p.n));log(`${esc(p.n)} married ${esc(K.sp)}.`,'good');add('hap',5)}
-  if(K.sp&&a>=26&&a<42&&(K.gk||[]).length<3&&R()<1/1400){(K.gk??=[]).push({n:pick(PNAMES),b:s.day});add('hap',8);log(`${esc(p.n)} had a baby, ${esc(K.gk.at(-1).n)}. You're a grandparent!`,'good');toast('A grandchild!')}
+  if(K.sp&&a>=26&&a<42&&(K.gk||[]).length<3&&R()<1/1400){(K.gk??=[]).push({n:pick(PNAMES),b:s.day});add('hap',8);if(K.gk.length===1&&!kids().some(k=>k!==p&&k.k?.gk?.length))mile('Became a grandparent.');log(`${esc(p.n)} had a baby, ${esc(K.gk.at(-1).n)}. You're a grandparent!`,'good');toast('A grandchild!')}
 }
 function kidLaunch(p,quiet){const K=p.k;if(!K||K.path)return;const P=s.eco.P,cost=COLLEGE*P;
   if(K.sma>=55){const use=Math.min(K.fund,cost);K.fund-=use;K.loan=Math.round(cost-use);K.path='college';K.grad=p.b+22*365;
@@ -268,7 +268,7 @@ const suRunway=u=>Math.floor(u.cash/Math.max(1,suBurn(u)));
 const suWorth=()=>s.su?s.su.own*s.su.val*.5:0; // private shares count at half: you can't sell them yet
 const suSeed=()=>clamp(s.cash*.25,1e4*s.eco.P,5e6*s.eco.P);
 function found(id){const I=IM[id],v=suSeed();if(!I||s.su||s.cash<v||jailed())return;if(s.job){log(`Quit your job as ${jobTitle()} to start a company.`);fire()}
-  s.cash-=v;s.su={idea:id,n:pick(SUNAME)+pick(['',' Labs',' AI',' Co',' HQ']),st:0,prog:0,cash:v,basis:v,own:1,hires:0,val:v,d:s.day,retry:0,fails:0};
+  mile(`Founded a ${I.n.toLowerCase()} startup.`);s.cash-=v;s.su={idea:id,n:pick(SUNAME)+pick(['',' Labs',' AI',' Co',' HQ']),st:0,prog:0,cash:v,basis:v,own:1,hires:0,val:v,d:s.day,retry:0,fails:0};
   log(`You founded <b>${esc(s.su.n)}</b>, a ${I.n.toLowerCase()} startup, with ${fmt(v)} of your own money.`,'good');return s.su}
 function suDay(){const u=s.su,I=IM[u.idea],P=s.eco.P;
   u.cash-=suBurn(u);add('hap',-.04);add('hea',-.01);s.xp[I.fld]=(s.xp[I.fld]||0)+1;
@@ -290,6 +290,7 @@ function suDay(){const u=s.su,I=IM[u.idea],P=s.eco.P;
 function suRaise(){const u=s.su,o=u?.offer;if(!o)return;u.fails=0;u.cash+=o.raise;u.own*=o.pre/(o.pre+o.raise);u.val=o.pre+o.raise;u.st++;delete u.offer;add('hap',8);
   const m=`${esc(u.n)} closed its ${SUST[u.st].n}: ${fmt(o.raise)} at a ${fmt(u.val)} valuation. You own ${(u.own*100).toFixed(1)}%.`;log(m,'good');return m}
 function suExit(v,kind){const u=s.su,mine=Math.round(u.own*v);s.su=null;(s.car2??={})[kind]=(s.car2[kind]||0)+1;add('hap',kind==='ipo'?30:20);
+  mile(kind==='ipo'?`Took ${esc(u.n)} public.`:`Sold ${esc(u.n)} for ${fmt(v)}.`);
   if(kind==='ipo'){const now=Math.round(mine*.2);s.cash+=now;capGain(now-u.basis*.2,u.d);s.later.push({d:s.day+180,k:'x',id:'lockup',v:mine-now,b:u.basis*.8,f:u.d,n:u.n});
     const m=`<b>${esc(u.n)}</b> went public at a ${fmt(v)} valuation! You sold ${fmt(now)} of shares; the rest, ${fmt(mine-now)}, unlocks in 180 days.`;log(m,'good');toast(`${esc(u.n)} IPO!`);return m}
   s.cash+=mine;capGain(mine-u.basis,u.d);const m=`You sold <b>${esc(u.n)}</b> for ${fmt(v)}. Your ${(u.own*100).toFixed(1)}% came to ${fmt(mine)}.`;log(m,'good');toast('Sold your startup!');return m}
@@ -327,7 +328,7 @@ const foundHtml=()=>s.su?'':`<div class="sec-h"><h2>Start a company</h2><span>a 
 // ---------- the family tree: a record of every generation, carried from heir to heir ----------
 function lifeRec(){const w=netWorth(),pt=partner();return {gen:s.gen,n:s.name,age:Math.floor(age()),cause:s.dead?(s.cause||'of old age'):null,nw:Math.round(w),real:Math.round(w/s.eco.P),
   job:s.job?jobTitle():s.su?`Founder of ${s.su.n}`:s.pension?'Retired':'Out of work',kids:kids().length,sp:pt?.role==='spouse'?pt.n:null,tr:s.tr||[],edu:EDU[s.edu].n,
-  exits:(s.car2?.acq||0)+(s.car2?.ipo||0),rec:s.legal.rec.length,given:Math.round(s.given||0),goals:Object.values(s.goals).filter(g=>g.gen===s.gen).length}}
+  exits:(s.car2?.acq||0)+(s.car2?.ipo||0),rec:s.legal.rec.length,mile:(s.mile||[]).slice(-40),given:Math.round(s.given||0),goals:Object.values(s.goals).filter(g=>g.gen===s.gen).length}}
 function legacyHtml(){const T=[...(s.tree||[]),lifeRec()],top=Math.max(1,...T.map(r=>r.real)),founder=T[0].n,tot=T.reduce((a,r)=>a+r.real,0);
   return `<section class="lede solo"><div><h2 class="headline">The family of ${esc(founder)}</h2><p class="dek">${T.length===1?`The first generation. Everything starts with ${esc(s.name)}.`:`${T.length} generations so far. Together they built <b class="num">${fmt(tot)}</b> in today's money, and reached ${Object.keys(s.goals).length} of ${GOALS.length} family goals.`}${s.given?` They have given away <b class="num">${fmt(T.reduce((a,r)=>a+r.given,0))}</b>.`:''}</p></div></section>
   <div class="sec-h"><h2>Fortune by generation</h2><span>net worth in today's money${T.length>1?', at death':''}</span></div>
@@ -335,7 +336,7 @@ function legacyHtml(){const T=[...(s.tree||[]),lifeRec()],top=Math.max(1,...T.ma
   <div class="sec-h"><h2>Every generation</h2></div>
   <div class="scroll"><table class="ledger"><thead><tr><th>Gen</th><th>Name</th><th>Lived</th><th>Career</th><th class="r">Fortune</th><th>Family</th><th>Known for</th></tr></thead><tbody>
   ${T.map((r,i)=>`<tr${i===T.length-1?' class="now"':''}><td class="num">${r.gen}</td><td><b>${esc(r.n)}</b>${i===T.length-1?' <span class="mut">(you)</span>':''}</td><td>${r.cause?`${r.age}, died ${esc(r.cause)}`:`${r.age} and counting`}</td><td>${esc(r.job)}<div class="sub">${r.edu}</div></td><td class="r num">${fmt(r.nw)}</td>
-   <td>${r.sp?`Married to ${esc(r.sp)}`:'Single'}${r.kids?`, ${r.kids} kid${r.kids>1?'s':''}`:''}</td><td class="mut">${[trTxt(r.tr),r.exits?`${r.exits} startup exit${r.exits>1?'s':''}`:'',r.given>=1e6?`gave ${fmt(r.given)}`:'',r.rec?`${r.rec} conviction${r.rec>1?'s':''}`:'',r.goals?`${r.goals} goal${r.goals>1?'s':''}`:''].filter(Boolean).join(' · ')||'—'}</td></tr>`).join('')}
+   <td>${r.sp?`Married to ${esc(r.sp)}`:'Single'}${r.kids?`, ${r.kids} kid${r.kids>1?'s':''}`:''}</td><td class="mut">${r.mile?.length&&i<T.length-1?`<details><summary>Their story</summary><ol class="story">${r.mile.map(m=>`<li><span class="num">${m.a}</span><span>${m.t}</span></li>`).join('')}</ol></details>`:''}${[trTxt(r.tr),r.exits?`${r.exits} startup exit${r.exits>1?'s':''}`:'',r.given>=1e6?`gave ${fmt(r.given)}`:'',r.rec?`${r.rec} conviction${r.rec>1?'s':''}`:'',r.goals?`${r.goals} goal${r.goals>1?'s':''}`:''].filter(Boolean).join(' · ')||'—'}</td></tr>`).join('')}
   </tbody></table></div>
   ${givingHtml()}`}
 
@@ -395,7 +396,7 @@ const PERS={romantic:{n:'Romantic',d:'date nights mean the world to them'},ambit
 const PJOBS=['retail','chef','admin','elec','police','design','dev','teacher','nurse','analyst','swe','lawyer','resident'];
 function partnerNew(p){if(p.pt)return p;p.pt=pick(Object.keys(PERS));p.gs??=rint(30,80);p.gl??=rint(30,80);const ok=PJOBS.filter(j=>JM[j].s<=p.gs+5);p.job=ok.length&&R()<.85?pick(ok.slice(-5)):null;return p}
 const spouseInc=()=>{const p=partner();return p?.role==='spouse'&&p.job?JM[p.job].pay*.5*s.eco.P:0}; // half of their pay goes into the household
-function married(p){p.role='spouse';p.wed=s.day;p.wedNW=Math.max(0,netWorth());if(!s.inbox.some(i=>i.id==='wedding'))s.inbox.push({id:'wedding',d:s.day,a:p.uid})}
+function married(p){p.role='spouse';p.wed=s.day;mile(`Married ${esc(p.n)}.`);p.wedNW=Math.max(0,netWorth());if(!s.inbox.some(i=>i.id==='wedding'))s.inbox.push({id:'wedding',d:s.day,a:p.uid})}
 function payOut(v){ // a big bill: cash first, then savings, then the index fund at today's price; whatever is left becomes debt
   let r=v;const c=Math.min(r,Math.max(0,s.cash));s.cash-=c;r-=c;const F=s.fin;
   if(r>0&&F){const a=Math.min(r,F.sav);F.sav-=a;r-=a;
@@ -434,7 +435,7 @@ function moveTo(id){const C=CITIES[id];if(!C||id===(s.city||'suburb')||jailed())
   const old=city().n,lost=[];if(s.job&&!(R()<.3)){lost.push(`left your job as ${jobTitle()}`);fire()}
   const h=homeP();if(h){s.home=null;h.from=s.day+rint(10,30);lost.push(`put your ${pname(h)} up for rent`)}
   for(const p of s.people)if(p.role==='friend'||p.role==='parent'||p.role==='sibling')prel(p,p.role==='friend'?-15:-6);
-  s.city=id;relist();add('hap',-4);
+  s.city=id;relist();add('hap',-4);mile(`Moved to ${C.n.toLowerCase().replace(/^the /,'the ')}.`);
   log(`Moved from ${old.toLowerCase()} to ${C.n.toLowerCase()} for ${fmt(c)}.${lost.length?` You ${lost.join(' and ')}.`:''}${s.job?' Your employer let you transfer.':''}`,'good');return c}
 function cityHtml(){const cur=s.city||'suburb',c=moveCost();
   return `<div class="sec-h"><h2>Where you live</h2><span>${city().n}</span></div>
@@ -466,7 +467,7 @@ function polMiss(o){const P=s.pol,m=[];if(o.need&&!P.held[o.need])m.push(`serve 
 function runFor(id){const o=OM[id],P=s.pol;if(!o||P.camp||polMiss(o).length||s.cash<polCost(o)||jailed())return;s.cash-=polCost(o);P.camp={id,end:s.day+CAMP,odds:polOdds(o)};log(`You launched a campaign for ${o.n.toLowerCase()}, spending ${fmt(polCost(o))}.`,'good');return P.camp}
 function polDay(){const P=s.pol;if(!P)return;
   if(P.camp&&s.day>=P.camp.end){const o=OM[P.camp.id],re=P.cur===o.id,won=R()<P.camp.odds;P.camp=null;
-    if(won){if(!re){if(!o.part&&s.job){log(`You left your job as ${jobTitle()} to take office.`);fire()}P.cur=o.id;P.app=55;P.terms=0}P.terms++;P.held[o.id]=(P.held[o.id]||0)+1;P.until=s.day+TERM;add('hap',15);s.fol+=Math.round(o.fol*.2);const to=o.id==='council'?'to city council':o.n.toLowerCase();log(`<b>You won!</b> ${re?'Re-elected':'Elected'} ${to}.`,'good');toast(`Elected ${to}!`)}
+    if(won){if(!re){if(!o.part&&s.job){log(`You left your job as ${jobTitle()} to take office.`);fire()}P.cur=o.id;P.app=55;P.terms=0}P.terms++;P.held[o.id]=(P.held[o.id]||0)+1;P.until=s.day+TERM;add('hap',15);s.fol+=Math.round(o.fol*.2);const to=o.id==='council'?'to city council':o.n.toLowerCase();mile(`${re?'Re-elected':'Elected'} ${to}.`);log(`<b>You won!</b> ${re?'Re-elected':'Elected'} ${to}.`,'good');toast(`Elected ${to}!`)}
     else{if(re){P.cur=null;log(`You lost your re-election as ${o.n.toLowerCase()}.`,'bad')}else log(`You lost the race for ${o.n.toLowerCase()}.`,'bad');add('hap',-12);toast('You lost the election')}}
   if(!P.cur)return;const o=OM[P.cur];
   P.app=clamp(P.app+(50+s.eco.g*25-(s.eco.u-.05)*300-P.app)*.004+gauss()*.4,0,100);add('hap',(P.app-50)*.0004-.02);s.fol+=o.fol*.00005*(P.app/50);
@@ -501,7 +502,7 @@ const CLM=Object.fromEntries(CLUBS.map(t=>[t.id,t]));
 const clubVal=()=>s.club?s.club.v:0;
 function clubDay(){const T=s.club;if(!T)return;const K=CLM[T.id];T.v*=Math.exp(.07/365+.08*gauss()/Math.sqrt(365));s.fol+=K.fame*(T.pay||1)/365*(T.champs?1.5:1);
   const d=dateOf(s.day);if(d.m===9&&d.dd===1&&T.season!==d.y){T.season=d.y;const pay=T.pay||1,prof=T.v*(K.rev-.05*pay)*(.7+R()*.6),odds=clamp(.06*pay**1.5*(.7+R()*.6),.01,.45);s.cash+=prof;taxAdd('ord',prof);
-    if(R()<odds){T.champs=(T.champs||0)+1;T.v*=1.12;add('hap',20);s.fol+=K.fame*50;log(`<b>Your ${K.n.toLowerCase()} won the championship!</b> The season made ${fmt(prof)}.`,'good');toast('Champions!')}
+    if(R()<odds){T.champs=(T.champs||0)+1;mile(`Your ${K.n.toLowerCase()} won the championship.`);T.v*=1.12;add('hap',20);s.fol+=K.fame*50;log(`<b>Your ${K.n.toLowerCase()} won the championship!</b> The season made ${fmt(prof)}.`,'good');toast('Champions!')}
     else log(`Your ${K.n.toLowerCase()}'s season is over: ${pick(['a playoff exit','a middling year','a rebuilding year','heartbreak in the final'])}. ${prof>=0?`It made ${fmt(prof)}`:`It lost ${fmt(-prof)}`}.`,prof>=0?'info':'bad')}}
 function clubHtml(){const T=s.club,P=s.eco.P;
   return `<div class="sec-h"><h2>Own a team</h2><span>${T?`${CLM[T.id].n}${T.champs?` · ${T.champs} championship${T.champs>1?'s':''}`:''}`:'for the very rich'}</span></div>
@@ -557,16 +558,28 @@ const TRM=Object.fromEntries(TRIPS.map(t=>[t.id,t]));
 function travel(id){const T=TRM[id],c=T.c*s.eco.P;if(!T||s.cash<c||cdLeft('t_'+id)||jailed())return;s.cash-=c;s.cd['t_'+id]=s.day+T.cd;
   add('hap',T.hap);if(T.hea)add('hea',T.hea);if(T.sma)add('sma',T.sma);if(T.fol)s.fol+=Math.round(T.fol*(1+s.fol/1e5));
   const pt=partner();if(pt)prel(pt,pt.pt==='adventurous'?15:6);if(T.risk&&R()<T.risk&&!cond('inj'))addCond('inj');
-  let m=`${T.n}: ${T.d.toLowerCase()}.`;if(!pt&&R()<.15){const p=meet('date',45);m+=` You met ${p.n} along the way, and you're seeing each other.`}return m}
+  if(id==='space'||id==='cruise'||id==='safari')mile(id==='space'?'Flew to space.':`Went on ${id==='cruise'?'a round-the-world cruise':'safari'}.`);let m=`${T.n}: ${T.d.toLowerCase()}.`;if(!pt&&R()<.15){const p=meet('date',45);m+=` You met ${p.n} along the way, and you're seeing each other.`}return m}
 function travelHtml(){return `<div class="sec-h"><h2>Travel</h2><span>each trip has its own wait</span></div>
   <div class="acards">${TRIPS.map(T=>{const w=cdLeft('t_'+T.id),c=T.c*s.eco.P;return `<button class="acard" data-a="travel" data-x="${T.id}" ${w||s.cash<c?'disabled':''}><b>${T.n}</b><span>${T.d}. +${T.hap} happiness${T.fol?', and followers':''}.</span><small>${fmt(c)}${w?` · again in ${w}d`:''}</small></button>`}).join('')}</div>`}
 
 // ---------- the military: a steady career that pays for college and healthcare afterwards ----------
 const VET=4*365; // a full enlistment
 const isVet=()=>!!s.vet;
-function milDay(){if((s.job==='army'||s.job==='officer')&&s.jobDays>=VET&&!s.vet){s.vet=1;log('You finished your enlistment. As a veteran, the GI Bill pays your tuition and VA healthcare covers you for life.','good');toast('You are a veteran')}}
+function milDay(){if((s.job==='army'||s.job==='officer')&&s.jobDays>=VET&&!s.vet){s.vet=1;mile('Finished an enlistment.');log('You finished your enlistment. As a veteran, the GI Bill pays your tuition and VA healthcare covers you for life.','good');toast('You are a veteran')}}
 const EV8=[
 {id:'deploy',w:s=>s.job==='army'||s.job==='officer'?3:0,c:()=>s.job==='army'||s.job==='officer',t:'Deployment',d:()=>'Your unit is shipping out for six months. There is hazard pay, and real danger.',def:0,ch:[
  ['Go with your unit',()=>{const v=Math.round(jobPay()*90);s.cash+=v;taxAdd('ord',v);s.perf=clamp(s.perf+8,0,100);add('hap',-6);if(R()<.08){addCond('inj');add('hea',-15);return `You came home hurt, with ${fmt(v)} in hazard pay.`}return `Six hard months. You came home with ${fmt(v)} in hazard pay.`}],
  ['Ask for a posting at home',()=>{s.perf=clamp(s.perf-6,0,100);return 'You stay stateside. Your commander remembers.'}]]},
 ];
+
+// ---------- the life story: the big moments of this life, by age; and how you've felt over the years ----------
+function mile(t){if(!s)return;(s.mile??=[]).push({a:Math.floor(age()),t});if(s.mile.length>80)s.mile.splice(1,1)}
+function statsSnap(){if(s.day%30)return;(s.sth??=[]).push([s.st.hea,s.st.hap,s.st.sma,s.st.loo].map(Math.round));if(s.sth.length>1300)s.sth.shift()}
+function statsChart(h){const W=480,H=120,n=h.length;if(n<2)return '<p class="mut">The chart fills in after a couple of months.</p>';
+  const L=[['Health',0],['Happiness',1],['Smarts',2],['Looks',3]],pts=k=>h.map((v,i)=>`${(i/(n-1)*W).toFixed(1)},${(H-4-v[k]/100*(H-8)).toFixed(1)}`).join(' ');
+  return `<svg class="nwc" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Your stats over ${plainDays(n*30)}">${L.map(([,k])=>`<polyline points="${pts(k)}" style="fill:none;stroke:var(--cat-${k+1});stroke-width:2" vector-effect="non-scaling-stroke"></polyline>`).join('')}</svg>
+  <div class="legend">${L.map(([l,k])=>`<div><i style="background:var(--cat-${k+1})"></i>${l}<b class="num">${h.at(-1)[k]}</b></div>`).join('')}</div>`}
+function storyHtml(){const M=s.mile||[];
+  return `<div class="sec-h"><h2>Your life so far</h2><span>${M.length?`${M.length} moment${M.length>1?'s':''}`:'just getting started'}</span></div>
+  ${statsChart(s.sth||[])}
+  ${M.length?`<ol class="story">${M.slice().reverse().slice(0,showAll.story?80:10).map(m=>`<li><span class="num">${m.a}</span><span>${m.t}</span></li>`).join('')}</ol>${M.length>10?`<div class="more-row"><button class="link2" data-a="storyall">${showAll.story?'Show less':`Show all ${M.length}`}</button></div>`:''}`:''}`}

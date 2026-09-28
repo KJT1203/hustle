@@ -510,7 +510,7 @@ const SAVE='hustle-v1',GROW=1.13,CAP=10,MILES=[10,25,50,100,150,200,300,400,500]
 let helpOpen={},showAll={},openP=null,tour=-1,tourSpeed=1,tourJump=false,enr=null,iv=null,bmode='1',wf='All',bd={},vmode='chart',oxp=0,oq=1,lastSpeed=1,lastIn=[],cg=null,tf='3M',cmode='candle',hov=null,ot={side:'buy',qty:10}; // screen state, not saved
 let s=null,tab='dash',sel='NOVA',csel='SATS',speed=1,holding=false,wiped=false,heir={},hiddenAt=0;
 const age=()=>s.startAge+s.day/365;
-const add=(k,v)=>s.st[k]=clamp(s.st[k]+((k==='hap'||k==='sma')&&v>0?v*clamp((100-s.st[k])/(k==='hap'?50:70),.05,1)**2:v),0,100); // gains in happiness and smarts shrink as they climb
+const add=(k,v)=>s.st[k]=clamp(s.st[k]+((k==='hap'||k==='sma'||k==='loo')&&v>0?v*clamp((100-s.st[k])/(k==='hap'?50:k==='loo'?60:70),.05,1)**2:v),0,100); // gains in happiness, smarts and looks shrink as they climb
 const job=()=>s.job&&JM[s.job];
 const jobPay=()=>job().pay*(1+.15*s.rank)*(1+(s.raise||0))*city().pay;
 const jobTitle=()=>job().rk?job().rk[Math.min(s.rank,5)]:RANKS[Math.min(s.rank,5)]+job().n;
@@ -531,11 +531,11 @@ const friendsN=()=>s.people.filter(p=>p.role==='friend').length;
 const peopleHap=()=>s.people.reduce((a,p)=>a+(PW[p.role]||0)*(p.rel-40)/(p.rel<40?80:60)*(p.role==='child'&&ageOf(p)>=18?.5:1),0);
 const closeWord=r=>r>=80?'Very close':r>=60?'Close':r>=40?'Friendly':r>=20?'Distant':'Strained';
 function meet(role,rel,b){const used=new Set(s.people.map(p=>p.n)),n=PNAMES.find(x=>!used.has(x)&&R()<.2)||pick(PNAMES);const p={uid:uid(),n,role,rel,b:b??(-s.startAge*365+rint(-4,4)*365),met:s.day,c:{}};s.people.push(p);if(role==='date'||role==='spouse')partnerNew(p);return p}
-const addChild=()=>{const p=meet('child',80,s.day);p.k=kidNew();return p};
+const addChild=()=>{const p=meet('child',80,s.day);p.k=kidNew();mile(`${esc(p.n)} was born.`);return p};
 function makeFamily(){const me=-s.startAge*365;for(let i=0;i<2;i++)meet('parent',rint(55,85),me-rint(24,38)*365);for(let i=rint(0,2);i>0;i--)meet('sibling',rint(40,75),me+rint(-6,6)*365);for(let i=rint(1,2);i>0;i--)meet('friend',rint(45,70),me+rint(-2,2)*365)}
 function endRel(p,theyLeft){const sp=p.role==='spouse',who=theyLeft?`${p.n} left you. `:'';p.role='ex';p.rel=Math.min(p.rel,20);
-  if(sp){const c=divCost(p);payOut(c);add('hap',-20);return `${who}You and ${p.n} divorced. It cost ${fmt(c)}.`}add('hap',-12);return `${who}You and ${p.n} broke up.`}
-function parentDies(p){s.people.splice(s.people.indexOf(p),1);const v=Math.round(rint(5000,40000)*(.5+p.rel/100));s.cash+=v;add('hap',-20);const m=`${p.n}, your parent, passed away at ${Math.floor(ageOf(p))}. They left you ${fmt(v)}.`;log(esc(m),'bad');toast(esc(m));return m}
+  if(sp){const c=divCost(p);payOut(c);add('hap',-20);mile(`Divorced ${esc(p.n)}.`);return `${who}You and ${p.n} divorced. It cost ${fmt(c)}.`}add('hap',-12);return `${who}You and ${p.n} broke up.`}
+function parentDies(p){s.people.splice(s.people.indexOf(p),1);mile(`Lost ${esc(p.n)}, a parent.`);const v=Math.round(rint(5000,40000)*(.5+p.rel/100));s.cash+=v;add('hap',-20);const m=`${p.n}, your parent, passed away at ${Math.floor(ageOf(p))}. They left you ${fmt(v)}.`;log(esc(m),'bad');toast(esc(m));return m}
 function peopleDay(){
   teamDay();
   for(const p of [...s.people]){
@@ -670,6 +670,7 @@ function newGame(name,bg,h={}){
   s.mkt.rc=capSum()*.6;s.mkt.div=(capSum()+s.mkt.rc)/5000;s.mkt.ic=s.mkt.ih=5000;s.mkt.lab='Bull market';
   initCrypto();relist();
   if(h.fam){for(const p of h.fam){const q={...p,uid:uid(),met:0,c:{}};if(q.role==='child'){q.rel=75;q.k=kidNew();q.k.sma=q.k.gs*(.3+Math.min(1,ageOf(q)/10)*.7)}if(q.role==='spouse'){partnerNew(q);q.wed=0;q.wedNW=0}s.people.push(q)}for(let i=rint(1,2);i>0;i--)meet('friend',rint(45,70),-s.startAge*365+rint(-2,2)*365)}else makeFamily();
+  mile(h.kid?`Took over the family from ${esc(h.last)}.`:h.gen?`Inherited the family fortune from ${esc(h.last)}.`:'Turned 18 and moved out.');
   log(h.kid?`${esc(name)}, ${Math.floor(s.startAge)}, takes over from ${esc(h.last)} with a ${fmt(h.inherit)} inheritance. Generation ${s.gen} begins.`:h.gen?`${esc(name)} begins generation ${s.gen} with a ${fmt(h.inherit)} inheritance.`:`${esc(name)} turns 18 and moves out. Time to hustle.`,'good');
   chirp('@hustleculture','Hustle Culture','new week, new grind. what are you building? 👇',1);
 }
@@ -687,9 +688,9 @@ function day(live){
   if(s.cash<0){s.cash*=1+debtAPR()/365;add('hap',-.05)}
   if(s.job){const J=job();s.jobDays++;s.xp[J.fld]=(s.xp[J.fld]||0)+1;
     s.perf=clamp(s.perf+((40+(trait('driven')?8:0)+s.st.sma*.3+(s.st.hap-50)*.2-J.str*2)-s.perf)*(boss()?.bt==='absent'?.012:.02),0,100);
-    if(s.jobDays%120===0&&!topRank()){if(s.perf>=promoNeed()){s.rank++;s.perf-=10;{const pt=partner();if(pt?.pt==='ambitious')prel(pt,8)}log(`Promoted to <b>${jobTitle()}</b>! Now ${fmt(jobPay())} a day.`,'good');toast('Promotion!')}else log(`Passed over for promotion. You needed a performance of ${promoNeed()}.`,'bad')}
-    if(s.job&&s.eco.u>.05&&R()<(s.eco.u-.045)*2/365){const j=jobTitle(),sev=jobPay()*30;fire();s.cash+=sev;taxAdd('ord',sev);add('hap',-12);log(`Laid off from ${j} as the economy slows. Severance: ${fmt(sev)}.`,'bad');toast(`Laid off from ${j}`)}
-    if(s.job&&s.perf<20&&R()<.01){const j=jobTitle();fire();add('hap',-15);log(`Fired from ${j} for poor performance.`,'bad');toast(`Fired from ${j}.`)}}
+    if(s.jobDays%120===0&&!topRank()){if(s.perf>=promoNeed()){s.rank++;s.perf-=10;mile(`Promoted to ${jobTitle()}.`);{const pt=partner();if(pt?.pt==='ambitious')prel(pt,8)}log(`Promoted to <b>${jobTitle()}</b>! Now ${fmt(jobPay())} a day.`,'good');toast('Promotion!')}else log(`Passed over for promotion. You needed a performance of ${promoNeed()}.`,'bad')}
+    if(s.job&&s.eco.u>.05&&R()<(s.eco.u-.045)*2/365){const j=jobTitle(),sev=jobPay()*30;fire();s.cash+=sev;taxAdd('ord',sev);add('hap',-12);mile(`Laid off from ${j}.`);log(`Laid off from ${j} as the economy slows. Severance: ${fmt(sev)}.`,'bad');toast(`Laid off from ${j}`)}
+    if(s.job&&s.perf<20&&R()<.01){const j=jobTitle();fire();mile(`Fired from ${j}.`);add('hap',-15);log(`Fired from ${j} for poor performance.`,'bad');toast(`Fired from ${j}.`)}}
   peopleDay();
   if(s.study&&!jailed()){const st=s.study,P=PG[st.p];st.left--;st.g=clamp(st.g+((40+(trait('bright')?6:0)+s.st.sma*.4+(s.st.hap-50)*.2)-st.g)*.02,0,100);if(P.stipend)s.cash+=P.stipend;
     if(st.left<=0){if(st.g<30){st.left=60;st.g=45;log(`Failed the final exams for ${degName(st)}. One more term.`,'bad');toast('Failed the finals. One more term.')}else graduate()}}
@@ -702,6 +703,7 @@ function day(live){
   for(const p of s.feed)if(p.l<p.tl)p.l+=Math.ceil((p.tl-p.l)*.35);
   if(R()<.3)npcChatter();
   marketDay(0,live);cryptoDay(0,live);
+  statsSnap();
   if(s.day%7===0){(s.nwh??=[]).push(Math.round(netWorth()));if(s.nwh.length>104)s.nwh.shift()}
   s.later=s.later.filter(p=>p.d>s.day||(runLater(p),false));
   s.inbox=s.inbox.filter(it=>{if(s.day-it.d<30)return true;const e=EVM[it.id];if(!e.c||e.c(s))log(`<b>${e.t}</b> ${e.ch[e.def][1](s,it.a)}<span class="auto">decided for you</span>`);return false});
@@ -1108,6 +1110,7 @@ const dur=sec=>sec<3600?`${Math.round(sec/60)} minutes`:sec<172800?`${Math.floor
 
 // ---------- actions ----------
 const ACT={
+  storyall:()=>{showAll.story=!showAll.story},
   bankrupt:y=>{if(!(s.cash<0&&netWorth()<0))return;if(y!=='yes')return modal(`<h2>Declare bankruptcy?</h2><p>Your negative balance is wiped out, but you lose your stocks, crypto, index fund, savings, businesses, rentals and all but one car. You keep your home and your retirement account. Your credit score drops to about 380 and the bankruptcy stays on file for 7 years, so no mortgages until then.</p><div class="row"><button class="bad" data-a="bankrupt" data-x="yes">Declare bankruptcy</button><button data-a="close">Not yet</button></div>`);closeModal();bankruptcy()},
   rehab:()=>{if(vice('alc')<=60&&vice('gam')<=60)return;const o=oopOf(rehabCost()).out;if(s.cash<o)return;const v=billMed(rehabCost());s.vice={alc:0,gam:0};s.rehab=s.day+30;add('hap',6);log(`Checked into rehab for 30 days. You paid ${fmt(v)} after insurance.`,'good');toast('Off to rehab. You will come back clean.')},
   travel:id=>{const m=travel(id);if(m){log(m,'good');toast(m)}},
@@ -1185,10 +1188,10 @@ const ACT={
   tskip:()=>{s.tour=1},
   apply:id=>{if(s.su)return toast('You run a startup full time. Shut it down or sell it first.');if(s.pol?.cur&&!OM[s.pol.cur].part)return toast(`You're the ${OM[s.pol.cur].n.toLowerCase()}. That is a full-time job.`);const j=JM[id];if(!canJob(j)||s.day<(s.cd['job_'+id]||0))return;iv={id,q:pick(IVQ)};modal(ivHtml())},
   answer:k=>{const j=JM[iv.id],ch=ivOdds(j,k);closeModal();
-    if(R()<ch){s.job=j.id;s.rank=0;s.jobDays=0;s.perf=50;s.raise=k==='pay'?.1:0;teamDay();log(`Hired as <b>${j.n}</b>${k==='pay'?' at 10% over the posted pay':''}.`,'good');toast(`You got the job: ${j.n}`)}
+    if(R()<ch){s.job=j.id;s.rank=0;s.jobDays=0;s.perf=50;s.raise=k==='pay'?.1:0;teamDay();mile(`Hired as ${art(j.n.toLowerCase())}.`);log(`Hired as <b>${j.n}</b>${k==='pay'?' at 10% over the posted pay':''}.`,'good');toast(`You got the job: ${j.n}`)}
     else{s.cd['job_'+j.id]=s.day+30;log(`${j.n}: they went with someone else.`,'bad');toast(`No offer after the ${j.n} interview. You can reapply in 30 days.`)}},
   work:k=>{const W=WORK[k];if(!s.job||s.day<(s.cd['w_'+k]||0)||s.cash<(W.c||0))return;s.cash-=W.c||0;s.cd['w_'+k]=s.day+W.cd;toast(W.fx())},
-  retire:()=>{if(!s.job||age()<55)return;s.pension=(s.pension||0)+jobPay()*.45;const j=jobTitle();fire();log(`Retired from ${j} with a pension of ${fmt(s.pension)} a day.`,'good')},
+  retire:()=>{if(!s.job||age()<55)return;s.pension=(s.pension||0)+jobPay()*.45;const j=jobTitle();fire();mile(`Retired from ${j}.`);log(`Retired from ${j} with a pension of ${fmt(s.pension)} a day.`,'good')},
   pp:(u,k)=>{const sure=k.endsWith('!');k=k.replace('!','');const p=per(+u),A=PACTS[k];if(!p||!A||!A.roles.includes(p.role)||A.show&&!A.show(p))return;
     if(A.bad&&!sure)return modal(`<h2>${A.n} with ${esc(p.n)}?</h2><p>${k==='divorce'?`Lawyers and the settlement will cost about <b class="num">${fmt(divCost(p))}</b>: half of what you've built since the wedding${p.pre?'. Your prenup protects the rest.':', plus a quarter of what you had before it. There is no prenup.'}`:'This cannot be undone.'}</p><div class="row"><button class="bad" data-a="pp" data-x="${p.uid}" data-y="${k}!">${A.n}</button><button data-a="close">Cancel</button></div>`);
     const cost=A.c?A.c(p):0;if((p.c?.[k]||0)>s.day||s.cash<cost||A.need?.(p))return;
@@ -1197,7 +1200,7 @@ const ACT={
   gig:()=>{if(gigsLeft()<1)return;const g=gig();s.cash+=g;taxAdd('ord',g);s.gigs=(s.gigs||0)+1;if(s.gd!==s.day){s.gd=s.day;s.gn=0}s.gn++},
   bbuy:(id,x)=>{const b=BM[id],o=s.biz[id]??={n:0,mgr:0,pend:0,spent:0},q=x==='max'?bmax(b,o.n):+x;if(q<1)return;const c=bcost(b,o.n,q);if(c>s.cash)return;
     const first=!o.n;s.cash-=c;o.spent+=c;const before=bmul(o.n);o.n+=q;
-    if(first){log(`Opened your first ${b.n}`,'good');if(s.fol>100&&R()<.6)chirp(...pick(NPC),`just walked past ${s.handle}'s new ${b.n.toLowerCase()} ${pick(['love to see it','entrepreneur arc','the grind pays'])}`)}
+    if(first){mile(`Opened a ${b.n.toLowerCase()}.`);log(`Opened your first ${b.n}`,'good');if(s.fol>100&&R()<.6)chirp(...pick(NPC),`just walked past ${s.handle}'s new ${b.n.toLowerCase()} ${pick(['love to see it','entrepreneur arc','the grind pays'])}`)}
     if(bmul(o.n)>before){log(`${b.n} milestone: ${o.n} units → income ×${bmul(o.n)}!`,'good');toast(`${b.n} income doubled`)}},
   mgr:id=>{const b=BM[id],o=s.biz[id],c=mgrCost(b);if(!o||o.mgr||s.cash<c)return;s.cash-=c;o.spent+=c;o.mgr=1;s.cash+=o.pend;taxAdd('ord',o.pend);o.pend=0;log(`Hired a manager for your ${b.n}. It runs itself now.`,'good')},
   col:id=>{const o=s.biz[id];s.cash+=o.pend;taxAdd('ord',o.pend);o.pend=0},
@@ -1237,7 +1240,7 @@ const ACT={
     if(s.cash<(mort?v*.2:v)||(mort&&!canBorrow(v*.8)))return;
     s.cash-=mort?v*.2:v;const p={...l,paid:v,bought:s.day,loan:mort?v*.8:0,pay:mort?mpay(v*.8,myRate()):0,rate:mort?myRate():0,from:s.day+rint(5,20)};
     s.props.push(p);s.re.list.splice(i,1,listing());if(!homeP()&&!PM[p.t].biz)s.home=p.uid;add('hap',5);
-    log(`Bought ${art(pname(p))} for ${fmt(v)}${mort?' with a mortgage':''}${s.home===p.uid?', and moved in':''}.`,'good')},
+    mile(`Bought ${art(pname(p))}${s.home===p.uid?' and moved in':''}.`);log(`Bought ${art(pname(p))} for ${fmt(v)}${mort?' with a mortgage':''}${s.home===p.uid?', and moved in':''}.`,'good')},
   live:u=>{const p=P(+u);if(!p||PM[p.t].biz||!here(p))return;const o=homeP();if(o)o.from=s.day+rint(5,20);s.home=p.uid;log(`Moved into your ${pname(p)}.`)},
   moveout:u=>{const p=P(+u);if(!p||s.home!==p.uid)return;s.home=null;p.from=s.day+rint(5,20);log(`Moved out of your ${pname(p)}. It goes up for rent.`)},
   payoff:u=>{const p=P(+u);if(!p?.loan||s.cash<p.loan)return;s.cash-=p.loan;p.loan=p.pay=0;log(`Paid off the mortgage on your ${pname(p)}.`,'good')},
@@ -1315,7 +1318,7 @@ function enrHtml(){const P=PG[enr.p];
   ${schoolsFor(P).map(sc=>{const c=tuition(P,sc),w=Math.max(0,(s.cd[`adm_${P.id}_${sc.id}`]||0)-s.day);return `<tr><td><b>${sc.n}</b>${sc.note?`<div class="sub">${sc.note}</div>`:''}</td><td>${PRES[sc.pres]}</td><td class="r num">${Math.round(admOdds(P,sc)*100)}%</td><td class="r num">${c?fmt(c):'Free'}</td>
    <td class="act">${w?`<span class="mut">Reapply in ${w}d</span>`:`<button class="pri" data-a="enroll" data-x="${sc.id}" data-y="cash" ${s.cash<c?'disabled':''}>Pay</button>${c?`<button data-a="enroll" data-x="${sc.id}" data-y="loan">Loan</button>`:''}`}</td></tr>`}).join('')}
   </tbody></table></div><div class="row" style="margin-top:var(--space-sm)"><button data-a="close">Cancel</button></div>`}
-function graduate(){const st=s.study,P=PG[st.p],d={p:st.p,sc:st.sc,mj:st.mj||null,hon:st.g>=80};s.degs.push(d);s.edu=Math.max(s.edu,P.lvl);add('sma',P.sma);if(P.xp)s.xp[P.xp]=(s.xp[P.xp]||0)+180;s.study=null;log(`Graduated: ${degName(d)}${d.hon?', with honors':''}.`,'good');toast('Graduated!')}
+function graduate(){const st=s.study,P=PG[st.p],d={p:st.p,sc:st.sc,mj:st.mj||null,hon:st.g>=80};s.degs.push(d);s.edu=Math.max(s.edu,P.lvl);add('sma',P.sma);if(P.xp)s.xp[P.xp]=(s.xp[P.xp]||0)+180;s.study=null;mile(`Graduated: ${degName(d)}${d.hon?', with honors':''}.`);log(`Graduated: ${degName(d)}${d.hon?', with honors':''}.`,'good');toast('Graduated!')}
 function ivHtml(){const j=JM[iv.id],o=k=>`${Math.round(ivOdds(j,k)*100)}% chance`;
   return `<p class="kicker">Interview · ${j.n}</p><h2>“${iv.q}”</h2><p>How do you answer?</p><div class="choices">
   <button data-a="answer" data-x="exp">Walk them through your experience<br><small class="mut">${xpY(j.fld)>=.1?`${xpY(j.fld).toFixed(1)} years in ${FIELD[j.fld]}`:`No ${FIELD[j.fld]} experience yet`} · ${o('exp')}</small></button>
@@ -1598,6 +1601,7 @@ dash(){
 life(){
   const f=flows(),rows=[[spouseInc()?'Salary, pension and your spouse':'Salary and pension',f.job],['Managed businesses',f.biz],['Tills to collect',f.pend],['Sponsorships',f.spon],['Companies you control',f.own],['Rent from tenants',f.rent],['Loan payments',-f.mort],['Income tax, about',-f.tax],[`Living costs${homeP()?'':', rent included'}`,-f.exp]].filter(r=>Math.abs(r[1])>=.01);
   return `<section class="lede solo"><div><h2 class="headline">${esc(s.name)}, ${Math.floor(age())}</h2><p class="dek">${esc(s.name)} ${lifeLine()}</p>${s.tr?.length?`<p class="mut">${s.tr.map(t=>`<b>${TRAITS[t].n}</b>: ${TRAITS[t].d}`).join(' · ')}</p>`:''}</div></section>
+  ${storyHtml()}
   <div class="sec-h"><h2>Activities</h2><span>each one has a cooldown</span></div>
   <div class="acards">${ACTS.filter(a=>!a.show||a.show()).map(a=>{const w=cdLeft(a.id);return `<button class="acard" data-a="act" data-x="${a.id}" ${w||s.cash<a.c?'disabled':''}><b>${a.n}</b><span>${a.d}</span><small>${a.c?fmt(a.c):'Free'}${w?` · ready in ${w}d`:''}</small></button>`}).join('')}</div>
   ${travelHtml()}

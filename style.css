@@ -422,3 +422,7 @@ input:focus-visible{outline:2px solid var(--color-focus);outline-offset:1px}
 .gbars{display:grid;gap:var(--space-3xs)}.gbars div{display:grid;grid-template-columns:2rem 1fr 6.5rem;align-items:center;gap:var(--space-xs)}
 .gbars i{display:block;height:10px;border-radius:5px;background:var(--color-accent)}.gbars b{text-align:right;font-size:var(--text-sm)}
 .ledger tr.now td{background:var(--color-paper-2)}
+.story{list-style:none;margin:var(--space-xs) 0 0;padding:0;display:grid;gap:var(--space-3xs)}
+.story li{display:grid;grid-template-columns:2.25rem 1fr;gap:var(--space-xs);font-size:var(--text-sm);padding:var(--space-3xs) 0;border-bottom:var(--rule)}
+.story li .num{color:var(--color-ink-3);text-align:right}
+details summary{cursor:pointer;color:var(--color-accent);font-size:var(--text-sm)}
