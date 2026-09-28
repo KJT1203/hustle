@@ -196,6 +196,7 @@ function kidLaunch(p,quiet){const K=p.k;if(!K||K.path)return;const P=s.eco.P,cos
     if(!quiet)log(`${esc(p.n)} turns 18 and heads to college.${use?` The college fund covers ${fmt(use)}.`:''}${K.loan?` The rest, ${fmt(K.loan)}, is student loans.`:''}`,'good')}
   else if(K.sma>=35){const use=Math.min(K.fund,8000*P);K.fund-=use;K.path='trade';K.grad=p.b+19*365;if(!quiet)log(`${esc(p.n)} turns 18 and starts a trade course.`,'good')}
   else{K.path='work';K.job=pick(['crew','retail','rider']);if(!quiet)log(`${esc(p.n)} turns 18 and goes straight to work as ${art(JM[K.job].n.toLowerCase())}.`)}
+  if(K.path!=='college'&&(K.tr.includes('sporty')&&K.hea>=88||K.loo>=82)){K.path='workd';K.done=1;K.job=K.tr.includes('sporty')&&K.hea>=88?'athlete':'model';K.grad=p.b+18*365;if(!quiet)log(`${esc(p.n)} turns 18 and signs as ${art(JM[K.job].n.toLowerCase())}!`,'good')}
   if(quiet&&K.grad<=s.day){K.path+='d';K.done=1;K.job=K.path==='colleged'?(K.sma>=65?'swe':K.sma>=58?'analyst':'admin'):'elec'}
 }
 const kidStat=p=>{const K=p.k;return K?`Smarts ${Math.round(K.sma)} · Health ${Math.round(K.hea)} · Mood ${Math.round(K.hap)}${K.tr?.length?` · ${trTxt(K.tr)}`:''}${kidAge(p)<18&&K.sch==='private'?' · Private school':''}${K.fund>=1?` · Fund ${fmt(K.fund)}`:''}${K.job&&kidAge(p)>=18?` · ${JM[K.job].n}`:K.path==='college'?' · At college':K.path==='trade'?' · Trade course':''}${K.sp?` · Married to ${esc(K.sp)}`:''}${K.gk?.length?` · ${K.gk.length} kid${K.gk.length>1?'s':''}`:''}`:''};

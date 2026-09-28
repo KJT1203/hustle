@@ -1430,6 +1430,9 @@ function tips(){const T=[],P=s.eco.P,A=age(),f=flows(),bb=bestBuy(),idle=s.cash-
   if(!Object.keys(s.hob).length&&s.day>90)t('hob','Pick up a hobby','A hobby lifts your mood, and once you are good it can pay: gigs, commissions, prizes.','<button data-a="tab" data-x="hobby">Hobbies</button>');
   if(s.fol>=4e3&&!s.pol?.cur&&!s.pol?.camp&&A>=21&&!s.pol?.held?.council)t('pol','Run for city council',`With ${big(s.fol)} followers you have a real shot. It's part time, so you keep your job.`,'<button data-a="tab" data-x="office">Politics</button>');
   if(s.cash>1e5*P&&!s.su&&!s.fl.jobs.length&&xpT()>=3&&!s.car2?.dead)t('found','Think about a startup','You have savings and a few years of experience. Most startups fail, but the ones that work change everything.','<button data-a="tab" data-x="work">Work</button>');
+  if(!s.job&&s.st.loo>=80&&age()<38&&canJob(JM.model))t('model','Try modeling',`With ${Math.round(s.st.loo)} looks, agencies would sign you today.`,'<button data-a="tab" data-x="work">Job board</button>');
+  if(nOwned()>=3&&!s.staff?.pa&&s.cash>1e5*P)t('pa','Hire a personal assistant','They collect every till each day, so your businesses never stop earning while you are busy.','<button data-a="tab" data-x="shop">Lifestyle</button>');
+  if(netWorth()>8e6*P&&kids().length&&!s.trust?.v&&A>=45)t('trust','Plan your estate','A family trust moves money to your heirs now, so its growth escapes the 40% estate tax.','<button data-a="tab" data-x="legacy">Family tree</button>');
   return T.slice(0,3)}
 const tipHtml=x=>`<div class="need tip"><div><div class="k">Next step</div><div class="t">${x.ti}</div><div class="d">${x.d}</div></div><div class="acts2">${x.btn}</div></div>`;
 function needs(){
