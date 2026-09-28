@@ -12,8 +12,8 @@ const CONDS={
  cancer:{n:'Cancer',hid:1,r:A=>A<35?0:.0015*((A-35)/10+1)**2,hea:.03,d:'It spreads in stages. Caught at stage 1, treatment works 95% of the time. By stage 4, only one in five.'},
 };
 const CSTAGE={cost:[40e3,90e3,200e3,350e3],cure:[.95,.8,.5,.2],hz:[0,.01,.1,.8]};
-const INS={va:{n:'VA healthcare',prem:0,cov:.9,ded:0,cap:2000,d:'For veterans: 90% covered, no deductible, capped at $2,000 a year.'},none:{n:'No insurance',prem:0,cov:0,ded:0,cap:Infinity,d:'You pay every bill in full.'},basic:{n:'Basic plan',prem:9,jobp:0,cov:.7,ded:3000,cap:8000,d:'Pays 70% after a $3,000 deductible. You never pay more than $8,000 a year. Free with a job.'},premium:{n:'Premium plan',prem:24,jobp:12,cov:.9,ded:500,cap:3000,d:'Pays 90% after a $500 deductible, capped at $3,000 a year.'}};
-const insPrem=(k=s.ins)=>{const I=INS[k];return (s.job&&I.jobp!=null?I.jobp:I.prem)*s.eco.P};
+const INS={medicare:{n:'Medicare',prem:6,cov:.8,ded:250,cap:7000,d:'From 65: pays 80% after a $250 deductible, capped at $7,000 a year with a supplement.'},va:{n:'VA healthcare',prem:0,cov:.9,ded:0,cap:2000,d:'For veterans: 90% covered, no deductible, capped at $2,000 a year.'},none:{n:'No insurance',prem:0,cov:0,ded:0,cap:Infinity,d:'You pay every bill in full.'},basic:{n:'Basic plan',prem:9,jobp:0,cov:.7,ded:3000,cap:8000,d:'Pays 70% after a $3,000 deductible. You never pay more than $8,000 a year. Free with a job.'},premium:{n:'Premium plan',prem:24,jobp:12,cov:.9,ded:500,cap:3000,d:'Pays 90% after a $500 deductible, capped at $3,000 a year.'}};
+const insPrem=(k=s.ins)=>{const I=INS[k],ag=k==='medicare'||k==='va'||k==='none'?1:1+Math.max(0,age()-30)*.025;return (s.job&&I.jobp!=null?I.jobp:I.prem)*s.eco.P*ag}; // private premiums climb with age
 function medYear(){const y=dateOf(s.day).y;if(s.med?.y!==y)s.med={y,ded:0,oop:0};return s.med}
 function oopOf(cost,k=s.ins){const I=INS[k],m=medYear(),d=Math.min(cost,Math.max(0,I.ded*s.eco.P-m.ded)),out=d+(cost-d)*(1-I.cov);return {out:Math.min(out,Math.max(0,I.cap*s.eco.P-m.oop)),d}}
 function billMed(cost){const {out,d}=oopOf(cost),m=medYear();m.ded+=d;m.oop+=out;s.cash-=out;return out} // what you pay after insurance
@@ -453,6 +453,7 @@ const careCost=()=>!s.rc&&age()>=75&&s.st.hea<35?160*s.eco.P:0; // a retirement 
 function oldDay(A){
   if(s.job)s.wage=(s.wage||0)+jobPay();
   if(A>=SS_AGE&&!s.ss&&(s.wage||0)>0){s.ss=ssBenefit();s.pension=(s.pension||0)+s.ss;log(`Social Security starts: ${fmt(s.ss)} a day for life.`,'good');toast('Social Security starts')}
+  if(A>=65&&!s.medOn){s.medOn=1;if(s.ins!=='va'){s.ins='medicare';log(`You turned 65 and moved onto Medicare: ${fmt(insPrem('medicare'))} a day, 80% of bills covered.`,'good')}}
   if(careCost()&&!s.care){s.care=1;log(`You need help at home now. Care costs ${fmt(careCost())} a day.`,'bad')}else if(!careCost())s.care=0;
 }
 
@@ -690,7 +691,7 @@ const NEWS=[
  {v:12,t:['Aging parents who need care','Friends and siblings marry, have kids, move away and grow old']},
  {v:13,t:['New careers: pro athlete, fashion model and actor']},
  {v:14,t:['Five new starting lives: lottery winner, young parent, sporty kid, new arrival and art school dropout','Lifetime stats on the family tree','Nine more life moments, from roommates to a memoir']},
- {v:15,t:['A portrait for every character, who ages and shows your mood','Three save slots for separate families (? menu)','Gentle mode: illness never kills you (? menu)']},
+ {v:15,t:['Unemployment benefits after a layoff, and Medicare from 65','A portrait for every character, who ages and shows your mood','Three save slots for separate families (? menu)','Gentle mode: illness never kills you (? menu)']},
 ];
 const NEWSV=NEWS.at(-1).v;
 function newsHtml(){const seen=s.seenV||1,L=NEWS.filter(n=>n.v>seen);if(!L.length)return '';s.seenV=NEWSV;
@@ -820,3 +821,10 @@ function avatar(name,ag,hap=60,sz=56){let h=0;for(const c of name||'?')h=(h*31+c
   const SK=['#f2d3b3','#e5b98f','#c68c5e','#a06a42','#6f4a2e'],HR=['#2b1d14','#5a3a22','#8c5a2b','#c9a15a','#1a1a1a','#7a2e1b'],skin=SK[Math.floor(r(1)*SK.length)],grey=ag>=62?'#d8d8d8':ag>=48?'#9a9a9a':null,hair=grey||HR[Math.floor(r(5)*HR.length)],style=Math.floor(r(9)*4);
   const smile=hap>=65?'M22 38 Q28 44 34 38':hap>=40?'M22 39 Q28 41 34 39':'M22 41 Q28 36 34 41',hairP=['M12 26 Q14 8 28 8 Q42 8 44 26 Q40 16 28 16 Q16 16 12 26Z','M11 30 Q10 6 28 7 Q46 6 45 30 Q44 18 36 15 Q28 20 18 15 Q12 18 11 30Z','M12 24 Q20 6 36 9 Q46 12 44 24 Q36 14 12 24Z','M10 36 Q8 8 28 8 Q48 8 46 36 L42 36 Q42 16 28 16 Q14 16 14 36Z'][style];
   return `<svg class="avatar" width="${sz}" height="${sz}" viewBox="0 0 56 56" aria-hidden="true"><circle cx="28" cy="28" r="27" fill="var(--color-paper-2)"/><ellipse cx="28" cy="29" rx="15" ry="17" fill="${skin}"/>${ag<62||r(13)>.4?`<path d="${hairP}" fill="${hair}"/>`:''}<circle cx="22" cy="28" r="1.8" fill="#222"/><circle cx="34" cy="28" r="1.8" fill="#222"/>${ag>=58?'<path d="M18 33 l3 1 M38 33 l-3 1" stroke="#0003" stroke-width="1"/>':''}<path d="${smile}" stroke="#5a2a1a" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>`}
+
+// ---------- safety nets: unemployment insurance after a layoff, and Medicare at 65 ----------
+const UIW=26*7; // six months of benefits
+function uiStart(pay){s.ui={v:Math.min(pay*.45,90*s.eco.P),until:s.day+UIW};log(`Unemployment benefits: ${fmt(s.ui.v)} a day for up to 26 weeks while you look for work.`,'info')}
+const uiPay=()=>s.ui&&!s.job&&s.day<s.ui.until?s.ui.v:0;
+function uiDay(){if(s.ui&&(s.job||s.day>=s.ui.until))s.ui=null}
+const medicare=()=>age()>=65;

@@ -353,7 +353,7 @@ const EV=[
  ['Plan something special',(s,a)=>{s.cash-=a;const p=partner();if(p)prel(p,20);add('hap',6);return 'A night to remember.'}],
  ['Keep it low-key',()=>{const p=partner();if(!p)return 'Takeout for one.';if(R()<.5){prel(p,-20);return 'They were hoping for more. It shows.'}prel(p,2);return 'Takeout and a movie. Honestly perfect.'}]]},
 {id:'layoffs',w:1.5,c:s=>s.job,a:()=>Math.round(jobPay()*60),t:'Layoffs coming',d:(s,a)=>`Your company is cutting jobs. HR offers <b>${fmt(a)}</b> to anyone who leaves voluntarily.`,def:1,ch:[
- ['Take the package',(s,a)=>{if(!s.job)return 'The moment has passed.';s.cash+=a;const j=jobTitle();fire();return `You leave your job as ${j} with ${fmt(a)} in your pocket.`}],
+ ['Take the package',(s,a)=>{if(!s.job)return 'The moment has passed.';s.cash+=a;const j=jobTitle(),pay0=jobPay();fire();uiStart(pay0);return `You leave your job as ${j} with ${fmt(a)} in your pocket.`}],
  ['Keep your head down',()=>{if(!s.job)return 'The moment has passed.';if(R()<.35-s.perf/400){const j=jobTitle();fire();add('hap',-12);return `You were laid off from ${j} anyway, without the package.`}s.perf=clamp(s.perf+5,0,100);return 'You survive the cuts. Everyone works harder now.'}]]},
 {id:'conference',w:1.2,c:s=>s.job&&s.cash>2000,a:()=>rint(1500,4000),t:'Industry conference',d:(s,a)=>`There's a big conference in your field. The trip costs <b>${fmt(a)}</b>.`,def:1,ch:[
  ['Go and network',(s,a)=>{s.cash-=a;s.perf=clamp(s.perf+10,0,100);if(R()<.5&&friendsN()<10){const p=meet('friend',45);return `Your boss is impressed, and you made a friend: ${p.n}.`}return 'Your boss is impressed.'}],
@@ -612,7 +612,7 @@ function upgrade(){ // bring older saves up to date
   for(const k of STOCKS){const q=s.px[k.t];if(q.k)continue; // daily candles used to be drawn from closes alone
     q.k=q.h.map((c,i)=>{const o=i?q.h[i-1]:c;return [o,Math.max(o,c)*(1+.005*hsh(i,1)),Math.min(o,c)*(1-.005*hsh(i,2))]});[q.op,q.hi,q.lo]=q.k.at(-1)}
 }
-function flows(){const f={job:(s.job&&!jailed()&&!(s.rehab>s.day)?jobPay():0)+(s.pension||0)+(s.su?.st>=2?suDraw():0)+spouseInc()+polPay(),biz:0,pend:0,spon:sponsor()+chInc()+(s.roy&&s.day<s.roy.end?s.roy.v:0),exp:expenses(),rent:s.props.reduce((t,p)=>t+rentOf(p),0),mort:s.props.reduce((t,p)=>t+(p.loan>0?p.pay:0),0)+loanPay()+carPays(),own:ownInc()};f.tax=s.tax?Math.max(0,(f.job+f.biz+f.pend+f.spon+f.rent*.5)*margRate()+f.own*.15):0;for(const b of BIZ){const o=s.biz[b.id];if(o?.n)f[o.mgr?'biz':'pend']+=bizInc(b,o)}return f}
+function flows(){const f={job:(s.job&&!jailed()&&!(s.rehab>s.day)?jobPay():0)+(s.pension||0)+(s.su?.st>=2?suDraw():0)+spouseInc()+polPay()+uiPay(),biz:0,pend:0,spon:sponsor()+chInc()+(s.roy&&s.day<s.roy.end?s.roy.v:0),exp:expenses(),rent:s.props.reduce((t,p)=>t+rentOf(p),0),mort:s.props.reduce((t,p)=>t+(p.loan>0?p.pay:0),0)+loanPay()+carPays(),own:ownInc()};f.tax=s.tax?Math.max(0,(f.job+f.biz+f.pend+f.spon+f.rent*.5)*margRate()+f.own*.15):0;for(const b of BIZ){const o=s.biz[b.id];if(o?.n)f[o.mgr?'biz':'pend']+=bizInc(b,o)}return f}
 const pfmt=n=>n>=1?fmt(n):'$'+(n<1e-6?n.toExponential(1):n.toPrecision(3));
 const qfmt=n=>n>=1?'$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):pfmt(n); // share prices to the cent, like a broker
 const units=u=>u>=1000?big(u):u>=1?u.toFixed(2):u.toPrecision(3);
@@ -704,7 +704,7 @@ function day(live){
   if(s.job){const J=job();s.jobDays++;s.xp[J.fld]=(s.xp[J.fld]||0)+1;
     s.perf=clamp(s.perf+((40+(trait('driven')?8:0)+hours().perf+s.st.sma*.3+(s.st.hap-50)*.2-J.str*2)-s.perf)*(boss()?.bt==='absent'?.012:.02),0,100);
     if(s.jobDays%120===0&&!topRank()){if(s.perf>=promoNeed()){s.rank++;s.perf-=10;mile(`Promoted to ${jobTitle()}.`);{const pt=partner();if(pt?.pt==='ambitious')prel(pt,8)}log(`Promoted to <b>${jobTitle()}</b>! Now ${fmt(jobPay())} a day.`,'good');toast('Promotion!')}else log(`Passed over for promotion. You needed a performance of ${promoNeed()}.`,'bad')}
-    if(s.job&&s.eco.u>.05&&R()<(s.eco.u-.045)*2/365){const j=jobTitle(),sev=jobPay()*30;fire();s.cash+=sev;taxAdd('ord',sev);add('hap',-12);mile(`Laid off from ${j}.`);log(`Laid off from ${j} as the economy slows. Severance: ${fmt(sev)}.`,'bad');toast(`Laid off from ${j}`)}
+    if(s.job&&s.eco.u>.05&&R()<(s.eco.u-.045)*2/365){const j=jobTitle(),sev=jobPay()*30,pay0=jobPay();fire();uiStart(pay0);s.cash+=sev;taxAdd('ord',sev);add('hap',-12);mile(`Laid off from ${j}.`);log(`Laid off from ${j} as the economy slows. Severance: ${fmt(sev)}.`,'bad');toast(`Laid off from ${j}`)}
     if(s.job&&s.perf<20&&R()<.01){const j=jobTitle();fire();mile(`Fired from ${j}.`);add('hap',-15);log(`Fired from ${j} for poor performance.`,'bad');toast(`Fired from ${j}.`)}}
   peopleDay();othersDay();
   if(s.study&&!jailed()){const st=s.study,P=PG[st.p];st.left--;st.g=clamp(st.g+((40+(trait('bright')?6:0)+s.st.sma*.4+(s.st.hap-50)*.2)-st.g)*.02,0,100);if(P.stipend)s.cash+=P.stipend;
@@ -723,7 +723,7 @@ function day(live){
   s.later=s.later.filter(p=>p.d>s.day||(runLater(p),false));
   s.inbox=s.inbox.filter(it=>{if(s.day-it.d<decDays())return true;const e=EVM[it.id];if(!e.c||e.c(s))log(`<b>${e.t}</b> ${e.ch[e.def][1](s,it.a)}<span class="auto">decided for you</span>`);return false});
   if(s.inbox.length<3&&R()<1/28)newEvent();
-  flDay();if(s.su)suDay();propDay();worldDay();fdnDay();oldDay(A);polDay();clubDay();creditDay();viceDay();milDay();trustDay();stlDay();chDay();staffDay();starDay();statsDay();
+  flDay();if(s.su)suDay();propDay();worldDay();fdnDay();oldDay(A);polDay();clubDay();creditDay();viceDay();milDay();trustDay();stlDay();chDay();staffDay();starDay();statsDay();uiDay();
   lifeDay(A);if(s.dead)return;
   const pd=s.st.hea<=0?1:A>60?Math.min(.5,((A-60)/30)**3*3)/365:0;
   if(R()<pd)die();else checkGoals();
@@ -1168,7 +1168,7 @@ const ACT={
   sukill:y=>{const u=s.su;if(!u)return;if(y!=='yes')return modal(`<h2>Shut down ${esc(u.n)}?</h2><p>You get back your ${(u.own*100).toFixed(1)}% of the ${fmt(Math.max(0,u.cash))} left in the bank.</p><div class="row"><button class="bad" data-a="sukill" data-x="yes">Shut it down</button><button data-a="close">Keep going</button></div>`);closeModal();const back=Math.max(0,u.cash)*u.own;s.cash+=back;capGain(back-u.basis,u.d);s.su=null;add('hap',-8);log(`You shut down ${esc(u.n)} and got back ${fmt(back)}.`)},
   treat:id=>{const c=cond(id);if(!c||c.hid||c.tx||c.cd>s.day)return;const K=CONDS[id];if(K.med&&!K.tc){c.tx=1;toast(id==='dep'?'You started therapy.':'You started medication.');return}const o=oopOf(txCost(c)).out;if(s.cash<o)return;const v=billMed(txCost(c));const m=CURE[id](c);log(`${condName(c)}: ${m} You paid ${fmt(v)} after insurance.`);toast(m)},
   untreat:id=>{const c=cond(id);if(c)c.tx=0},
-  ins:k=>{if(INS[k]&&(k!=='va'||isVet())){s.ins=k;toast(`Switched to ${INS[k].n.toLowerCase()}.`)}},
+  ins:k=>{if(INS[k]&&(k!=='va'||isVet())&&(k!=='medicare'||medicare())){s.ins=k;toast(`Switched to ${INS[k].n.toLowerCase()}.`)}},
   case:(id,how)=>{const c=s.legal.cases.find(c=>c.id===+id);if(!c||!['plead','lawyer','self'].includes(how))return;if(how==='lawyer'&&s.cash<lawCost(c))return;const m=resolveCase(c,how);log(`<b>${CASES[c.t].n}</b> ${m}`);toast(m)},
   hob:id=>{const H=HM[id];if(!H||s.day<(s.cd['h_'+id]||0)||s.cash<H.c*s.eco.P)return;s.cash-=H.c*s.eco.P;s.cd['h_'+id]=s.day+2;toast(practice(id))},
   hshow:id=>{const H=HM[id];if(!H||hobSk(id)<(H.need||30)||s.day<(s.cd['hs_'+id]||0))return;s.cd['hs_'+id]=s.day+(H.scd||30);const m=hobShow(id);log(m,'good');toast(m)},
@@ -1625,7 +1625,7 @@ health(){
   ${f.length?`<table class="ledger"><tbody>${f.map(c=>`<tr><td><b>${condName(c)}</b><div class="mut">${CONDS[c.id].d}</div></td><td>${st(c)}</td><td class="act">${btn(c)}</td></tr>`).join('')}</tbody></table>`:'<p class="mut">You are healthy. Keep it that way: exercise, see a doctor now and then, and don\'t let your mood sink too low for too long.</p>'}
   ${viceHtml()}
   <div class="sec-h"><h2>Insurance</h2><span>this year: ${fmt(m.oop)} paid out of pocket</span></div>
-  <div class="acards">${Object.entries(INS).filter(([k])=>k!=='va'||isVet()).map(([k,x])=>`<button class="acard${s.ins===k?' on':''}" data-a="ins" data-x="${k}" aria-pressed="${s.ins===k}"><b>${x.n}</b><span>${x.d}</span><small>${insPrem(k)?`${fmt(insPrem(k))} a day`:'Free'}${s.ins===k?' · your plan':''}</small></button>`).join('')}</div>
+  <div class="acards">${Object.entries(INS).filter(([k])=>(k!=='va'||isVet())&&(k!=='medicare'||medicare())).map(([k,x])=>`<button class="acard${s.ins===k?' on':''}" data-a="ins" data-x="${k}" aria-pressed="${s.ins===k}"><b>${x.n}</b><span>${x.d}</span><small>${insPrem(k)?`${fmt(insPrem(k))} a day`:'Free'}${s.ins===k?' · your plan':''}</small></button>`).join('')}</div>
   ${I.ded?`<p class="mut" style="margin-top:var(--space-2xs)">Deductible used: ${fmt(m.ded)} of ${fmt(I.ded*P)}. Out-of-pocket cap: ${fmt(I.cap*P)}.</p>`:''}
   ${howto('Every day there is a small chance of getting ill, and it grows with age, poor health and low mood. Colds and injuries pass on their own. Chronic conditions stay, draining your health and happiness until treated. Diabetes and cancer can go unnoticed for a long time, so a check-up every year or so is cheap insurance. Heart disease and late-stage cancer can kill you. Insurance pays most of your medical bills after a yearly deductible.')}`;
 },
