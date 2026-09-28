@@ -125,7 +125,7 @@ function petsDay(){for(const p of [...s.pets])if(s.day>=p.dies){s.pets.splice(s.
   if(s.pets.length&&R()<s.pets.length*.4/365){const v=Math.round(rint(200,2500)*s.eco.P);s.cash-=v;log(`A vet bill for ${esc(pick(s.pets).n)}: ${fmt(v)}.`,'bad')}}
 
 // ---------- the daily tick for all of the above ----------
-const lifeCost=()=>(s.staff?.pa?paCost():0)+dietCost()+careCost()+insPrem()+medDaily()+kidsCost()+petSum('up')*s.eco.P-Math.min(.25,hobSk('cook')/500+hobSk('garden')/1000)*(15+kidsHome()*47)*s.eco.P;
+const lifeCost=()=>(s.staff?.pa?paCost():0)+(s.staff?.nanny?nannyCost():0)+dietCost()+careCost()+insPrem()+medDaily()+kidsCost()+petSum('up')*s.eco.P-Math.min(.25,hobSk('cook')/500+hobSk('garden')/1000)*(15+kidsHome()*47)*s.eco.P;
 function lifeDay(A){
   if(jailed())add('hap',-.25);else if(s.legal.jail&&s.legal.jail===s.day){log('Released from jail.','good');toast('Released from jail')}
   for(const id in s.hob){const h=s.hob[id];if(s.day-h.last>30)h.sk=Math.max(0,h.sk-.03)}
@@ -699,7 +699,7 @@ const NEWS=[
  {v:13,t:['New careers: pro athlete, fashion model and actor']},
  {v:14,t:['Five new starting lives: lottery winner, young parent, sporty kid, new arrival and art school dropout','Lifetime stats on the family tree','Nine more life moments, from roommates to a memoir']},
  {v:15,t:['Unemployment benefits after a layoff, and Medicare from 65','A portrait for every character, who ages and shows your mood','Three save slots for separate families (? menu)','Gentle mode: illness never kills you (? menu)','Menu badges for court, illness, campaigns and startup offers']},
- {v:16,t:['Enact policies once you hold office','Three new hobbies: photography, gardening and dance']},
+ {v:16,t:['Enact policies once you hold office','Three new hobbies: photography, gardening and dance','Hire a nanny (Lifestyle)']},
 ];
 const NEWSV=NEWS.at(-1).v;
 function newsHtml(){const seen=s.seenV||1,L=NEWS.filter(n=>n.v>seen);if(!L.length)return '';s.seenV=NEWSV;
@@ -750,15 +750,17 @@ function richHtml(){const L=richList(),me=L.findIndex(x=>x.me),top=L.slice(0,20)
   <button class="pri" data-a="close" style="margin-top:var(--space-sm)">Back</button>`}
 
 // ---------- staff: people you pay to run the boring parts of a rich life ----------
-const paCost=()=>80*s.eco.P;
+const paCost=()=>80*s.eco.P,nannyCost=()=>120*s.eco.P;
 function staffDay(){const S=s.staff;if(!S)return;
+  if(S.nanny&&s.day%7===0)for(const k of kids())if(k.k&&ageOf(k)<18){k.k.sma=Math.min(100,k.k.sma+.2);k.k.hea=Math.min(100,k.k.hea+.5);k.k.hap=Math.min(100,k.k.hap+.5)} // a little less than doing it yourself
   if(S.pa){for(const id in s.biz){const v=s.biz[id].pend;if(v){s.cash+=v;taxAdd('ord',v);s.biz[id].pend=0}}}
   if(S.adv){const F=s.fin,px=fundPx();s.cash-=F.fu*px*.01/365; // 1% a year of what they manage
     if(s.day%7===0){const keep=Math.max(5e3*s.eco.P,flows().exp*90),a=s.cash-keep;if(a>1e3*s.eco.P){s.cash-=a;F.fd=avgDay(F.fd,F.fu,a/px);F.fu+=a/px;F.fc+=a}}}}
 function staffHtml(){const S=s.staff||{};
   return `<div class="sec-h"><h2>Staff</h2><span>for when life runs itself</span></div>
   <div class="acards"><button class="acard${S.pa?' on':''}" data-a="staff" data-x="pa" aria-pressed="${!!S.pa}"><b>Personal assistant</b><span>Collects every till each day and answers decisions after 7 days with the sensible choice.</span><small>${S.pa?'Hired · tap to let go':`${fmt(paCost())} a day`}</small></button>
-  <button class="acard${S.adv?' on':''}" data-a="staff" data-x="adv" aria-pressed="${!!S.adv}"><b>Financial advisor</b><span>Each week, invests spare cash in the index fund, keeping about 90 days of spending in cash.</span><small>${S.adv?'Hired · tap to let go':'1% a year of what they manage'}</small></button></div>`}
+  <button class="acard${S.adv?' on':''}" data-a="staff" data-x="adv" aria-pressed="${!!S.adv}"><b>Financial advisor</b><span>Each week, invests spare cash in the index fund, keeping about 90 days of spending in cash.</span><small>${S.adv?'Hired · tap to let go':'1% a year of what they manage'}</small></button>
+  ${kidsHome()||S.nanny?`<button class="acard${S.nanny?' on':''}" data-a="staff" data-x="nanny" aria-pressed="${!!S.nanny}"><b>Nanny</b><span>Does homework and plays with the kids every week, almost as well as you would.</span><small>${S.nanny?'Hired · tap to let go':`${fmt(nannyCost())} a day`}</small></button>`:''}</div>`}
 
 // ---------- other people's lives: parents who need care, friends and siblings who move on ----------
 function othersDay(){for(const p of [...s.people]){const a=ageOf(p);

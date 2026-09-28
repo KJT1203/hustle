@@ -1129,7 +1129,7 @@ const dur=sec=>sec<3600?`${Math.round(sec/60)} minutes`:sec<172800?`${Math.floor
 // ---------- actions ----------
 const ACT={
   enact:k=>{const m=enact(k);if(m){log(m,'good');toast(m)}},
-  staff:k=>{if(k!=='pa'&&k!=='adv')return;const S=s.staff??={};S[k]=S[k]?0:1;toast(S[k]?(k==='pa'?'You hired a personal assistant':'You hired a financial advisor'):'You let them go')},
+  staff:k=>{if(!['pa','adv','nanny'].includes(k))return;const S=s.staff??={};S[k]=S[k]?0:1;toast(S[k]?`You hired a ${{pa:'personal assistant',adv:'financial advisor',nanny:'nanny'}[k]}`:'You let them go')},
   rich:()=>modal(richHtml()),
   stl:u=>{const p=P(+u);if(!p||p.uid===s.home||PM[p.t].biz)return;p.stl=p.stl?0:1;toast(p.stl?'Now a holiday let: more rent, more wear, more empty nights':'Back to a long let')},
   chstart:()=>{const C=s.ch??=chNew();if(C.on||s.cash<500*s.eco.P)return;s.cash-=500*s.eco.P;C.on=1;C.last=s.day;mile('Started a channel.');toast('Your channel is live')},
