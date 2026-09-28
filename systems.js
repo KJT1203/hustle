@@ -689,6 +689,7 @@ const NEWS=[
  {v:11,t:['Hire a personal assistant and a financial advisor (Lifestyle)']},
  {v:12,t:['Aging parents who need care','Friends and siblings marry, have kids, move away and grow old']},
  {v:13,t:['New careers: pro athlete, fashion model and actor']},
+ {v:14,t:['Five new starting lives: lottery winner, young parent, sporty kid, new arrival and art school dropout','Lifetime stats on the family tree']},
 ];
 const NEWSV=NEWS.at(-1).v;
 function newsHtml(){const seen=s.seenV||1,L=NEWS.filter(n=>n.v>seen);if(!L.length)return '';s.seenV=NEWSV;

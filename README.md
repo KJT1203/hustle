@@ -60,6 +60,8 @@ An idle life simulator with no build step: `index.html`, `style.css`, `game.js` 
 
 **Settings** (in the ? menu): pause when a decision arrives, let decisions decide themselves after 7, 30 or 90 days, and a quiet mode with no pop-ups.
 
+**Starting lives**: trust-fund kid, street hustler, bookworm, chronically online, lottery winner ($1M and a gambling itch), young parent (a toddler and a retail job), sporty kid (a head start at tennis), new arrival (bright and driven, $300) and art school dropout (a painter with followers and no money).
+
 **Playing it:** a short guided tour starts with every new life (reopen it with the ? button or the ? key). the Home screen lists everything that needs you. Answer decisions right there, collect full tills, and hire managers when they pay off. Quick actions sit underneath, with your net worth chart and a breakdown of where your money is. The side menu groups the other screens and flags what needs attention; on a phone it becomes a bottom tab bar. Keys 1–0 switch screens, Space pauses, C collects everything.
 
 Play: open `index.html` (keep the files together). It saves to the browser automatically; use **Back up your save** in the ? menu to keep a copy or move it to another device.

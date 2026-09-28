@@ -244,6 +244,11 @@ const BG={
  street:{n:'Street hustler',d:'Tough & scrappy, $150 and a fry-cook job',cash:150,job:'crew',st:{hea:92,hap:60,sma:35,loo:50}},
  nerd:{n:'Bookworm',d:'Diploma done, office job, 65 smarts',cash:600,job:'admin',st:{hea:70,hap:55,sma:65,loo:40},edu:1},
  online:{n:'Chronically online',d:'1,500 followers and a delivery gig',cash:400,job:'rider',st:{hea:65,hap:62,sma:28,loo:70},fol:1500},
+ lotto:{n:'Lottery winner',d:'$1M at 18, and no idea what to do with it',cash:1e6,st:{hea:75,hap:85,sma:25,loo:55},fx:()=>{viceAdd('gam',30)}},
+ parent:{n:'Young parent',d:'A toddler, a retail job and $300',cash:300,job:'retail',st:{hea:80,hap:52,sma:40,loo:55},fx:()=>{const k=addChild();k.b=s.day-2*365}},
+ sporty:{n:'Sporty kid',d:'Top health, tennis skill 55, and a shot at going pro',cash:500,st:{hea:95,hap:62,sma:30,loo:58},fx:()=>{s.hob.sport={sk:55,last:0,n:30};s.tr=['sporty']}},
+ newc:{n:'New arrival',d:'Just landed with $300. Bright, and hungry',cash:300,job:'crew',st:{hea:82,hap:58,sma:58,loo:50},fx:()=>{s.tr=['driven']}},
+ artist:{n:'Art school dropout',d:'A painter with talent, followers and no money',cash:150,st:{hea:70,hap:60,sma:45,loo:60},fol:800,fx:()=>{s.hob.paint={sk:45,last:0,n:40};s.tr=['creative']}},
 };
 const NAMES=['Alex','Sam','Jordan','Riley','Casey','Kai','Mika','Rin','Ari','Noa','Remy','Jules'];
 const NPC=[['@stonksguy','Stonks Guy'],['@moneymira','Mira | Money'],['@techbro_tim','tim 🚀'],['@auntie_ling','Auntie Ling'],['@gymrat_raj','Raj lifts'],['@catmom88','cat mom'],['@lowkey_lena','lena'],['@dad_jokes_dan','Dan'],['@nomad_noor','Noor ✈️'],['@quietquitter','Q. Quitter']];
@@ -665,7 +670,7 @@ function newGame(name,bg,h={}){
      job:b.job||null,jobDays:0,rank:0,biz:{},port:{},px:{},mkt:{bull:true,h:MVOL.bull**2/YR,eps:0,cb:0,div:1,ic:1,ih:1,rc:1e13},orders:[],fol:b.fol||0,feed:[],own:{},people:[],degs:b.edu?[{p:'dip',sc:'cc',mj:'Computer science',hon:false}]:[],debt:0,xp:{},perf:50,raise:0,pension:0,wallet:{},cz:{chip:100,net:0,played:0,rh:[],ban:0},props:[],cars:[],home:null,re:{idx:1,list:[],next:0},cd:{},inbox:[],later:[],log:[],seenV:NEWSV,fl:flNew(),su:null,pol:polNew(),club:null,credit:650,vice:{alc:0,gam:0},pets:[],conds:[],ins:'basic',legal:{rec:[],cases:[],jail:0},hob:{},
      gen:h.gen||1,boost:0,lastPost:0,dead:0,lastSeen:Date.now(),goals:{...h.goals},min:480,eco:h.eco?{...h.eco}:ecoNew(),fin:finNew(),tax:taxNew(),mloan:0,shorts:{},opts:[]};applyPrices();
   s.legacy=1+.25*(s.gen-1);
-  s.tr=h.tr||rollTraits().slice(0,1);s.tree=h.tree||[];s.fdn=h.fdn||0;s.city=h.city||'suburb';
+  s.tr=h.tr||rollTraits().slice(0,1);if(!h.gen&&b.fx)b.fx();s.tree=h.tree||[];s.fdn=h.fdn||0;s.city=h.city||'suburb';
   if(h.ks){for(const k in h.ks)s.st[k]=Math.round(clamp(h.ks[k],0,100));s.cash+=h.fund||0;s.debt=h.loan||0;if(h.degs){s.degs=h.degs;s.edu=h.edu}if(h.job){s.job=h.job;s.xp=h.xp||{}}if(h.study)s.study=h.study} // the heir is the person their childhood made
   else if(h.gen){s.st.sma=Math.round(s.st.sma*.7+h.sma*.3);s.st.loo=Math.round(s.st.loo*.7+h.loo*.3)} // a little of the family runs in the blood
   if(h.pets)s.pets=h.pets.map(p=>({...p,uid:uid()}));
