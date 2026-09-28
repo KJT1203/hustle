@@ -651,7 +651,8 @@ function bjEnd(){const b=s.cz.bj,p=hv(b.p),nat=b.p.length===2&&p===21;
 function netWorth(){let w=s.cash+(s.fin&&s.mkt.div?finVal():0)-(s.mloan||0);for(const t in s.shorts||{})w-=s.shorts[t].sh*s.px[t].p;if(s.opts?.length)w+=optVal();for(const t in s.port)w+=s.port[t].sh*s.px[t].p;w+=bizWorth();for(const id in s.own)w+=SM[id].cost*.6;for(const p of s.props)w+=pval(p)-p.loan;for(const c of s.cars)w+=c.v;return w+walletVal()+suWorth()+clubVal()-(s.debt||0)}
 function log(t,k='info'){s.log.unshift({d:s.day,t,k});if(s.log.length>80)s.log.pop()}
 function chirp(h,n,x,v){s.feed.unshift({h,n,x,v,l:0,tl:rint(3,40)*(v?40:1),d:s.day});if(s.feed.length>60)s.feed.pop()}
-function toast(m){if(catching)return;const t=document.createElement('div');t.className='toast';t.innerHTML=m;$('#toasts').append(t);setTimeout(()=>t.remove(),2800)}
+const decDays=()=>s?.opt?.dec||30,opt=k=>!!s?.opt?.[k];
+function toast(m){if(catching||opt('quiet'))return;const t=document.createElement('div');t.className='toast';t.innerHTML=m;$('#toasts').append(t);setTimeout(()=>t.remove(),2800)}
 
 function newGame(name,bg,h={}){
   const b=BG[bg]||{cash:0,st:{hea:75,hap:60,sma:40,loo:50}};
@@ -706,7 +707,7 @@ function day(live){
   statsSnap();
   if(s.day%7===0){(s.nwh??=[]).push(Math.round(netWorth()));if(s.nwh.length>104)s.nwh.shift()}
   s.later=s.later.filter(p=>p.d>s.day||(runLater(p),false));
-  s.inbox=s.inbox.filter(it=>{if(s.day-it.d<30)return true;const e=EVM[it.id];if(!e.c||e.c(s))log(`<b>${e.t}</b> ${e.ch[e.def][1](s,it.a)}<span class="auto">decided for you</span>`);return false});
+  s.inbox=s.inbox.filter(it=>{if(s.day-it.d<decDays())return true;const e=EVM[it.id];if(!e.c||e.c(s))log(`<b>${e.t}</b> ${e.ch[e.def][1](s,it.a)}<span class="auto">decided for you</span>`);return false});
   if(s.inbox.length<3&&R()<1/28)newEvent();
   flDay();if(s.su)suDay();propDay();worldDay();fdnDay();oldDay(A);polDay();clubDay();creditDay();viceDay();milDay();
   lifeDay(A);if(s.dead)return;
@@ -1005,7 +1006,7 @@ function runLater(p){
 function newEvent(){
   const W=e=>typeof e.w==='function'?e.w(s):e.w,ok=EV.filter(e=>(!e.c||e.c(s))&&!s.inbox.some(i=>i.id===e.id));
   let r=R()*ok.reduce((t,e)=>t+W(e),0);
-  for(const e of ok)if((r-=W(e))<=0){s.inbox.push({id:e.id,d:s.day,a:e.a?e.a(s):0});toast('A new decision is waiting');return}
+  for(const e of ok)if((r-=W(e))<=0){s.inbox.push({id:e.id,d:s.day,a:e.a?e.a(s):0});toast('A new decision is waiting');if(opt('pause')&&!catching){if(speed)lastSpeed=speed;speed=0}return}
 }
 function die(){s.dead=1;(s.tree??=[]).push(lifeRec());log(`${esc(s.name)} passed away at ${Math.floor(age())}${s.cause?' '+s.cause:''}.`,'bad');save();lbPost(true);deathModal()}
 
@@ -1110,6 +1111,7 @@ const dur=sec=>sec<3600?`${Math.round(sec/60)} minutes`:sec<172800?`${Math.floor
 
 // ---------- actions ----------
 const ACT={
+  setopt:(k,v)=>{const O=s.opt??={};if(k==='dec'){if([7,30,90].includes(+v))O.dec=+v}else if(k==='pause'||k==='quiet')O[k]=!O[k];ACT.help()},
   hours:k=>{if(HOURS[k]){s.hours=k;toast(`Work hours: ${HOURS[k].n.toLowerCase()}`)}},
   diet:k=>{if(DIETS[k]){s.diet=k;toast(`Food: ${DIETS[k].n.toLowerCase()}`)}},
   bsell:(id,y)=>{const b=BM[id],o=s.biz[id];if(!b||!o?.n)return;const v=Math.round(bizVal(b,o)*.95);
@@ -1168,6 +1170,10 @@ const ACT={
   dropout:x=>{if(!s.study)return;if(x!=='yes')return modal(`<h2>Drop out of ${degName(s.study)}?</h2><p>You won't get your tuition back, and any student loan stays.</p><div class="row"><button class="bad" data-a="dropout" data-x="yes">Drop out</button><button data-a="close">Keep studying</button></div>`);log(`Dropped out of ${degName(s.study)}.`,'bad');s.study=null;closeModal()},
   payloan:()=>{if(!s.debt||s.cash<s.debt)return;s.cash-=s.debt;s.debt=0;log('Paid off your student loans.','good')},
   help:()=>modal(`<p class="kicker">Help and settings</p><h2>The Hustle</h2><div class="choices"><button data-a="guide2">Replay the guide</button><button data-a="exp">Back up your save</button><button data-a="imp">Load a saved game</button><button class="bad" data-a="reset">Start a new life</button><button class="pri" data-a="close">Back to the game</button></div>
+    <h3 style="margin-top:var(--space-lg)">Settings</h3><table class="ledger"><tbody>
+     <tr><td>Pause when a decision arrives</td><td class="act"><button class="${opt('pause')?'pri':''}" data-a="setopt" data-x="pause">${opt('pause')?'On':'Off'}</button></td></tr>
+     <tr><td>Decisions decide themselves after</td><td class="act">${[7,30,90].map(d=>`<button class="${decDays()===d?'pri':''}" data-a="setopt" data-x="dec" data-y="${d}">${d} days</button>`).join('')}</td></tr>
+     <tr><td>Quiet mode: no pop-up messages (everything still goes in The Record)</td><td class="act"><button class="${opt('quiet')?'pri':''}" data-a="setopt" data-x="quiet">${opt('quiet')?'On':'Off'}</button></td></tr></tbody></table>
     <h3 style="margin-top:var(--space-lg)">Keyboard</h3><table class="ledger"><tbody><tr><td class="num">1 to 0</td><td>Switch screens</td></tr><tr><td>Space</td><td>Pause or resume</td></tr><tr><td>C</td><td>Collect every till</td></tr><tr><td>?</td><td>Replay the guide</td></tr><tr><td>Esc</td><td>Close the guide</td></tr></tbody></table>`),
   guide2:()=>{closeModal();ACT.guide()},
   exp:()=>{modal('<p class="kicker">Back up</p><h2>Preparing your save…</h2>');packSave().then(code=>{expCode=code;modal(`<p class="kicker">Back up</p><h2>Your save</h2>
@@ -1432,7 +1438,7 @@ function legalHtml(){const L=s.legal;if(!jailed()&&!L.cases.length&&!L.rec.lengt
   ${L.rec.length?`<p class="mut" style="margin-top:var(--space-2xs)">Record: ${L.rec.map(r=>`${CASES[r.t].n.replace(/ charges?$/,'').toLowerCase()} (year ${dateOf(r.d).y})`).join(', ')}. ${crimes().length?'Convictions from the last 7 years hurt interviews and rule out police, teaching, nursing, law, medicine and flying.':'Old enough that employers no longer care.'}</p>`:''}`}
 function needHtml(n){
   const row=(k,ti,d,acts,hot)=>`<div class="need"><div><div class="k ${hot?'hot':''}">${k}</div><div class="t">${ti}</div><div class="d">${d}</div></div><div class="acts2">${acts}</div></div>`;
-  if(n.k==='dec'){const left=30-(s.day-n.it.d);return row(`Decision · ${left} day${left===1?'':'s'} left`,n.e.t,n.e.d(s,n.it.a),n.e.ch.map((c,j)=>`<button data-a="pick" data-x="${n.it.id}" data-y="${j}">${c[0]}</button>`).join(''),1)}
+  if(n.k==='dec'){const left=decDays()-(s.day-n.it.d);return row(`Decision · ${left} day${left===1?'':'s'} left`,n.e.t,n.e.d(s,n.it.a),n.e.ch.map((c,j)=>`<button data-a="pick" data-x="${n.it.id}" data-y="${j}">${c[0]}</button>`).join(''),1)}
   if(n.k==='case'){const c=n.c,K=CASES[c.t];return row(`Legal · ${30-(s.day-c.d)} days left`,K.n,`${K.d} Answer it on the Life screen, or it goes to trial with a public defender.`,`<button data-a="tab" data-x="life">Deal with it</button>`,1)}
   if(n.k==='su'){const u=s.su;return row('Startup',n.t==='offer'?`${SUST[u.st+1].n} offer for ${esc(u.n)}`:n.t==='acq'?`Someone wants to buy ${esc(u.n)}`:`${esc(u.n)} has ${suRunway(u)} days of cash left`,n.t==='offer'?`${fmt(u.offer.raise)} at a ${fmt(u.offer.pre)} valuation.`:n.t==='acq'?`${fmt(u.acq.v)} for the company. Your share: ${fmt(u.own*u.acq.v)}.`:'Raise money, cut staff or put in more of your own, or it shuts down.',`<button data-a="tab" data-x="work">Open</button>`,1)}
   if(n.k==='jail')return row('Jail',`${s.legal.jail-s.day} days left inside`,'No work, school, gigs or activities until you get out. Your money keeps working.','');
