@@ -28,7 +28,7 @@ function selfTest(){ // open with ?test=1 — never touches your real save
   s.study.g=90;for(let i=0;i<2000&&s.study;i++)day();ok(s.degs.some(d=>d.p==='ba'&&d.mj==='Nursing')&&s.edu>=2&&canJob(JM.nurse),'graduated as nurse');
   s.cash=0;s.debt=0;ACT.learn('ma');ACT.enroll('online','loan');ok(s.study&&s.debt>0,'student loan');const d0=s.debt;for(let i=0;i<30;i++)day();ok(s.debt<d0,'loan repays');
   ok(xpY('health')>=1,'major counts as experience');tab='school';VIEWS.school();
-  s.tour=0;ACT.guide();ok(tour===0&&speed===0,'guide starts paused');for(let i=0;i<TOUR.length;i++)ACT.tnext();ok(tour===-1&&s.tour===1&&speed>0,'guide finishes');
+  s.tour=0;ACT.guide();ok(tour===0&&speed===0,'guide starts paused');for(let i=0;i<TR().length;i++)ACT.tnext();ok(tour===-1&&s.tour===1&&speed>0,'guide finishes');
   const sp=meet('spouse',60),ex=meet('ex',20),kd=addChild();kd.b=s.day-8*365;meet('friend',60);(s.people.find(p=>p.role==='parent')||meet('parent',60)).b=s.day-66*365;s.inbox=[];for(const q of s.props)if(q.uid!==s.home)q.from=0;for(const p of s.people)if(p.role==='friend')p.rel=60;
   const base=JSON.stringify({...s,job:'swe',fol:20000,cash:2e6,biz:{truck:{n:12,mgr:0,pend:0,spent:1e5},cafe:{n:3,mgr:1,pend:0,spent:1e5}},port:{NOVA:{sh:50,cost:5000}}});
   for(const e of EV)for(const[,fx]of e.ch){s=JSON.parse(base);s.st.hap=10;const m=fx(s,e.a?e.a(s):0);ok(typeof m==='string','event '+e.id)}
@@ -274,6 +274,14 @@ function selfTest(){ // open with ?test=1 — never touches your real save
   const sp_s0=s;newGame('Widow','nerd');const sp_p=meet('spouse',80);sp_p.b=s.day-110*365;for(let i=0;i<8000&&partner();i++)othersDay();ok(!partner()&&s.mile.some(m=>m.t.includes('Lost')),'spouses grow old too');s=sp_s0;
   const ks_s0=s;newGame('Support','nerd');s.startAge=75;const ks_k=addChild();ks_k.b=s.day-40*365;ks_k.rel=90;ks_k.k.job='swe';s.day=dayOf(dateOf(s.day).y,11,20);const ks_c=s.cash;othersDay();ok(s.cash>ks_c,'grown kids help out');s=ks_s0;
   ok(Array.from({length:400},(_,i)=>avatar('n'+i*7919,30+i%60,i%100)).every(x=>!x.includes('undefined')),'portraits are always complete');
+  const sx_s0=s;newGame('Simple','nerd');s.opt={};tab='dash';render();ok(document.body.classList.contains('simple')&&tab==='feed'&&$('#dock [data-a="ageup"]')&&$('#view .prof'),'simple layout starts on the life feed');
+  for(const k in MENUS){ACT.menu(k);ok($('#mbox').querySelectorAll('.mrow').length===MENUS[k][1].length&&MENUS[k][1].every(([x])=>VIEWS[x]&&TABS[x]),'menu '+k)}
+  ACT.go('dash');render();ok(tab==='dash'&&$('#modal').hidden&&$('#view .backbar'),'assets overview opens the old home');ACT.tab('feed');render();ok(tab==='feed','back to the feed');
+  s.inbox=[];const sx_a=Math.floor(age()),sx_ne=newEvent;newEvent=()=>{};ageUp();ok(Math.floor(age())===sx_a+1&&s.day>0,'age up reaches the next birthday');
+  let sx_n=0;newEvent=()=>{if(++sx_n===3)s.inbox.push({id:EV[0].id,d:s.day,a:EV[0].a?EV[0].a(s):0})};const sx_d=s.day;s.inbox=[];const sx_c=EV[0].c;EV[0].c=null;ageUp();ok(!$('#modal').hidden&&$('#mbox [data-a="pickm"]')&&Math.floor(age())===sx_a+1,'age up stops for a decision');
+  ACT.pickm(EV[0].id,0);ok(!s.inbox.length&&$('#mbox [data-a="ageon"]'),'the popup decides it and shows what happened');ACT.ageon();ok(Math.floor(age())===sx_a+2&&!ageRun&&$('#modal').hidden,'then carries on to the birthday');
+  newEvent=()=>s.inbox.push({id:EV[0].id,d:s.day,a:0});s.inbox=[];let sx_p=0;ageUp();while($('#mbox [data-a="pickm"]')&&sx_p<20){sx_p++;ACT.pickm(EV[0].id,0);ACT.ageon()}ok(sx_p===3&&Math.floor(age())===sx_a+3&&!quietEv,'at most three decisions a year');EV[0].c=sx_c;newEvent=sx_ne;
+  s.opt.classic=true;render();ok(!document.body.classList.contains('simple')&&tab==='dash'&&$('#dock').innerHTML==='','classic layout still works');s=sx_s0;
   tab='dash';ok(VIEWS.dash().includes('Goals'),'goals on home');goalsModal();
   const sp2=meet('spouse',70),k1=addChild(),k2=addChild(),k3=addChild();k1.b=s.day-40*365;k2.b=s.day-30*365;k3.b=s.day-5*365;k1.rel=90;
   deathModal();ok($('#mbox').innerHTML.includes('Continue as '+k1.n),'death lists the kids');ACT.heir(String(k1.uid));

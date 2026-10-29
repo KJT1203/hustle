@@ -700,6 +700,7 @@ const NEWS=[
  {v:14,t:['Five new starting lives: lottery winner, young parent, sporty kid, new arrival and art school dropout','Lifetime stats on the family tree','Nine more life moments, from roommates to a memoir']},
  {v:15,t:['Unemployment benefits after a layoff, and Medicare from 65','A portrait for every character, who ages and shows your mood','Three save slots for separate families (? menu)','Gentle mode: illness never kills you (? menu)','Menu badges for court, illness, campaigns and startup offers']},
  {v:16,t:['Enact policies once you hold office','Three new hobbies: photography, gardening and dance','Hire a nanny (Lifestyle)','Spouses grow old too','Grown kids who help support you in old age']},
+ {v:17,t:['A simpler layout: your life story in one feed, four stat bars, and five big buttons','The Age button skips to your next birthday, stopping for up to three decisions on the way','Occupation, Assets, Relationships and Activities each open a short list','The old layout is still there: turn on Classic layout in the ? menu']},
 ];
 const NEWSV=NEWS.at(-1).v;
 function newsHtml(){const seen=s.seenV||1,L=NEWS.filter(n=>n.v>seen);if(!L.length)return '';s.seenV=NEWSV;
@@ -857,3 +858,41 @@ function enact(k){const P=s.pol,X=POLICIES[k];if(!P?.cur||!X||OFFRANK[P.cur]<OFF
 function policyHtml(){const P=s.pol;if(!P?.cur)return '';
   return `<div class="sec-h"><h2>Policies</h2><span>each one can be used every 120 days</span></div>
   <div class="acards">${Object.entries(POLICIES).filter(([,X])=>OFFRANK[P.cur]>=OFFRANK[X.min]).map(([k,X])=>{const w=cdLeft('pol_'+k);return `<button class="acard" data-a="enact" data-x="${k}" ${w?'disabled':''}><b>${X.n}</b><span>${X.d}.</span><small>${w?`Again in ${w}d`:'Enact'}</small></button>`}).join('')}</div>`}
+
+// ---------- the simple layout: one life feed, four stat bars, and five big buttons (like a phone life sim) ----------
+const simple=()=>!opt('classic');
+const MENUS={
+ job:['Occupation',[['work','Job',()=>s.job?`${jobTitle()} · ${fmt(jobPay())} a day`:s.su?`Founder of ${esc(s.su.n)}`:'Out of work · find a job, freelance or start a company'],['school','Education',()=>s.study?`Studying: ${degName(s.study)}`:`${EDU[s.edu].n}${s.degs.length?`, ${s.degs.length} qualification${s.degs.length>1?'s':''}`:''}`],['office','Politics',()=>s.pol?.cur?`${OM[s.pol.cur].n}, approval ${Math.round(s.pol.app)}%`:'Run for office']]],
+ assets:['Assets',[['dash','Overview',()=>`Net worth ${fmt(netWorth())}`],['biz','Businesses',()=>nOwned()?`${nOwned()} kind${nOwned()>1?'s':''} · ${fmt(pendAll())} waiting to collect`:'Open your first business'],['bank','Bank',()=>`Savings and investments ${fmt(finVal())} · credit ${credit()}`],['home','Property',()=>s.props.length?`${s.props.length} propert${s.props.length>1?'ies':'y'} · ${city().n}`:`Renting in ${city().n.toLowerCase()}`],['stock','Stocks',()=>`Hustle 500 ${pct(idxDay())} today`],['crypto','Crypto',()=>`Wallet ${fmt(walletVal())}`],['garage','Cars',()=>s.cars.length?`${s.cars.length} car${s.cars.length>1?'s':''}`:'No car yet'],['shop','Lifestyle and staff',()=>'Nice things, a sports team, and people to help']]],
+ rel:['Relationships',[['people','People',()=>{const p=partner();return `${p?`${p.role==='spouse'?'Married to':'Seeing'} ${esc(p.n)}`:'Single'}${kids().length?` · ${kids().length} kid${kids().length>1?'s':''}`:''}`}],['legacy','Family tree',()=>`Generation ${s.gen} of the ${esc(s.surname||'family')}${s.surname?' family':''}`],['hobby','Pets',()=>s.pets.length?s.pets.map(p=>esc(p.n)).join(', '):'Adopt a pet']]],
+ act:['Activities',[['life','Activities and travel',()=>'The gym, nights out, dating, vacations'],['health','Doctor',()=>{const c=s.conds.filter(c=>!c.hid);return c.length?c.map(condName).join(', '):'Healthy, as far as anyone knows'}],['hobby','Hobbies',()=>{const h=Object.entries(s.hob).sort((a,b)=>b[1].sk-a[1].sk)[0];return h?`Best at ${HM[h[0]].n.toLowerCase()}, skill ${Math.round(h[1].sk)}`:'Pick something up'}],['chirp','Social media',()=>`${big(s.fol)} followers`],['casino','Casino',()=>'Blackjack, roulette, dice and slots']]],
+};
+function menuHtml(k){const [t,rows]=MENUS[k];return `<h2>${t}</h2><div class="mlist">${rows.map(([x,n,sub])=>`<button class="mrow" data-a="go" data-x="${x}">${ICON[TABS[x][1]]}<span><b>${n}</b><small>${sub()}</small></span>${badge(x)}<span class="chev" aria-hidden="true">›</span></button>`).join('')}</div><button class="link2" data-a="close" style="margin-top:var(--space-sm)">Close</button>`}
+const menuBadge=k=>MENUS[k][1].some(([x])=>/class="(badge|tag dn|tag gold)"/.test(badge(x)));
+const barCol=v=>v>=60?'var(--color-up)':v>=30?'var(--color-warn)':'var(--color-down)';
+function dockHtml(){const st=[['hap','Happiness'],['hea','Health'],['sma','Smarts'],['loo','Looks']];
+  return `<div class="inner"><div id="sstats">${st.map(([k,n])=>{const v=Math.round(s.st[k]);return `<div><span>${n}</span><span class="sm-bar"><i style="width:${v}%;background:${barCol(v)}"></i></span><span class="num">${v}%</span></div>`}).join('')}</div>
+  <nav id="sbar" aria-label="Your life">${[['job','Occupation','work'],['assets','Assets','chart'],null,['rel','Relationships','heart'],['act','Activities','user']].map(b=>b?`<button data-a="menu" data-x="${b[0]}">${ICON[b[2]]}${b[1]}${menuBadge(b[0])?'<span class="dot"></span>':''}</button>`:`<button class="age" data-a="ageup" aria-label="Age up a year"><span>+</span>Age</button>`).join('')}</nav></div>`}
+function feedHtml(){const J=job(),y=dateOf(s.day).y,N=needs(),groups=[];
+  for(const l of s.log){const a=Math.floor(s.startAge+l.d/365);if(!groups.length||groups.at(-1).a!==a)groups.push({a,L:[]});groups.at(-1).L.push(l)}
+  const tip=tips()[0];
+  return `<section class="prof">${avatar(s.name+s.gen,age(),s.st.hap,72)}<div><h2>${esc(s.name)}${s.surname?` ${esc(s.surname)}`:''}</h2><p class="mut">${J?jobTitle():s.su?`Founder of ${esc(s.su.n)}`:s.study?'Student':s.pension?'Retired':'Out of work'}</p><p class="mut sm">Age ${Math.floor(age())} · ${dstr(s.day)}, year ${y}</p></div><div class="bal"><small>Bank balance</small><b class="num ${s.cash<0?'dn':''}">${fmt(s.cash)}</b></div></section>
+  ${N.length?`<div class="needs">${N.map(needHtml).join('')}</div>`:''}
+  ${tip?`<div class="needs">${tipHtml(tip)}</div>`:''}
+  <div class="feedlog">${groups.map(g=>`<div class="yr"><h3>Age: ${g.a} years</h3>${g.L.map(l=>`<p class="lg ${l.k}">${l.t}</p>`).join('')}</div>`).join('')}</div>`}
+// Age up runs the clock to the next birthday. Up to three decisions pop up on the way; each one pauses the run, shows its result, then carries on.
+let ageRun=null,quietEv=false;
+function ageUp(cont){if(!s||s.dead)return;if(!cont||!ageRun)ageRun={tgt:Math.floor(age())+1,nw:netWorth(),pops:0};const A=ageRun,had=new Set(s.inbox.map(i=>i.id)),live=i=>!had.has(i.id)&&EVM[i.id]&&(!EVM[i.id].c||EVM[i.id].c(s));
+  catching=true;quietEv=A.pops>=3;let n=0;
+  while(!s.dead&&age()<A.tgt&&n<400){skipDay();n++;if(s.inbox.some(live))break}
+  catching=false;quietEv=false;save();if(s.dead){ageRun=null;render();deathModal();return}
+  const it=s.inbox.find(live);if(it){A.pops++;const e=EVM[it.id];render();return modal(`<p class="kicker">Age ${Math.floor(age())}</p><h2>${e.t}</h2><p>${e.d(s,it.a)}</p><div class="choices">${e.ch.map((c,j)=>`<button data-a="pickm" data-x="${it.id}" data-y="${j}">${c[0]}</button>`).join('')}</div>`)}
+  const d=netWorth()-A.nw;ageRun=null;render();toast(`You're ${Math.floor(age())}. Net worth ${d>=0?'up':'down'} ${fmt(Math.abs(d))} this year.`);scrollTo(0,0)}
+function pickAge(id,c){const i=s.inbox.findIndex(x=>x.id===id);if(i<0)return closeModal();const it=s.inbox.splice(i,1)[0],e=EVM[id],msg=e.c&&!e.c(s)?'The moment has passed.':e.ch[+c][1](s,it.a);log(`<b>${e.t}</b> ${msg}`);
+  modal(`<p class="kicker">Age ${Math.floor(age())}</p><h2>${e.t}</h2><p>${msg}</p><div class="choices"><button class="pri" data-a="ageon">${ageRun?'Continue':'OK'}</button></div>`)}
+const STOUR=[
+ {tab:'feed',t:'Welcome to The Hustle',x:'This is your life story. Everything that happens to you shows up here, newest first, and anything that needs you sits at the top. Time passes on its own while the game is open, and slowly while it is closed.',hi:['.prof']},
+ {tab:'feed',t:'How you are doing',x:'Happiness, health, smarts and looks. Green is good, red needs attention.',hi:['#sstats']},
+ {tab:'feed',t:'Age up',x:'The big button skips ahead to your next birthday. It stops early when something comes up that needs a decision.',hi:['#sbar .age']},
+ {tab:'feed',t:'Everything else',x:'Occupation is your job, school and politics. Assets is your money: businesses, the bank, property, stocks and cars. Relationships and Activities hold the rest. Each opens a short list.',hi:['#sbar']},
+];

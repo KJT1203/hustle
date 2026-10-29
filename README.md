@@ -84,11 +84,13 @@ An idle life simulator with no build step: `index.html`, `style.css`, `game.js` 
 
 **Families**: three save slots in the ? menu, so you can run separate families side by side.
 
-**Settings** (in the ? menu): pause when a decision arrives, let decisions decide themselves after 7, 30 or 90 days, a quiet mode with no pop-ups, and a gentle mode where illness never kills you.
+**Settings** (in the ? menu): the classic layout, pause when a decision arrives, let decisions decide themselves after 7, 30 or 90 days, a quiet mode with no pop-ups, and a gentle mode where illness never kills you.
 
 **Starting lives**: trust-fund kid, street hustler, bookworm, chronically online, lottery winner ($1M and a gambling itch), young parent (a toddler and a retail job), sporty kid (a head start at tennis), new arrival (bright and driven, $300) and art school dropout (a painter with followers and no money).
 
-**Playing it:** a short guided tour starts with every new life (reopen it with the ? button or the ? key). The Home screen lists everything that needs you. Answer decisions right there, collect full tills, and hire managers when they pay off. Quick actions sit underneath, with your net worth chart and a breakdown of where your money is. The side menu groups the other screens and flags what needs attention; on a phone it becomes a bottom tab bar. Keys 1–0 switch screens, Space pauses, C collects everything.
+**The layout**: like a phone life sim. Your life story runs down one feed, newest first, with anything that needs you at the top. Four bars at the bottom show happiness, health, smarts and looks. Under them sit five buttons: Occupation, Assets, the big **Age** button, Relationships and Activities. Age skips ahead to your next birthday. Up to three decisions pop up on the way, and each shows what happened before the year carries on. The other four buttons each open a short list of screens. Time still passes on its own as well. Prefer every screen in a side menu? Turn on **Classic layout** in the ? menu.
+
+**Playing it (classic layout):** a short guided tour starts with every new life (reopen it with the ? button or the ? key). The Home screen lists everything that needs you. Answer decisions right there, collect full tills, and hire managers when they pay off. Quick actions sit underneath, with your net worth chart and a breakdown of where your money is. The side menu groups the other screens and flags what needs attention; on a phone it becomes a bottom tab bar. Keys 1–0 switch screens, Space pauses, C collects everything.
 
 Play: open `index.html` (keep the files together). It saves to the browser automatically; use **Back up your save** in the ? menu to keep a copy or move it to another device.
 

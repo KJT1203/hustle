@@ -519,7 +519,7 @@ const avgDay=(d0,n0,n)=>d0==null?s.day:(d0*n0+s.day*n)/(n0+n); // the average pu
 let slot=1;try{slot=+localStorage.getItem('hustle-slot')||1}catch{}
 const SAVE='hustle-v1',saveKey=()=>slot===1?SAVE:`${SAVE}-${slot}`,GROW=1.13,CAP=10,MILES=[10,25,50,100,150,200,300,400,500];
 let helpOpen={},showAll={},openP=null,tour=-1,tourSpeed=1,tourJump=false,enr=null,iv=null,bmode='1',wf='All',bd={},vmode='chart',oxp=0,oq=1,lastSpeed=1,lastIn=[],cg=null,tf='3M',cmode='candle',hov=null,ot={side:'buy',qty:10}; // screen state, not saved
-let s=null,tab='dash',sel='NOVA',csel='SATS',speed=1,holding=false,wiped=false,heir={},hiddenAt=0;
+let dashOk=false,s=null,tab='dash',sel='NOVA',csel='SATS',speed=1,holding=false,wiped=false,heir={},hiddenAt=0;
 const age=()=>s.startAge+s.day/365;
 const add=(k,v)=>s.st[k]=clamp(s.st[k]+((k==='hap'||k==='sma'||k==='loo')&&v>0?v*clamp((100-s.st[k])/(k==='hap'?50:k==='loo'?60:70),.05,1)**2:v),0,100); // gains in happiness, smarts and looks shrink as they climb
 const job=()=>s.job&&JM[s.job];
@@ -661,7 +661,7 @@ function bjEnd(){const b=s.cz.bj,p=hv(b.p),nat=b.p.length===2&&p===21;
   b.msg=p>21?'Bust.':nat&&!dnat?'Blackjack! Paid 3 to 2.':dnat&&!nat?'Dealer has blackjack.':ret>b.bet?(d>21?'Dealer busts. You win.':'You win.'):ret===b.bet?'Push. Your bet comes back.':'Dealer wins.';
   b.done=1;settle(b.bet,ret,'blackjack','bj')}
 function netWorth(){let w=s.cash+(s.fin&&s.mkt.div?finVal():0)-(s.mloan||0);for(const t in s.shorts||{})w-=s.shorts[t].sh*s.px[t].p;if(s.opts?.length)w+=optVal();for(const t in s.port)w+=s.port[t].sh*s.px[t].p;w+=bizWorth();for(const id in s.own)w+=SM[id].cost*.6;for(const p of s.props)w+=pval(p)-p.loan;for(const c of s.cars)w+=c.v-(c.loan||0);return w+walletVal()+suWorth()+clubVal()-(s.debt||0)}
-function log(t,k='info'){s.log.unshift({d:s.day,t,k});if(s.log.length>80)s.log.pop()}
+function log(t,k='info'){s.log.unshift({d:s.day,t,k});if(s.log.length>300)s.log.pop()}
 function chirp(h,n,x,v){s.feed.unshift({h,n,x,v,l:0,tl:rint(3,40)*(v?40:1),d:s.day});if(s.feed.length>60)s.feed.pop()}
 const decDays=()=>Math.min(s?.opt?.dec||30,s?.staff?.pa?7:90),opt=k=>!!s?.opt?.[k];
 function toast(m){if(catching||opt('quiet'))return;const box=$('#toasts');for(const x of box.children)if(x.innerHTML===m)return; // no duplicates on screen
@@ -722,7 +722,7 @@ function day(live){
   if(s.day%7===0){(s.nwh??=[]).push(Math.round(netWorth()));if(s.nwh.length>104)s.nwh.shift()}
   s.later=s.later.filter(p=>p.d>s.day||(runLater(p),false));
   s.inbox=s.inbox.filter(it=>{if(s.day-it.d<decDays())return true;const e=EVM[it.id];if(!e.c||e.c(s))log(`<b>${e.t}</b> ${e.ch[e.def][1](s,it.a)}<span class="auto">decided for you</span>`);return false});
-  if(s.inbox.length<3&&R()<1/28)newEvent();
+  if(s.inbox.length<3&&!quietEv&&R()<1/28)newEvent();
   flDay();if(s.su)suDay();propDay();worldDay();fdnDay();oldDay(A);polDay();clubDay();creditDay();viceDay();milDay();trustDay();stlDay();chDay();staffDay();starDay();statsDay();uiDay();
   lifeDay(A);if(s.dead)return;
   const pd=s.st.hea<=0?1:A>60?Math.min(.5,((A-60)/30)**3*3)/365:0;
@@ -1128,6 +1128,11 @@ const dur=sec=>sec<3600?`${Math.round(sec/60)} minutes`:sec<172800?`${Math.floor
 
 // ---------- actions ----------
 const ACT={
+  menu:k=>{if(MENUS[k])modal(menuHtml(k))},
+  go:x=>{closeModal();ACT.tab(x);dashOk=x==='dash'},
+  ageup:()=>ageUp(),
+  pickm:(id,c)=>pickAge(id,c),
+  ageon:()=>{closeModal();if(ageRun)ageUp(true)},
   enact:k=>{const m=enact(k);if(m){log(m,'good');toast(m)}},
   staff:k=>{if(!['pa','adv','nanny'].includes(k))return;const S=s.staff??={};S[k]=S[k]?0:1;toast(S[k]?`You hired a ${{pa:'personal assistant',adv:'financial advisor',nanny:'nanny'}[k]}`:'You let them go')},
   rich:()=>modal(richHtml()),
@@ -1138,7 +1143,7 @@ const ACT={
   trust:v=>{v=+v;if(!(v>0)||s.cash<v)return;const gt=trustAdd(v);log(`Moved ${fmt(v)} into the family trust${gt?`, paying ${fmt(gt)} in gift tax`:''}.`,'good');toast(`Trust: +${fmt(v)}`)},
   comm:()=>{moveComm()},
   petplay:u=>{const m=petPlay(u);if(m)toast(esc(m))},
-  setopt:(k,v)=>{const O=s.opt??={};if(k==='dec'){if([7,30,90].includes(+v))O.dec=+v}else if(k==='pause'||k==='quiet'||k==='gentle')O[k]=!O[k];ACT.help()},
+  setopt:(k,v)=>{const O=s.opt??={};if(k==='dec'){if([7,30,90].includes(+v))O.dec=+v}else if(['pause','quiet','gentle','classic'].includes(k))O[k]=!O[k];if(k==='classic'){tab=O.classic?'dash':'feed';render()}ACT.help()},
   hours:k=>{if(HOURS[k]){s.hours=k;toast(`Work hours: ${HOURS[k].n.toLowerCase()}`)}},
   diet:k=>{if(DIETS[k]){s.diet=k;toast(`Food: ${DIETS[k].n.toLowerCase()}`)}},
   bsell:(id,y)=>{const b=BM[id],o=s.biz[id];if(!b||!o?.n)return;const v=Math.round(bizVal(b,o)*.95);
@@ -1175,7 +1180,7 @@ const ACT={
   hshow:id=>{const H=HM[id];if(!H||hobSk(id)<(H.need||30)||s.day<(s.cd['hs_'+id]||0))return;s.cd['hs_'+id]=s.day+(H.scd||30);const m=hobShow(id);log(m,'good');toast(m)},
   adopt:t=>{const K=PTM[t];if(!K||s.pets.length>=5||s.cash<K.c*s.eco.P)return;s.cash-=K.c*s.eco.P;const p=addPet(t);add('hap',8);log(`Welcome home, ${esc(petOf(p))}.`,'good');toast(`Welcome home, ${esc(p.n)}!`)},
   rehome:u=>{const i=s.pets.findIndex(p=>p.uid===+u);if(i<0)return;const p=s.pets.splice(i,1)[0];add('hap',-6);toast(`${esc(p.n)} went to a good new home.`)},
-  tab:x=>{tab=x;const g=BAR.findIndex(b=>b[1].includes(x));if(g>=0)lastIn[g]=x;$('#view').scrollTop=0;if(innerWidth<=860)scrollTo(0,0)},
+  tab:x=>{tab=x;dashOk=false;const g=BAR.findIndex(b=>b[1].includes(x));if(g>=0)lastIn[g]=x;$('#view').scrollTop=0;if(innerWidth<=860)scrollTo(0,0)},
   grp:x=>{const ks=BAR[+x][1];ACT.tab(ks.includes(tab)?tab:lastIn[+x]||ks[0])},
   spd:x=>{if(speed)lastSpeed=speed;speed=+x},
   bmode:x=>{bmode=x},
@@ -1199,6 +1204,7 @@ const ACT={
   help:()=>modal(`<p class="kicker">Help and settings</p><h2>The Hustle</h2><div class="choices"><button data-a="guide2">Replay the guide</button><button data-a="exp">Back up your save</button><button data-a="imp">Load a saved game</button><button class="bad" data-a="reset">Start a new life</button><button class="pri" data-a="close">Back to the game</button></div>
     <h3 style="margin-top:var(--space-lg)">Families</h3><table class="ledger"><tbody>${[1,2,3].map(n=>{let m=null;try{m=JSON.parse(localStorage.getItem('hustle-meta-'+n))}catch{}if(n===slot&&s)m={n:s.name,g:s.gen,a:Math.floor(age()),w:netWorth()};return `<tr${n===slot?' class="now"':''}><td>Slot ${n}</td><td>${m?`${esc(m.n)}, ${m.a} · generation ${m.g} · ${fmt(m.w)}`:'<span class="mut">Empty</span>'}</td><td class="act">${n===slot?'<span class="mut">Playing</span>':`<button data-a="slot" data-x="${n}">${m?'Switch':'Start a new family'}</button>`}</td></tr>`}).join('')}</tbody></table>
     <h3 style="margin-top:var(--space-lg)">Settings</h3><table class="ledger"><tbody>
+     <tr><td>Classic layout: every screen in a side menu, instead of the simple life feed</td><td class="act"><button class="${opt('classic')?'pri':''}" data-a="setopt" data-x="classic">${opt('classic')?'On':'Off'}</button></td></tr>
      <tr><td>Pause when a decision arrives</td><td class="act"><button class="${opt('pause')?'pri':''}" data-a="setopt" data-x="pause">${opt('pause')?'On':'Off'}</button></td></tr>
      <tr><td>Decisions decide themselves after</td><td class="act">${[7,30,90].map(d=>`<button class="${decDays()===d?'pri':''}" data-a="setopt" data-x="dec" data-y="${d}">${d} days</button>`).join('')}</td></tr>
      <tr><td>Gentle mode: illness can still hurt, but never kills you</td><td class="act"><button class="${opt('gentle')?'pri':''}" data-a="setopt" data-x="gentle">${opt('gentle')?'On':'Off'}</button></td></tr>
@@ -1222,9 +1228,9 @@ const ACT={
   howto:()=>{helpOpen[tab]=!helpOpen[tab]},
   showall:()=>{showAll[tab]=!showAll[tab]},
   pmore:x=>{openP=openP===+x?null:+x},
-  guide:()=>{if(tour<0){tourSpeed=speed||lastSpeed||1;speed=0}tour=0;ACT.tab(TOUR[0].tab);tourJump=true},
-  tnext:()=>{if(tour>=TOUR.length-1)return ACT.tend();tour++;ACT.tab(TOUR[tour].tab);tourJump=true},
-  tback:()=>{if(tour>0){tour--;ACT.tab(TOUR[tour].tab);tourJump=true}},
+  guide:()=>{if(tour<0){tourSpeed=speed||lastSpeed||1;speed=0}tour=0;ACT.tab(TR()[0].tab);tourJump=true},
+  tnext:()=>{if(tour>=TR().length-1)return ACT.tend();tour++;ACT.tab(TR()[tour].tab);tourJump=true},
+  tback:()=>{if(tour>0){tour--;ACT.tab(TR()[tour].tab);tourJump=true}},
   tend:()=>{if(tour<0)return;tour=-1;s.tour=1;speed=tourSpeed;coach()},
   tskip:()=>{s.tour=1},
   apply:id=>{if(s.su)return toast('You run a startup full time. Shut it down or sell it first.');if(s.pol?.cur&&!OM[s.pol.cur].part)return toast(`You're the ${OM[s.pol.cur].n.toLowerCase()}. That is a full-time job.`);const j=JM[id];if(!canJob(j)||s.day<(s.cd['job_'+id]||0))return;iv={id,q:pick(IVQ)};modal(ivHtml())},
@@ -1237,7 +1243,7 @@ const ACT={
     if(A.bad&&!sure)return modal(`<h2>${A.n} with ${esc(p.n)}?</h2><p>${k==='divorce'?`Lawyers and the settlement will cost about <b class="num">${fmt(divCost(p))}</b>: half of what you've built since the wedding${p.pre?'. Your prenup protects the rest.':', plus a quarter of what you had before it. There is no prenup.'}`:'This cannot be undone.'}</p><div class="row"><button class="bad" data-a="pp" data-x="${p.uid}" data-y="${k}!">${A.n}</button><button data-a="close">Cancel</button></div>`);
     const cost=A.c?A.c(p):0;if((p.c?.[k]||0)>s.day||s.cash<cost||A.need?.(p))return;
     s.cash-=cost;(p.c??={})[k]=s.day+(A.cd||0);const m=A.fx(p,cost);if(sure)closeModal();toast(esc(m));if(A.bad)log(esc(m),'bad')},
-  quit:()=>{log(`Quit your job as ${jobTitle()}.`);fire()},
+  quit:()=>{if(!job())return;log(`Quit your job as ${jobTitle()}.`);fire()},
   gig:()=>{if(gigsLeft()<1)return;const g=gig();s.cash+=g;taxAdd('ord',g);s.gigs=(s.gigs||0)+1;if(s.gd!==s.day){s.gd=s.day;s.gn=0}s.gn++},
   bbuy:(id,x)=>{const b=BM[id],o=s.biz[id]??={n:0,mgr:0,pend:0,spent:0},q=x==='max'?bmax(b,o.n):+x;if(q<1)return;const c=bcost(b,o.n,q);if(c>s.cash)return;
     const first=!o.n;s.cash-=c;o.spent+=c;const before=bmul(o.n);o.n+=q;
@@ -1610,6 +1616,7 @@ function taxHtml(){
   <p class="mut" style="margin-top:var(--space-2xs)">Your next dollar of income is taxed at <b>${Math.round(margRate()*100)}%</b>${inc>0&&cur?`, and you're paying ${pctA((T.paid)/Math.max(1,inc))} of your taxable income overall`:''}. Hold investments longer than a year and the gain is taxed at 0-20% instead. Money you put in your retirement account comes off your taxable income.${last?` Last year you paid ${fmt(last.tax)}.`:''}</p>`;
 }
 const VIEWS={
+feed(){return feedHtml()},
 office(){return polHtml()},
 legacy(){return legacyHtml()},
 health(){
@@ -1914,7 +1921,7 @@ const ICON={bank:ic('<path d="M3 10l9-6 9 6M5 10v8M10 10v8M14 10v8M19 10v8M3 20h
  store:ic('<path d="M4 9l1.5-5h13L20 9M4 9v11h16V9M4 9h16M9 20v-6h6v6"/>'),chart:ic('<path d="M4 19h16M6 15l4-5 3 3 5-7"/>'),coin:ic('<circle cx="12" cy="12" r="8"/><path d="M10 8h3a2 2 0 0 1 0 4h-3m0 0h3.5a2 2 0 0 1 0 4H10m0-8v8"/>'),building:ic('<path d="M5 21V4h9v17M14 9h5v12M8 8h3M8 12h3M8 16h3M3 21h18"/>'),
  car:ic('<path d="M5 16l1.5-5.5A2 2 0 0 1 8.4 9h7.2a2 2 0 0 1 1.9 1.5L19 16M4 16h16v3H4zM7 19v1.5M17 19v1.5"/>'),bag:ic('<path d="M6 8h12l-1 12H7zM9 8a3 3 0 0 1 6 0"/>'),chat:ic('<path d="M4 5h16v11H9l-5 4z"/>'),cap:ic('<path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"/>'),heart:ic('<path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.5-7 10-7 10z"/>'),
  dice:ic('<rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="9" cy="9" r="1"/><circle cx="15" cy="15" r="1"/><circle cx="15" cy="9" r="1"/><circle cx="9" cy="15" r="1"/>'),tree:ic('<circle cx="12" cy="5" r="2"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="18" r="2"/><path d="M12 7v5M12 12H6v4M12 12h6v4"/>'),flag:ic('<path d="M5 21V4M5 4h11l-2 4 2 4H5"/>'),pulse:ic('<path d="M3 12h4l2-5 4 10 2-5h6"/>'),leaf:ic('<path d="M5 19c0-8 5-14 14-14 0 9-6 14-14 14zM5 19l7-7"/>'),pause:ic('<path d="M8 5v14M16 5v14"/>')};
-const TABS={dash:['Home','home'],bank:['Bank','bank'],life:['Life','user'],work:['Work','work'],people:['People','heart'],school:['Education','cap'],health:['Health','pulse'],hobby:['Hobbies','leaf'],legacy:['Family tree','tree'],biz:['Business','store'],stock:['Markets','chart'],crypto:['Crypto','coin'],home:['Property','building'],garage:['Garage','car'],shop:['Lifestyle','bag'],chirp:['Chirp','chat'],office:['Politics','flag'],casino:['Casino','dice']};
+const TABS={feed:['Your life','user'],dash:['Home','home'],bank:['Bank','bank'],life:['Life','user'],work:['Work','work'],people:['People','heart'],school:['Education','cap'],health:['Health','pulse'],hobby:['Hobbies','leaf'],legacy:['Family tree','tree'],biz:['Business','store'],stock:['Markets','chart'],crypto:['Crypto','coin'],home:['Property','building'],garage:['Garage','car'],shop:['Lifestyle','bag'],chirp:['Chirp','chat'],office:['Politics','flag'],casino:['Casino','dice']};
 const GROUPS=[['',['dash']],['You',['life','work','people','school','health','hobby','legacy']],['Money',['biz','stock','crypto','bank','home']],['Spend',['garage','shop']],['Fun',['chirp','office','casino']]];
 const BAR=[['Home',['dash'],'home'],['Life',['life','work','people','school','health','hobby','legacy'],'user'],['Money',['biz','stock','crypto','bank','home'],'chart'],['Spend',['garage','shop'],'bag'],['Fun',['chirp','office','casino'],'dice']];
 const KEYTABS=['dash','life','work','people','school','biz','stock','crypto','home','garage'];
@@ -1931,11 +1938,12 @@ const TOUR=[
  {tab:'stock',t:'Grow your money',x:'Markets, Crypto and Property are other places to put spare cash. Stocks trade from 9:30 to 4:00 on weekdays, closed on exchange holidays, and behave like the real market: about 7% a year on average, with bad years and crashes along the way.',hi:['#nav [data-x="stock"]','#nav [data-x="crypto"]','#nav [data-x="home"]','#tabbar [data-x="2"]']},
  {tab:'dash',t:'Getting around',x:'The menu groups every screen, and on a phone it sits at the bottom. Keys 1 to 0 switch screens, Space pauses, and C collects every till. That is everything. Enjoy your life.',hi:['#nav','#tabbar']},
 ];
+const TR=()=>simple()?STOUR:TOUR;
 function coach(){
   document.querySelectorAll('.tour-hi').forEach(e=>e.classList.remove('tour-hi'));
   const c=$('#coach');if(tour<0||!s){c.hidden=true;return}
-  const T=TOUR[tour],last=tour===TOUR.length-1;
-  c.innerHTML=`<p class="kicker">Guide · ${tour+1} of ${TOUR.length}</p><h3>${T.t}</h3><p>${T.x}</p><div class="row"><button data-a="tback" ${tour?'':'disabled'}>Back</button><button class="pri" data-a="tnext">${last?'Start playing':'Next'}</button><button class="link" data-a="tend">Skip the guide</button></div>`;c.hidden=false;
+  const TT=TR(),T=TT[tour],last=tour===TT.length-1;
+  c.innerHTML=`<p class="kicker">Guide · ${tour+1} of ${TT.length}</p><h3>${T.t}</h3><p>${T.x}</p><div class="row"><button data-a="tback" ${tour?'':'disabled'}>Back</button><button class="pri" data-a="tnext">${last?'Start playing':'Next'}</button><button class="link" data-a="tend">Skip the guide</button></div>`;c.hidden=false;
   let first=null;for(const q of T.hi)for(const el of document.querySelectorAll(q)){el.classList.add('tour-hi');if(!first&&el.offsetParent)first=el}
   if(tourJump&&first){first.scrollIntoView({block:'center'});tourJump=false}
 }
@@ -1976,9 +1984,10 @@ function render(){
   document.body.classList.toggle('wide',!['dash','life'].includes(tab));
   const pc=paceNow(),pl={idle:'Auto',active:'Auto · slow',trade:'Auto · trade'}[pc]||'Auto';
   $('#speed').innerHTML=[[0,ICON.pause,'Pause'],[1,pl,PACE_TXT[pc==='fast'?'idle':pc]],[2,'Fast',PACE_TXT.fast]].map(([v,l,a])=>`<button class="${speed===v?'on':''}" data-a="spd" data-x="${v}" aria-label="${a}" title="${a}">${l}</button>`).join('');
-  $('#nav').innerHTML=railHtml();$('#tabbar').innerHTML=barHtml();
+  const sim=simple();document.body.classList.toggle('simple',sim);if(sim&&tab==='dash'&&!dashOk)tab='feed';if(!sim&&tab==='feed')tab='dash';
+  $('#nav').innerHTML=railHtml();$('#tabbar').innerHTML=barHtml();$('#dock').innerHTML=sim?dockHtml():'';
   const keep=[...$$('#view [data-keep]')].map(e=>[e.dataset.keep,e.scrollTop]); // inner scroll boxes survive the rebuild
-  $('#view').innerHTML=subtabs()+VIEWS[tab]();
+  $('#view').innerHTML=(sim?(tab==='feed'?'':`<div class="backbar"><button data-a="tab" data-x="feed">‹ Your life</button></div>`):subtabs())+VIEWS[tab]();
   for(const[k,y]of keep){const e=$(`#view [data-keep="${k}"]`);if(e)e.scrollTop=y}
   if(tab==='stock')drawStock();
   if(tab==='crypto'){const c=coin(csel),w=s.wallet[csel];if(c)drawChart(c.h,w&&w.c/w.u,pfmt)}
